@@ -1,0 +1,14 @@
+﻿<Window x:Class="wv2util.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:wv2util"
+        mc:Ignorable="d"
+        Title="WebView2 Utils" Height="119.074" Width="176.867" ResizeMode="CanMinimize">
+    <Grid>
+        <Button Content="Application Overrides" HorizontalAlignment="Left" VerticalAlignment="Top" Width="152" Margin="10,10,0,0" Click="Button_Click"/>
+        <Button Content="Runtimes" HorizontalAlignment="Left" VerticalAlignment="Top" Width="152" Margin="10,35,0,0"/>
+        <Button Content="Running WebView2" HorizontalAlignment="Left" VerticalAlignment="Top" Width="152" Margin="10,60,0,0"/>
+    </Grid>
+</Window>
