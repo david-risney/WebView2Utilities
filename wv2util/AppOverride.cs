@@ -160,10 +160,10 @@ namespace wv2util
 
     public class AppOverrideEntry
     {
-        public bool ReverseSearchOrder { get; set; }
-        public string HostApp { get; set; }
-        public string RuntimePath { get; set; }
-        public string UserDataPath { get; set; }
-        public string BrowserArguments { get; set; }
+        public bool ReverseSearchOrder { get; set; } = false;
+        public string HostApp { get; set; } = "";
+        public string RuntimePath { get; set; } = "";
+        public string UserDataPath { get; set; } = "";
+        public string BrowserArguments { get; set; } = "";
     }
 }

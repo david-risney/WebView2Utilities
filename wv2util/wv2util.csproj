@@ -23,7 +23,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>2</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,10 +55,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="RuntimeList.xaml.cs">
-      <DependentUpon>RuntimeList.xaml</DependentUpon>
+    <Compile Include="AppOverride.cs" />
+    <Compile Include="RuntimeListUi.xaml.cs">
+      <DependentUpon>RuntimeListUi.xaml</DependentUpon>
     </Compile>
-    <Page Include="AppOverride.xaml">
+    <Page Include="AppOverrideUi.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -70,14 +71,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AppOverride.xaml.cs">
-      <DependentUpon>AppOverride.xaml</DependentUpon>
+    <Compile Include="AppOverrideUi.xaml.cs">
+      <DependentUpon>AppOverrideUi.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="RuntimeList.xaml">
+    <Page Include="RuntimeListUi.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
