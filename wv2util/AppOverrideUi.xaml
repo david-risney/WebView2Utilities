@@ -5,36 +5,42 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wv2util"
         mc:Ignorable="d"
-        Title="Application Overrides" Height="447.801" Width="844.707">
-    <Grid>
+        Title="Application Overrides" Height="483.801" Width="844.707">
+    <Window.Resources>
+        <local:AppOverrideList
+            x:Key="AppOverrideList" />
+        <DataTemplate x:Key="AppOverrideListTemplate">
+            <TextBlock Text="{Binding Path=HostApp}" />
+        </DataTemplate>
+    </Window.Resources>
+    <Grid
+        DataContext="{Binding Source={StaticResource AppOverrideList}}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
-        <TextBox x:Name="AppOverrideRuntimePathTextBox" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,48,0,0" TextChanged="TextBox_TextChanged"/>
+        <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
+        <TextBox x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,48,0,0"/>
         <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
-        <TextBox x:Name="AppOverrideUserDataPathTextBox" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0"/>
+        <TextBox x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0"/>
         <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
-        <TextBox x:Name="AppOverrideBrowserArgumentsTextBox" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0"/>
+        <TextBox x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0"/>
         <Label Content="Browser arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,110,0,0" Width="126"/>
-        <Button Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="337,162,0,0" RenderTransformOrigin="0.597,-3.701" Click="Button_Click"/>
+        <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="257,415,0,0" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
         <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="37" Margin="798,48,0,0"/>
         <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,79,0,0"/>
         <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,110,0,0"/>
-        <ListBox x:Name="AppOverrideListBox" HorizontalAlignment="Left" Height="400" VerticalAlignment="Top" Width="322" Margin="10,10,0,0" SelectionChanged="ListBox_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding HostApp}" />
-                    </Grid>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
+        <ListBox
+            x:Name="AppOverrideListBox" 
+            ItemsSource="{Binding}" 
+            ItemTemplate="{StaticResource AppOverrideListTemplate}"
+            IsSynchronizedWithCurrentItem="True"
+            HorizontalAlignment="Left" Height="400" VerticalAlignment="Top" Width="322" Margin="10,10,0,0">
         </ListBox>
-        <TextBox x:Name="AppOverrideHostAppTextBox" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0"/>
+
+        <TextBox x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0"/>
         <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126"/>
+        <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,415,0,0" Click="AddNewButton_Click"/>
+        <Button x:Name="Reload" Content="Reload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="128,415,0,0" Click="Reload_Click"/>
 
     </Grid>
 </Window>
