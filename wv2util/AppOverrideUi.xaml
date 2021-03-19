@@ -12,6 +12,7 @@
             <TextBlock Text="{Binding Path=HostApp}" />
         </DataTemplate>
         <local:RuntimeList x:Key="RuntimeList" />
+        <local:HostAppList x:Key="HostAppList" />
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -21,21 +22,11 @@
             <TabItem DataContext="{Binding Source={StaticResource AppOverrideList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock>Overrides</TextBlock>
+                        <TextBlock Text="Overrides "/>
+                        <Button x:Name="OverridesReload" Content="&#x1F504;" Click="Reload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
-                    <TextBox x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,48,0,0"/>
-                    <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
-                    <TextBox x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0"/>
-                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
-                    <TextBox x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0"/>
-                    <Label Content="Browser arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,110,0,0" Width="126"/>
-                    <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="257,415,0,0" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
-                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="37" Margin="798,48,0,0"/>
-                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,79,0,0"/>
-                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,110,0,0"/>
                     <ListBox
                         x:Name="AppOverrideListBox" 
                         ItemsSource="{Binding}" 
@@ -43,17 +34,32 @@
                         IsSynchronizedWithCurrentItem="True"
                         HorizontalAlignment="Left" Height="400" VerticalAlignment="Top" Width="322" Margin="10,10,0,0">
                     </ListBox>
-
-                    <TextBox x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0"/>
-                    <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126"/>
                     <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,415,0,0" Click="AddNewButton_Click"/>
-                    <Button x:Name="Reload" Content="Reload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="128,415,0,0" Click="Reload_Click"/>
+                    <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="257,415,0,0" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
+
+                    <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
+                    <TextBox ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
+                    <TextBox ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" VerticalAlignment="Top" Width="324" Margin="468,48,0,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <Button x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="37" Margin="798,48,0,0" Click="AppOverrideRuntimePathButton_Click"/>
+
+                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
+                    <TextBox ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <Button x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,79,0,0" Click="AppOverrideUserDataPathButton_Click"/>
+
+                    <Label Content="Browser arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,110,0,0" Width="126" />
+                    <TextBox  ToolTip="Additional arguments to include on the command line for msedgewebview2.exe." x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <Button x:Name="AppOverrideBrowserArgumentsButton" Content="?" HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,110,0,0" Click="AppOverrideBrowserArgumentsButton_Click"/>
+
+                    <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
                 </Grid>
             </TabItem>
             <TabItem DataContext="{Binding Source={StaticResource RuntimeList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock>Runtimes</TextBlock>
+                        <TextBlock Text="Runtimes "/>
+                        <Button x:Name="RuntimesReload" Content="&#x1F504;" Click="RuntimesReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="ListView_SelectionChanged">
@@ -62,6 +68,26 @@
                             <GridViewColumn Header="Path" DisplayMemberBinding="{Binding RuntimeLocation}"/>
                             <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}"/>
                             <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+            <TabItem DataContext="{Binding Source={StaticResource HostAppList}}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Host Apps "/>
+                        <Button x:Name="HostAppsReload" Content="&#x1F504;" Click="HostAppsReload_Click"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ListView x:Name="HostAppListView" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Executable" DisplayMemberBinding="{Binding ExecutableName}"/>
+                            <GridViewColumn Header="Runtime Version" DisplayMemberBinding="{Binding Runtime.Version}"/>
+                            <GridViewColumn Header="Runtime Channel" DisplayMemberBinding="{Binding Runtime.Channel}"/>
+                            <GridViewColumn Header="Runtime Path" DisplayMemberBinding="{Binding Runtime.RuntimeLocation}"/>
+                            <GridViewColumn Header="User Data Path" DisplayMemberBinding="{Binding UserDataPath}"/>
+                            <GridViewColumn Header="Executable Path" DisplayMemberBinding="{Binding ExecutablePath}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
