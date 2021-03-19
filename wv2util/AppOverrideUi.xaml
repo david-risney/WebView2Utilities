@@ -5,42 +5,67 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wv2util"
         mc:Ignorable="d"
-        Title="Application Overrides" Height="483.801" Width="844.707">
+        Title="Application Overrides" Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
-        <local:AppOverrideList
-            x:Key="AppOverrideList" />
+        <local:AppOverrideList x:Key="AppOverrideList" />
         <DataTemplate x:Key="AppOverrideListTemplate">
             <TextBlock Text="{Binding Path=HostApp}" />
         </DataTemplate>
+        <local:RuntimeList x:Key="RuntimeList" />
     </Window.Resources>
-    <Grid
-        DataContext="{Binding Source={StaticResource AppOverrideList}}">
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
-        <TextBox x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,48,0,0"/>
-        <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
-        <TextBox x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0"/>
-        <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
-        <TextBox x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0"/>
-        <Label Content="Browser arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,110,0,0" Width="126"/>
-        <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="257,415,0,0" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
-        <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="37" Margin="798,48,0,0"/>
-        <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,79,0,0"/>
-        <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,110,0,0"/>
-        <ListBox
-            x:Name="AppOverrideListBox" 
-            ItemsSource="{Binding}" 
-            ItemTemplate="{StaticResource AppOverrideListTemplate}"
-            IsSynchronizedWithCurrentItem="True"
-            HorizontalAlignment="Left" Height="400" VerticalAlignment="Top" Width="322" Margin="10,10,0,0">
-        </ListBox>
+        <TabControl x:Name="TabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TabItem DataContext="{Binding Source={StaticResource AppOverrideList}}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Overrides</TextBlock>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <CheckBox x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
+                    <TextBox x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,48,0,0"/>
+                    <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
+                    <TextBox x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,79,0,0"/>
+                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
+                    <TextBox x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,110,0,0"/>
+                    <Label Content="Browser arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,110,0,0" Width="126"/>
+                    <Button x:Name="RemoveButton" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="257,415,0,0" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
+                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="37" Margin="798,48,0,0"/>
+                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,79,0,0"/>
+                    <Button Content="..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="36" Margin="798,110,0,0"/>
+                    <ListBox
+                        x:Name="AppOverrideListBox" 
+                        ItemsSource="{Binding}" 
+                        ItemTemplate="{StaticResource AppOverrideListTemplate}"
+                        IsSynchronizedWithCurrentItem="True"
+                        HorizontalAlignment="Left" Height="400" VerticalAlignment="Top" Width="322" Margin="10,10,0,0">
+                    </ListBox>
 
-        <TextBox x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0"/>
-        <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126"/>
-        <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,415,0,0" Click="AddNewButton_Click"/>
-        <Button x:Name="Reload" Content="Reload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="128,415,0,0" Click="Reload_Click"/>
-
+                    <TextBox x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Width="324" Margin="468,17,0,0"/>
+                    <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126"/>
+                    <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="10,415,0,0" Click="AddNewButton_Click"/>
+                    <Button x:Name="Reload" Content="Reload" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Margin="128,415,0,0" Click="Reload_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem DataContext="{Binding Source={StaticResource RuntimeList}}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Runtimes</TextBlock>
+                    </StackPanel>
+                </TabItem.Header>
+                <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="ListView_SelectionChanged">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Path" DisplayMemberBinding="{Binding RuntimeLocation}"/>
+                            <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}"/>
+                            <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

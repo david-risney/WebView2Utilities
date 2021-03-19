@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,9 +29,9 @@ namespace wv2util
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
         {
             int selectedIndex = AppOverrideListBox.SelectedIndex;
-            if (selectedIndex >= 0 && selectedIndex < ListData.Count)
+            if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
             {
-                ListData.RemoveAt(AppOverrideListBox.SelectedIndex);
+                AppOverrideListData.RemoveAt(AppOverrideListBox.SelectedIndex);
             }
         }
 
@@ -38,15 +39,27 @@ namespace wv2util
         {
             AppOverrideEntry entry = new AppOverrideEntry();
             entry.HostApp = "New " + (++m_NewEntriesCount);
-            ListData.Add(entry);
+            AppOverrideListData.Add(entry);
         }
 
-        protected AppOverrideList ListData { get { return (AppOverrideList)AppOverrideListBox.ItemsSource; } }
+        protected AppOverrideList AppOverrideListData { get { return (AppOverrideList)AppOverrideListBox?.ItemsSource; } }
         private uint m_NewEntriesCount = 0;
+
+        protected RuntimeList RuntimeListData { get { return (RuntimeList)RuntimeList?.ItemsSource; } }
+
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
-            ListData.FromRegistry();
+            AppOverrideListData.FromRegistry();
+        }
+
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (RuntimeList.SelectedIndex >= 0)
+            {
+                RuntimeEntry selection = (RuntimeEntry)RuntimeList.SelectedItem;
+                Clipboard.SetText(selection.RuntimeLocation);
+            }
         }
     }
 }
