@@ -62,7 +62,7 @@
                         <Button x:Name="RuntimesReload" Content="&#x1F504;" Click="RuntimesReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="ListView_SelectionChanged">
+                <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Path" DisplayMemberBinding="{Binding RuntimeLocation}"/>
@@ -79,7 +79,7 @@
                         <Button x:Name="HostAppsReload" Content="&#x1F504;" Click="HostAppsReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ListView x:Name="HostAppListView" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <ListView x:Name="HostAppListView" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="HostAppListViewSelectionChanged">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Executable" DisplayMemberBinding="{Binding ExecutableName}"/>

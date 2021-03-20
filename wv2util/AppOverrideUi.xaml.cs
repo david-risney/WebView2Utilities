@@ -56,14 +56,16 @@ namespace wv2util
             AppOverrideListData.FromRegistry();
         }
 
-        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void RuntimeListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (RuntimeList.SelectedIndex >= 0)
             {
                 RuntimeEntry selection = (RuntimeEntry)RuntimeList.SelectedItem;
                 try
                 {
-                    Clipboard.SetText(selection.RuntimeLocation);
+                    Clipboard.SetText(selection.RuntimeLocation + "\t" + 
+                        selection.Version + "\t" + 
+                        selection.Channel);
                 }
                 catch (System.Runtime.InteropServices.COMException)
                 {
@@ -71,6 +73,26 @@ namespace wv2util
                 }
             }
         }
+        private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (HostAppListView.SelectedIndex >= 0)
+            {
+                HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
+                try
+                {
+                    Clipboard.SetText(selection.ExecutableName + "\t" + 
+                        selection.Runtime.RuntimeLocation + "\t" + 
+                        selection.Runtime.Version + "\t" +
+                        selection.Runtime.Channel + "\t" +
+                        selection.UserDataPath + "\t" +
+                        selection.ExecutablePath);
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // We might fail to open clipboard. Just ignore
+                }
+            }
+        }       
 
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
         {

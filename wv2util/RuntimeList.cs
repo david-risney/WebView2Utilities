@@ -36,21 +36,25 @@ namespace wv2util
         { 
             get
             {
-                if (ExePath.ToLower().Contains("sxs"))
+                if (ExePath.ToLower().Contains("\\edge sxs\\"))
                 {
                     return "Canary";
                 }
-                else if (ExePath.ToLower().Contains("beta"))
+                else if (ExePath.ToLower().Contains("\\edge beta\\"))
                 {
                     return "Beta";
                 }
-                else if (ExePath.ToLower().Contains("dev"))
+                else if (ExePath.ToLower().Contains("\\edge dev\\"))
                 {
                     return "Dev";
                 }
-                else
+                else if (ExePath.ToLower().Contains("\\edge\\"))
                 {
                     return "Stable";
+                }
+                else
+                {
+                    return "Unknown";
                 }
             }
         }
