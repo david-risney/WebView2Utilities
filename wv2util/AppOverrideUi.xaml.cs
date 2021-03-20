@@ -61,7 +61,14 @@ namespace wv2util
             if (RuntimeList.SelectedIndex >= 0)
             {
                 RuntimeEntry selection = (RuntimeEntry)RuntimeList.SelectedItem;
-                Clipboard.SetText(selection.RuntimeLocation);
+                try
+                {
+                    Clipboard.SetText(selection.RuntimeLocation);
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // We might fail to open clipboard. Just ignore
+                }
             }
         }
 

@@ -21,7 +21,15 @@ namespace wv2util
         {
             get
             {
-                return FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
+                try
+                {
+                    return FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
+                }
+                catch (System.IO.FileNotFoundException e)
+                {
+                    // Somehow this is possible.
+                    return "FileNotFound";
+                }
             }
         }
         public string Channel
@@ -57,7 +65,7 @@ namespace wv2util
     {
         public RuntimeList()
         {
-            FromDisk();
+            // FromDisk();
         }
 
         public void FromDisk()
@@ -76,24 +84,33 @@ namespace wv2util
         }
         private static IEnumerable<RuntimeEntry> GetInstalledRuntimes()
         {
-            string microsoftRootPath = Environment.GetEnvironmentVariable("LOCALAPPDATA") + "\\Microsoft\\";
-            var potentialParents = Directory.GetDirectories(microsoftRootPath).Where(path => path.Contains("Edge"));
-                
-            foreach (string potentialParent in potentialParents)
+            string[] rootPaths =
             {
-                string[] foundExes = null;
-                try
-                {
-                    foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
-                }
-                catch (UnauthorizedAccessException e)
-                {
-                    Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
-                }
+                Environment.GetEnvironmentVariable("LOCALAPPDATA") + "\\Microsoft\\",
+                Environment.GetEnvironmentVariable("ProgramFiles(x86)") + "\\Microsoft\\",
+                Environment.GetEnvironmentVariable("ProgramFiles") + "\\Microsoft\\"
+            };
 
-                foreach (string path in foundExes)
+            foreach (string rootPath in rootPaths)
+            {
+                var potentialParents = Directory.GetDirectories(rootPath).Where(path => path.Contains("Edge"));
+
+                foreach (string potentialParent in potentialParents)
                 {
-                    yield return new RuntimeEntry(path);
+                    string[] foundExes = null;
+                    try
+                    {
+                        foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
+                    }
+                    catch (UnauthorizedAccessException e)
+                    {
+                        Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
+                    }
+
+                    foreach (string path in foundExes)
+                    {
+                        yield return new RuntimeEntry(path);
+                    }
                 }
             }
         }
