@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wv2util"
         mc:Ignorable="d"
-        Title="Application Overrides" Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip">
+        Icon="logo.ico"
+        Title="WebView2 Utilities"
+        Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <local:AppOverrideList x:Key="AppOverrideList" />
         <DataTemplate x:Key="AppOverrideListTemplate">
@@ -13,6 +15,14 @@
         </DataTemplate>
         <local:RuntimeList x:Key="RuntimeList" />
         <local:HostAppList x:Key="HostAppList" />
+        
+        <Style x:Key="heading" TargetType="Label">
+            <Setter Property="FontSize" Value="24" />
+        </Style>
+
+        <Style x:Key="subHeading" TargetType="Label">
+            <Setter Property="FontSize" Value="16" />
+        </Style>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -91,6 +101,29 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="About"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+                    <Label Style="{StaticResource heading}" Content="About" /><LineBreak/>
+                    <Image Source="logo.ico" Height="128" Width="128"/>
+                    <TextBlock>
+                    <TextBlock>This is WebView2 Utilities. It helps with developing and debugging Microsoft Edge WebView2 usage.</TextBlock><LineBreak/>
+                    <Hyperlink NavigateUri="https://github.com/david-risney/webview2-utils" RequestNavigate="Hyperlink_RequestNavigate">
+                        WebView2 Tools GitHub
+                    </Hyperlink><LineBreak/>
+                    <Hyperlink NavigateUri="https://docs.microsoft.com/en-us/microsoft-edge/webview2/" RequestNavigate="Hyperlink_RequestNavigate">
+                        WebView2 Documentation
+                    </Hyperlink><LineBreak/>
+                    <Hyperlink NavigateUri="https://thenounproject.com/search/?q=wrench&amp;i=3775455" RequestNavigate="Hyperlink_RequestNavigate">
+                        Wrench by Gicon studio from the Noun Project
+                    </Hyperlink><LineBreak/>
+                    </TextBlock>
+                </TextBlock>
             </TabItem>
         </TabControl>
     </Grid>
