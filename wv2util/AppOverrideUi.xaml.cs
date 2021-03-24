@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,44 @@ using Clipboard = System.Windows.Clipboard;
 
 namespace wv2util
 {
+    public class ValidListBoxSelection : INotifyPropertyChanged
+    {
+        public System.Windows.Controls.ListBox ListBox
+        {
+            get { return m_ListBox; }
+
+            set
+            {
+                if (m_ListBox != value)
+                {
+                    if (m_ListBox != null)
+                    {
+                        m_ListBox.SelectionChanged -= OnSelectionChanged;
+                    }
+                    if (value != null)
+                    {
+                        m_ListBox = value;
+                        m_ListBox.SelectionChanged += OnSelectionChanged;
+                        OnSelectionChanged(null, null);
+                    }
+                }
+            }
+        }
+
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInvalidSelection"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidSelection"));
+        }
+
+        private System.Windows.Controls.ListBox m_ListBox = null;
+
+        public bool IsInvalidSelection { get { return !IsValidSelection; } }
+        public bool IsValidSelection { get { return ListBox != null && ListBox.SelectedIndex != -1; } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
@@ -27,6 +66,7 @@ namespace wv2util
         public AppOverrideUi()
         {
             InitializeComponent();
+            ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)

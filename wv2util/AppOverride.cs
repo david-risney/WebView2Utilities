@@ -247,15 +247,15 @@ namespace wv2util
         {
             if (!IgnoreUpdatesToRegistry)
             {
-                if (entry.BrowserArguments != null)
-                {
-                    OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(entry.HostApp, entry.BrowserArguments, RegistryValueKind.String);
-                }
-                else
-                {
-                    DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true), entry.HostApp);
-                }
-                if (entry.RuntimePath != null)
+                // Use empty string for browser arguments if its null. But always write it to ensure we have something in the registry
+                // recording the entry. An empty string browser arguments is fine because its merged with normal command line arguments
+                // and won't change anything, unlike the paths.
+                OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(
+                    entry.HostApp, 
+                    entry.BrowserArguments != null ? entry.BrowserArguments : "", 
+                    RegistryValueKind.String);
+
+                if (entry.RuntimePath != null && entry.RuntimePath != "")
                 {
                     OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true)?.SetValue(entry.HostApp, entry.RuntimePath, RegistryValueKind.String);
                 }
@@ -271,7 +271,7 @@ namespace wv2util
                 {
                     DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
                 }
-                if (entry.UserDataPath != null)
+                if (entry.UserDataPath != null && entry.UserDataPath != "")
                 {
                     OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true)?.SetValue(entry.HostApp, entry.UserDataPath, RegistryValueKind.String);
                 }
@@ -330,7 +330,7 @@ namespace wv2util
             {
                 if (m_HostApp != value)
                 {
-                    m_HostApp = value;
+                    m_HostApp = NullToEmpty(value);
                     OnPropertyChanged("HostApp");
                 }
             }
@@ -344,7 +344,7 @@ namespace wv2util
             {
                 if (m_RuntimePath != value)
                 {
-                    m_RuntimePath = value;
+                    m_RuntimePath = NullToEmpty(value);
                     OnPropertyChanged("RuntimePath");
                 }
             }
@@ -358,7 +358,7 @@ namespace wv2util
             {
                 if (m_UserDataPath != value)
                 {
-                    m_UserDataPath = value;
+                    m_UserDataPath = NullToEmpty(value);
                     OnPropertyChanged("UserDataPath");
                 }
             }
@@ -372,11 +372,13 @@ namespace wv2util
             {
                 if (m_BrowserArguments != value)
                 {
-                    m_BrowserArguments = value;
+                    m_BrowserArguments = NullToEmpty(value);
                     OnPropertyChanged("BrowserArguments");
                 }
             }
         }
         private string m_BrowserArguments = "";
+
+        private string NullToEmpty(string inp) { return inp == null ? "" : inp; }
     }
 }
