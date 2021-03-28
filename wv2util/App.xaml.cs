@@ -19,6 +19,8 @@ namespace wv2util
     {
         public App()
         {
+            // ClickOnce doesn't support marking the app as requiring adminstrator in the manifest.
+            // So we check at runtime and rerun ourselves as admin.
             if (!IsRunAsAdministrator())
             {
                 var processInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().CodeBase);

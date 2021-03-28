@@ -25,10 +25,10 @@ namespace wv2util
                 {
                     return FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
                 }
-                catch (System.IO.FileNotFoundException e)
+                catch (System.IO.FileNotFoundException)
                 {
                     // Somehow this is possible.
-                    return "FileNotFound";
+                    return "File not found";
                 }
             }
         }

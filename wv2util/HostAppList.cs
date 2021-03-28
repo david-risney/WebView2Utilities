@@ -73,12 +73,12 @@ namespace wv2util
                     string commandLinePartTrimmed = commandLinePart.Trim().Replace("\\\"", "\"").Trim('"');
                     if (commandLinePartTrimmed.StartsWith("--type"))
                     {
-                        processType = commandLinePartTrimmed.Split('=')[1];
+                        processType = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' '});
                     }
 
                     if (commandLinePartTrimmed.StartsWith("--user-data-dir"))
                     {
-                        userDataPath = commandLinePartTrimmed.Split('=')[1];
+                        userDataPath = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' ' });
                     }
                 }
 
