@@ -5,7 +5,7 @@ WebView2 Utilities help you develop and debug Microsoft Edge WebView2 apps.
 
 * Install via the [ClickOnce install page](https://david-risney.github.io/webview2-utils/install/wv2util.application).
 * Or copy the binaries off the [releases page](https://github.com/david-risney/webview2-utils/releases/) to somewhere on your machine.
-* Or build the code yourself.
+* Or build [the code](https://github.com/david-risney/webview2-utils) yourself.
 
 ## Override tab
 ![Screenshot of WebView2 Utilities](screenshot.png)
