@@ -73,7 +73,7 @@
                         <Button x:Name="RuntimesReload" Content="&#x1F504;" Click="RuntimesReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged">
+                <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" MouseRightButtonUp="RuntimeListMouseRightButtonUp">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Path" DisplayMemberBinding="{Binding RuntimeLocation}"/>
