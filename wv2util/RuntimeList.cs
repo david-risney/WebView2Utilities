@@ -97,23 +97,34 @@ namespace wv2util
 
             foreach (string rootPath in rootPaths)
             {
-                var potentialParents = Directory.GetDirectories(rootPath).Where(path => path.Contains("Edge"));
-
-                foreach (string potentialParent in potentialParents)
+                IEnumerable<string> potentialParents = null;
+                try
                 {
-                    string[] foundExes = null;
-                    try
-                    {
-                        foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
-                    }
-                    catch (UnauthorizedAccessException e)
-                    {
-                        Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
-                    }
+                    potentialParents = Directory.GetDirectories(rootPath).Where(path => path.Contains("Edge"));
+                }
+                catch (System.IO.DirectoryNotFoundException e)
+                {
+                    Debug.WriteLine("Ignoring DirectoryNotFoundException exception while searching for WebView2 runtimes: " + e.Message);
+                }
 
-                    foreach (string path in foundExes)
+                if (potentialParents != null)
+                {
+                    foreach (string potentialParent in potentialParents)
                     {
-                        yield return new RuntimeEntry(path);
+                        string[] foundExes = null;
+                        try
+                        {
+                            foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
+                        }
+                        catch (UnauthorizedAccessException e)
+                        {
+                            Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
+                        }
+
+                        foreach (string path in foundExes)
+                        {
+                            yield return new RuntimeEntry(path);
+                        }
                     }
                 }
             }
