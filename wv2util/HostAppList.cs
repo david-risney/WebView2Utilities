@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
@@ -41,23 +43,57 @@ namespace wv2util
     {
         public HostAppList()
         {
-            // FromMachine();
+            FromMachineAsync();
         }
 
-        public void FromMachine()
+        // This is clearly not thread safe. It assumes FromDiskAsync will only
+        // be called from the same thread.
+        public async Task FromMachineAsync()
+        {
+            if (m_fromMachineInProgress != null)
+            {
+                await m_fromMachineInProgress;
+            }
+            else
+            {
+                m_fromMachineInProgress = FromMachineInnerAsync();
+                await m_fromMachineInProgress;
+                m_fromMachineInProgress = null;
+            }
+        }
+        protected Task m_fromMachineInProgress = null;
+        protected async Task FromMachineInnerAsync()
         {
 
-            IEnumerable<HostAppEntry> newEntries = GetHostAppEntriesFromMachine().ToList<HostAppEntry>();
+            IEnumerable<HostAppEntry> newEntries = null;
+
+            await Task.Factory.StartNew(() =>
+            {
+                ProcessSnapshotHelper.ReloadSnapshot();
+                newEntries = GetHostAppEntriesFromMachine().ToList<HostAppEntry>();
+            });
+
+            // Only update the entries on the caller thread to ensure the
+            // caller isn't trying to enumerate the entries while
+            // we're updating them.
+            SetEntries(newEntries);
+        }
+
+        private void SetEntries(IEnumerable<HostAppEntry> newEntries)
+        {
             // Use ToList to get a fixed collection that won't get angry that we're calling
             // Add and Remove on it while enumerating.
             foreach (var entry in this.Except(newEntries).ToList<HostAppEntry>())
             {
-                this.Remove(entry);
+                this.Items.Remove(entry);
             }
             foreach (var entry in newEntries.Except(this).ToList<HostAppEntry>())
             {
-                this.Add(entry);
+                this.Items.Add(entry);
             }
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
@@ -149,33 +185,58 @@ namespace wv2util
         }
     }
 
-    public static class ProcessExtensions2
+    public static class ProcessSnapshotHelper
     {
+        private static ProcessSnapshot s_snapShot = new ProcessSnapshot();
+        public static void ReloadSnapshot()
+        {
+            s_snapShot.Reload();
+        }
+
+        public static Process ParentProcess(this Process process)
+        {
+            return s_snapShot.GetParentProcess(process);
+        }
+    }
+
+    public class ProcessSnapshot
+    {
+        private static readonly uint TH32CS_SNAPPROCESS = 2;
+        private IntPtr m_hSnapshot = IntPtr.Zero;
+        public void Reload()
+        {
+            if (m_hSnapshot != IntPtr.Zero)
+            {
+                CloseHandle(m_hSnapshot);
+            }
+            m_hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        }
+        private void EnsureSnapshot()
+        {
+            if (m_hSnapshot == IntPtr.Zero)
+            {
+                Reload();
+            }
+        }
+
         /// <summary>
         /// Returns the Parent Process of a Process
         /// </summary>
         /// <param name="process">The Windows Process.</param>
         /// <returns>The Parent Process of the Process.</returns>
-        public static Process ParentProcess(this Process process)
+        public Process GetParentProcess(Process childProcess)
         {
             int parentPid = 0;
-            int processPid = process.Id;
-            uint TH32CS_SNAPPROCESS = 2;
+            int processPid = childProcess.Id;
 
-            // Take snapshot of processes
-            IntPtr hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-
-            if (hSnapshot == IntPtr.Zero)
-            {
-                return null;
-            }
+            EnsureSnapshot();
 
             PROCESSENTRY32 procInfo = new PROCESSENTRY32();
 
             procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
 
             // Read first
-            if (Process32First(hSnapshot, ref procInfo) == false)
+            if (Process32First(m_hSnapshot, ref procInfo) == false)
             {
                 return null;
             }
@@ -189,7 +250,7 @@ namespace wv2util
                     parentPid = (int)procInfo.th32ParentProcessID;
                 }
             }
-            while (parentPid == 0 && Process32Next(hSnapshot, ref procInfo)); // Read next
+            while (parentPid == 0 && Process32Next(m_hSnapshot, ref procInfo)); // Read next
 
             if (parentPid > 0)
             {
@@ -240,6 +301,9 @@ namespace wv2util
         /// Returns FALSE otherwise.</returns>
         [DllImport("kernel32.dll")]
         private static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool CloseHandle(IntPtr hSnapshot);
 
         /// <summary>
         /// Describes an entry from a list of the processes residing 

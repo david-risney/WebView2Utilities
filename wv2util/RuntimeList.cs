@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -69,22 +71,56 @@ namespace wv2util
     {
         public RuntimeList()
         {
-            // FromDisk();
+            FromDiskAsync();
         }
 
-        public void FromDisk()
+        private Task m_inProgressFromDisk = null;
+
+        // This is clearly not thread safe. It assumes FromDiskAsync will only
+        // be called from the same thread.
+        public async Task FromDiskAsync()
         {
-            IEnumerable<RuntimeEntry> newEntries = GetInstalledRuntimes();
+            if (m_inProgressFromDisk != null)
+            {
+                await m_inProgressFromDisk;
+            }
+            else
+            {
+                m_inProgressFromDisk = FromDiskInnerAsync();
+                await m_inProgressFromDisk;
+                m_inProgressFromDisk = null;
+            }
+        }
+
+        private async Task FromDiskInnerAsync()
+        {
+            IEnumerable<RuntimeEntry> newEntries = null;
+            await Task.Factory.StartNew(() =>
+            {
+                newEntries = RuntimeList.GetInstalledRuntimes();
+            });
+            // Only update the entries on the caller thread to ensure the
+            // caller isn't trying to enumerate the entries while
+            // we're updating them.
+            this.SetEntries(newEntries);
+        }
+
+        protected void SetEntries(IEnumerable<RuntimeEntry> newEntries)
+        { 
             // Use ToList to get a fixed collection that won't get angry that we're calling
             // Add and Remove on it while enumerating.
             foreach (var entry in this.Except(newEntries).ToList<RuntimeEntry>())
             {
-                this.Remove(entry);
+                this.Items.Remove(entry);
             }
             foreach (var entry in newEntries.Except(this).ToList<RuntimeEntry>())
             {
-                this.Add(entry);
+                this.Items.Add(entry);
             }
+
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
         private static IEnumerable<RuntimeEntry> GetInstalledRuntimes()
         {

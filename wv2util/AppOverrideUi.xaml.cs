@@ -160,14 +160,27 @@ namespace wv2util
             Process.Start("https://peter.sh/experiments/chromium-command-line-switches/");
         }
 
-        private void RuntimesReload_Click(object sender, RoutedEventArgs e)
+        private async void RuntimesReload_Click(object sender, RoutedEventArgs e)
         {
-            RuntimeListData.FromDisk();
+            var originalContent = RuntimesReload.Content;
+            RuntimesReload.Content = "⌚";
+            RuntimesReload.IsEnabled = false;
+
+            await RuntimeListData.FromDiskAsync();
+            
+            RuntimesReload.Content = originalContent;
+            RuntimesReload.IsEnabled = true;
         }
 
-        private void HostAppsReload_Click(object sender, RoutedEventArgs e)
+        private async void HostAppsReload_Click(object sender, RoutedEventArgs e)
         {
-            HostAppsListData.FromMachine();
+            var originalContent = HostAppsReload.Content;
+            HostAppsReload.Content = "⌚";
+            HostAppsReload.IsEnabled = false;
+
+            await HostAppsListData.FromMachineAsync();
+            HostAppsReload.Content = originalContent;
+            HostAppsReload.IsEnabled = true;
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
