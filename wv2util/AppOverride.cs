@@ -173,7 +173,14 @@ namespace wv2util
             foreach (string valueName in valueNames)
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
-                entry.ReverseSearchOrder = (1 == (int)regKey.GetValue(valueName));
+                try
+                {
+                    entry.ReverseSearchOrder = (1 == (int)regKey.GetValue(valueName));
+                }
+                catch (InvalidCastException e)
+                {
+                    Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
+                }
                 entriesToRemove.Remove(entry);
             }
 

@@ -75,7 +75,7 @@ namespace wv2util
 
         public static int CompareChannelStrings(string left, string right)
         {
-            string[] channels = { "Canary", "Dev", "Beta", "Stable" };
+            string[] channels = { "Canary", "Dev", "Beta", "Stable", "Stable WebView2 Runtime" };
             int leftPos = Array.IndexOf(channels, left);
             int rightPos = Array.IndexOf(channels, right);
             return leftPos - rightPos;

@@ -30,6 +30,8 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <TabControl x:Name="TabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
+            <!-- App Override List -->
             <TabItem DataContext="{Binding Source={StaticResource AppOverrideList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -48,10 +50,11 @@
                     <Button x:Name="RemoveButton" IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="257,0,0,5" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
 
                     <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
-                    <TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,17,53,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center" Height="26"/>
+                    <ComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,53,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26" />
+                    <!--<TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,17,53,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center" Height="26"/>-->
 
                     <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
-                    <TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." x:Name="AppOverrideRuntimePathTextBox" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,48,53,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <ComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,48,53,0" VerticalContentAlignment="Center"/>
                     <Button IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,52,10,0" Click="AppOverrideRuntimePathButton_Click"/>
 
                     <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,79,0,0" Width="126"/>
@@ -65,6 +68,8 @@
                     <CheckBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideReverseRuntimeSearchOrderCheckBox" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse runtime search order" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,141,0,0" Height="16" Width="222"/>
                 </Grid>
             </TabItem>
+
+            <!-- Runtime list -->
             <TabItem DataContext="{Binding Source={StaticResource RuntimeList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
@@ -88,6 +93,8 @@
                     </ListView.View>
                 </ListView>
             </TabItem>
+
+            <!-- Host App list -->
             <TabItem DataContext="{Binding Source={StaticResource HostAppList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">

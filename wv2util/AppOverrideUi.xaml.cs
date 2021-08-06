@@ -141,7 +141,8 @@ namespace wv2util
             folderBrowserDialog.Description = "Select a WebView2 Runtime folder";
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                this.AppOverrideRuntimePathTextBox.Text = folderBrowserDialog.SelectedPath;
+                //this.AppOverrideRuntimePathTextBox.Text = folderBrowserDialog.SelectedPath;
+                this.AppOverrideRuntimePathComboBox.Text = folderBrowserDialog.SelectedPath;
             }
         }
 
