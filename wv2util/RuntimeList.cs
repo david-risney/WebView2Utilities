@@ -56,6 +56,10 @@ namespace wv2util
                 {
                     return "Stable";
                 }
+                else if (ExePath.ToLower().Contains("\\edgewebview\\"))
+                {
+                    return "Stable WebView2 Runtime";
+                }
                 else
                 {
                     return "Unknown";
@@ -170,7 +174,10 @@ namespace wv2util
 
                         foreach (string path in foundExes)
                         {
-                            yield return new RuntimeEntry(path);
+                            if (!path.ToLower().Contains(@"edge\application") && !path.ToLower().Contains("edgecore"))
+                            {
+                                yield return new RuntimeEntry(path);
+                            }
                         }
                     }
                 }
