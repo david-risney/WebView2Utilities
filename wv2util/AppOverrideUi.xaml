@@ -75,9 +75,15 @@
                 <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" MouseRightButtonUp="RuntimeListMouseRightButtonUp">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Path" DisplayMemberBinding="{Binding RuntimeLocation}"/>
-                            <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}"/>
-                            <GridViewColumn Header="Channel" DisplayMemberBinding="{Binding Channel}"/>
+                            <GridViewColumn DisplayMemberBinding="{Binding RuntimeLocation}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Path_Click">Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Version}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Version_Click">Version</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Channel}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Channel_Click">Channel</GridViewColumnHeader>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
@@ -92,12 +98,24 @@
                 <ListView x:Name="HostAppListView" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="HostAppListViewSelectionChanged">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Executable" DisplayMemberBinding="{Binding ExecutableName}"/>
-                            <GridViewColumn Header="Runtime Version" DisplayMemberBinding="{Binding Runtime.Version}"/>
-                            <GridViewColumn Header="Runtime Channel" DisplayMemberBinding="{Binding Runtime.Channel}"/>
-                            <GridViewColumn Header="Runtime Path" DisplayMemberBinding="{Binding Runtime.RuntimeLocation}"/>
-                            <GridViewColumn Header="User Data Path" DisplayMemberBinding="{Binding UserDataPath}"/>
-                            <GridViewColumn Header="Executable Path" DisplayMemberBinding="{Binding ExecutablePath}"/>
+                            <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Channel}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeChannel_Click">Runtime Channel</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.RuntimeLocation}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeLocation_Click">Runtime Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding UserDataPath}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_UserDataPath_Click">User Data Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding ExecutablePath}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_ExecutablePath_Click">Executable Path</GridViewColumnHeader>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -8,9 +9,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace wv2util
-{    
+{
     public class RuntimeEntry : IEquatable<RuntimeEntry>
     {
         public RuntimeEntry(string location)
@@ -35,7 +37,7 @@ namespace wv2util
             }
         }
         public string Channel
-        { 
+        {
             get
             {
                 if (ExePath.ToLower().Contains("\\edge sxs\\"))
@@ -106,7 +108,7 @@ namespace wv2util
         }
 
         protected void SetEntries(IEnumerable<RuntimeEntry> newEntries)
-        { 
+        {
             // Use ToList to get a fixed collection that won't get angry that we're calling
             // Add and Remove on it while enumerating.
             foreach (var entry in this.Except(newEntries).ToList<RuntimeEntry>())
@@ -122,6 +124,15 @@ namespace wv2util
             this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
+     
+        public void Sort<T>(Comparison<T> comparison)
+        {
+            ArrayList.Adapter((IList)this.Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
+
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+        
         private static IEnumerable<RuntimeEntry> GetInstalledRuntimes()
         {
             string[] rootPaths =

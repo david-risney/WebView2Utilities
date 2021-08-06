@@ -209,5 +209,71 @@ namespace wv2util
             }
 
         }
+
+        private SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
+        private void GridViewColumnHeader_Runtime_Path_Click(object sender, RoutedEventArgs e)
+        {
+            m_runtimeSortColumn.SelectColumn(0);
+
+            RuntimeListData.Sort<RuntimeEntry>((left, right) =>
+                m_runtimeSortColumn.SortDirection * left.RuntimeLocation.CompareTo(right.RuntimeLocation));
+        }
+
+        private void GridViewColumnHeader_Runtime_Version_Click(object sender, RoutedEventArgs e)
+        {
+            m_runtimeSortColumn.SelectColumn(1);
+            RuntimeListData.Sort<RuntimeEntry>((left, right) =>
+                m_runtimeSortColumn.SortDirection * wv2util.SortUtil.CompareVersionStrings(left.Version, right.Version));
+        }
+
+        private void GridViewColumnHeader_Runtime_Channel_Click(object sender, RoutedEventArgs e)
+        {
+            m_runtimeSortColumn.SelectColumn(1);
+            RuntimeListData.Sort<RuntimeEntry>((left, right) =>
+                m_runtimeSortColumn.SortDirection * SortUtil.CompareChannelStrings(left.Channel, right.Channel));
+        }
+
+        private SortUtil.SortColumnContext m_hostAppSortColumn = new SortUtil.SortColumnContext();
+        private void GridViewColumnHeader_HostApps_Executable_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(0);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * left.ExecutableName.CompareTo(right.ExecutableName));
+        }
+
+        private void GridViewColumnHeader_HostApps_RuntimeVersion_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(1);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * SortUtil.CompareVersionStrings(left.Runtime.Version, right.Runtime.Version));
+        }
+
+        private void GridViewColumnHeader_HostApps_RuntimeChannel_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(2);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * SortUtil.CompareChannelStrings(left.Runtime.Channel, right.Runtime.Channel));
+        }
+
+        private void GridViewColumnHeader_HostApps_RuntimeLocation_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(3);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * left.Runtime.RuntimeLocation.CompareTo(right.Runtime.RuntimeLocation));
+        }
+
+        private void GridViewColumnHeader_HostApps_UserDataPath_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(4);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * left.UserDataPath.CompareTo(right.UserDataPath));
+        }
+
+        private void GridViewColumnHeader_HostApps_ExecutablePath_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(5);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * left.ExecutablePath.CompareTo(right.ExecutablePath));
+        }
     }
 }

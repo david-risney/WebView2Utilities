@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -92,6 +93,14 @@ namespace wv2util
                 this.Items.Add(entry);
             }
             this.OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        public void Sort<T>(Comparison<T> comparison)
+        {
+            ArrayList.Adapter((IList)this.Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
+
             this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
