@@ -108,6 +108,9 @@
                             <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
                                 <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
                             </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding PID}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
+                            </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
                                 <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
                             </GridViewColumn>

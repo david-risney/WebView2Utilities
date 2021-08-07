@@ -242,6 +242,13 @@ namespace wv2util
                 m_hostAppSortColumn.SortDirection * left.ExecutableName.CompareTo(right.ExecutableName));
         }
 
+        private void GridViewColumnHeader_HostApps_PID_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(6);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * (left.PID - right.PID));
+        }
+
         private void GridViewColumnHeader_HostApps_RuntimeVersion_Click(object sender, RoutedEventArgs e)
         {
             m_hostAppSortColumn.SelectColumn(1);

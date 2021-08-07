@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
@@ -15,11 +16,12 @@ namespace wv2util
 {
     public class HostAppEntry : IEquatable<HostAppEntry>
     {
-        public HostAppEntry(string exePath, string runtimePath, string userDataPath)
+        public HostAppEntry(string exePath, int pid, string runtimePath, string userDataPath)
         {
-            ExecutablePath = exePath;
+            ExecutablePath = exePath == null ? "Unknown" : exePath;
             Runtime = new RuntimeEntry(runtimePath);
-            UserDataPath = userDataPath;
+            UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
+            this.PID = pid;
         }
         public string ExecutableName
         { 
@@ -28,9 +30,10 @@ namespace wv2util
                 return ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
             }
         }
+        public int PID { get; private set; } = 0;
         public string ExecutablePath { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
-        public string UserDataPath { get; private set; }
+        public string UserDataPath { get; set; }
 
         public bool Equals(HostAppEntry other)
         {
@@ -107,6 +110,67 @@ namespace wv2util
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
         {
+            var entriesByClientDllList = GetHostAppEntriesFromMachineByClientDll().ToList();
+            var entriesByClientDll = entriesByClientDllList.ToLookup(entry => entry.PID);
+            var entriesBySnapshot = GetHostAppEntriesFromMachineByProcessSnapshot().ToList().Where(entry => entry.PID != 0);
+
+            foreach (var entry in entriesBySnapshot)
+            {
+                if (entry.UserDataPath != "Unknown")
+                {
+                    var entriesMatchingPID = entriesByClientDll[entry.PID];
+                    foreach (var entryMatch in entriesMatchingPID)
+                    {
+                        entryMatch.UserDataPath = entry.UserDataPath;
+                    }
+                }
+            }
+
+            return entriesByClientDllList;
+        }
+
+        // Determining host apps by client DLL has some drawbacks:
+        //  * The host app may not actively be using WebView2 may just have the DLL loaded from a previous use
+        //  * We don't know associated browser processes
+        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByClientDll()
+        {
+            var processes = Process.GetProcesses();
+            foreach (var process in processes)
+            {
+                ProcessModuleCollection modules = null;
+                try
+                {
+                    modules = process.Modules;
+                }
+                catch (System.ComponentModel.Win32Exception e)
+                {
+                }
+                catch (System.InvalidOperationException e)
+                {
+                }
+
+                if (modules != null)
+                {
+                    foreach (var moduleAsObject in modules)
+                    {
+                        var processModule = moduleAsObject as ProcessModule;
+                        if (processModule.ModuleName.ToLower() == "embeddedbrowserwebview.dll")
+                        {
+                            HostAppEntry entry = new HostAppEntry(
+                                process.GetMainModuleFileName(),
+                                process.Id,
+                                Path.Combine(processModule.FileName, "..\\..\\..\\msedgewebview2.exe"),
+                                null);
+                            yield return entry;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByProcessSnapshot()
+        {
             var processes = Process.GetProcessesByName("msedgewebview2");
             foreach (var process in processes)
             {
@@ -129,9 +193,11 @@ namespace wv2util
 
                 if (processType == null)
                 {
+                    int? parentPID = process?.ParentProcess()?.Id;
                     HostAppEntry entry = new HostAppEntry(
-                        process.ParentProcess().GetMainModuleFileName(),
-                        process.GetMainModuleFileName(),
+                        process?.ParentProcess()?.GetMainModuleFileName(),
+                        parentPID.GetValueOrDefault(0),
+                        process?.GetMainModuleFileName(),
                         userDataPath);
                     yield return entry;
                 }
@@ -263,7 +329,14 @@ namespace wv2util
 
             if (parentPid > 0)
             {
-                return Process.GetProcessById(parentPid);
+                try
+                {
+                    return Process.GetProcessById(parentPid);
+                }
+                catch (ArgumentException e)
+                {
+                    return null;
+                }
             }
             else
             {
