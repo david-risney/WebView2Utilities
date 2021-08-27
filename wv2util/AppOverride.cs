@@ -206,6 +206,23 @@ namespace wv2util
             {
                 collection.Remove(entry);
             }
+
+            // If the wildcard entry exists then move it to the start
+            for (int idx = 1; idx < collection.Count; ++idx)
+            {
+                if (collection[idx].HostApp == "*")
+                {
+                    collection.Move(idx, 0);
+                    break;
+                }
+            }
+            // If we didn't have a wildcard entry, add it at the start
+            if (collection.Count == 0 || collection[0].HostApp != "*")
+            {
+                AppOverrideEntry entry = new AppOverrideEntry();
+                entry.HostApp = "*";
+                collection.Insert(0, entry);
+            }
         }
 
         public static ObservableCollection<AppOverrideEntry> CreateCollectionFromRegistry()
@@ -313,7 +330,7 @@ namespace wv2util
         }
         public override string ToString()
         {
-            return HostApp;
+            return DisplayLabel;
         }
 
         public bool ReverseSearchOrder
@@ -329,6 +346,14 @@ namespace wv2util
             }
         }
         private bool m_ReverseSearchOrder = false;
+
+        public string DisplayLabel
+        {
+            get
+            {
+                return HostApp == "*" ? "* (All other apps)" : HostApp;
+            }
+        }
 
         public string HostApp
         {

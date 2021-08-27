@@ -11,7 +11,7 @@
     <Window.Resources>
         <local:AppOverrideList x:Key="AppOverrideList" />
         <DataTemplate x:Key="AppOverrideListTemplate">
-            <TextBlock Text="{Binding Path=HostApp}" />
+            <TextBlock Text="{Binding Path=DisplayLabel}" />
         </DataTemplate>
         <local:RuntimeList x:Key="RuntimeList" />
         <local:HostAppList x:Key="HostAppList" />
@@ -51,7 +51,6 @@
 
                     <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
                     <ComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,53,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26" />
-                    <!--<TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." x:Name="AppOverrideHostAppTextBox" Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,17,53,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center" Height="26"/>-->
 
                     <Label Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,48,0,0" Width="126"/>
                     <ComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,48,53,0" VerticalContentAlignment="Center"/>
