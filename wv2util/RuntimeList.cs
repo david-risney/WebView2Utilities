@@ -103,7 +103,7 @@ namespace wv2util
             IEnumerable<RuntimeEntry> newEntries = null;
             await Task.Factory.StartNew(() =>
             {
-                newEntries = RuntimeList.GetInstalledRuntimes();
+                newEntries = RuntimeList.GetRuntimes();
             });
             // Only update the entries on the caller thread to ensure the
             // caller isn't trying to enumerate the entries while
@@ -136,52 +136,137 @@ namespace wv2util
             this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
-        
+
+        private static List<RuntimeEntry> GetLocalRepoRuntimesInRoot(DirectoryInfo root)
+        {
+            List<RuntimeEntry> runtimes = new List<RuntimeEntry>();
+            try
+            {
+                foreach (var subDirectory in root.GetDirectories())
+                {
+                    try
+                    {
+                        DirectoryInfo srcDirectory = subDirectory.GetDirectories("src").FirstOrDefault();
+                        if (srcDirectory != null)
+                        {
+                            try
+                            {
+                                DirectoryInfo outDirectory = srcDirectory.GetDirectories("out").FirstOrDefault();
+                                if (outDirectory != null)
+                                {
+                                    foreach (var buildDirectory in outDirectory.GetDirectories("release_*"))
+                                    {
+                                        try
+                                        {
+                                            FileInfo exeFile = buildDirectory.GetFiles("msedgewebview2.exe").FirstOrDefault();
+                                            if (exeFile != null)
+                                            {
+                                                runtimes.Add(new RuntimeEntry(exeFile.FullName));
+                                            }
+                                        }
+                                        catch (Exception) { }
+                                    }
+                                }
+                            }
+                            catch (Exception) { }
+                        }
+                    }
+                    catch (Exception) { }
+                }
+            }
+            catch (Exception) { }
+            return runtimes;
+        }
+
+        private static IEnumerable<RuntimeEntry> GetLocalRepoRuntimes()
+        {
+            IEnumerable<RuntimeEntry> runtimes = new List<RuntimeEntry>();
+            foreach (var driveInfo in DriveInfo.GetDrives().Where(
+                drive => drive.IsReady && // Try to skip CDs or other removable media that's not ready
+                drive.TotalSize > 1073741824)) // Skip disks too small to contain local repos
+            {
+                runtimes = runtimes.Concat(GetLocalRepoRuntimesInRoot(driveInfo.RootDirectory));
+                foreach (var rootFolder in driveInfo.RootDirectory.GetDirectories())
+                {
+                    try
+                    {
+                        runtimes = runtimes.Concat(GetLocalRepoRuntimesInRoot(rootFolder));
+                    }
+                    catch (Exception) { }
+                }
+            }
+            return runtimes;
+        }
+
+        private static IEnumerable<RuntimeEntry> GetDownloadFolderRuntimes()
+        {
+            DirectoryInfo downloadFolder = null;
+
+            try
+            {
+                downloadFolder = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)).GetDirectories("Downloads").FirstOrDefault();
+            }
+            catch (Exception) { }
+
+            if (downloadFolder != null)
+            {
+                foreach (var subFolder in downloadFolder.GetDirectories())
+                {
+                    FileInfo exeFile = subFolder.GetFiles("msedgewebview2.exe").FirstOrDefault();
+                    if (exeFile != null)
+                    {
+                        yield return new RuntimeEntry(exeFile.FullName);
+                    }
+                }
+            }
+        }
+
         private static IEnumerable<RuntimeEntry> GetInstalledRuntimes()
         {
-            string[] rootPaths =
-            {
+            List<string> potentialParents = new List<string>();
+            foreach (string rootPath in new string[] {
                 Environment.GetEnvironmentVariable("LOCALAPPDATA") + "\\Microsoft\\",
                 Environment.GetEnvironmentVariable("ProgramFiles(x86)") + "\\Microsoft\\",
                 Environment.GetEnvironmentVariable("ProgramFiles") + "\\Microsoft\\"
-            };
-
-            foreach (string rootPath in rootPaths)
+            })
             {
-                IEnumerable<string> potentialParents = null;
                 try
                 {
-                    potentialParents = Directory.GetDirectories(rootPath).Where(path => path.Contains("Edge"));
+                    potentialParents.AddRange(Directory.GetDirectories(rootPath).Where(path => path.Contains("Edge")));
                 }
                 catch (System.IO.DirectoryNotFoundException e)
                 {
                     Debug.WriteLine("Ignoring DirectoryNotFoundException exception while searching for WebView2 runtimes: " + e.Message);
                 }
+            }
 
-                if (potentialParents != null)
+            foreach (string potentialParent in potentialParents)
+            {
+                string[] foundExes = null;
+                try
                 {
-                    foreach (string potentialParent in potentialParents)
-                    {
-                        string[] foundExes = null;
-                        try
-                        {
-                            foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
-                        }
-                        catch (UnauthorizedAccessException e)
-                        {
-                            Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
-                        }
+                    foundExes = Directory.GetFiles(potentialParent, "msedgewebview2.exe", SearchOption.AllDirectories);
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    Debug.WriteLine("Ignoring unauthorized access exception while searching for WebView2 runtimes: " + e.Message);
+                }
 
-                        foreach (string path in foundExes)
-                        {
-                            if (!path.ToLower().Contains(@"edge\application") && !path.ToLower().Contains("edgecore"))
-                            {
-                                yield return new RuntimeEntry(path);
-                            }
-                        }
+                foreach (string path in foundExes)
+                {
+                    if (!path.ToLower().Contains(@"edge\application") && !path.ToLower().Contains("edgecore"))
+                    {
+                        yield return new RuntimeEntry(path);
                     }
                 }
             }
+        }
+
+        private static IEnumerable<RuntimeEntry> GetRuntimes()
+        {
+            return GetInstalledRuntimes().Concat(
+                GetLocalRepoRuntimes()).Concat(
+                GetDownloadFolderRuntimes());
         }
     }
 }
