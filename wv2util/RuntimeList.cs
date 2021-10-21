@@ -77,7 +77,7 @@ namespace wv2util
     {
         public RuntimeList()
         {
-            FromDiskAsync();
+            _ = FromDiskAsync();
         }
 
         private Task m_inProgressFromDisk = null;

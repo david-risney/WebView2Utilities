@@ -177,7 +177,7 @@ namespace wv2util
                 {
                     entry.ReverseSearchOrder = (1 == (int)regKey.GetValue(valueName));
                 }
-                catch (InvalidCastException e)
+                catch (InvalidCastException)
                 {
                     Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
                 }

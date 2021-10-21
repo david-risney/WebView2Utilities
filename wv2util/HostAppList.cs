@@ -47,7 +47,7 @@ namespace wv2util
     {
         public HostAppList()
         {
-            FromMachineAsync();
+            _ = FromMachineAsync();
         }
 
         // This is clearly not thread safe. It assumes FromDiskAsync will only
@@ -134,18 +134,24 @@ namespace wv2util
         //  * We don't know associated browser processes
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByClientDll()
         {
+            var currentSessionID = Process.GetCurrentProcess().SessionId;
             var processes = Process.GetProcesses();
             foreach (var process in processes)
             {
                 ProcessModuleCollection modules = null;
+
                 try
                 {
-                    modules = process.Modules;
+                    // Try to filter out things like lsass in session 0
+                    if (process.SessionId == currentSessionID)
+                    {
+                        modules = process.Modules;
+                    }
                 }
-                catch (System.ComponentModel.Win32Exception e)
+                catch (System.ComponentModel.Win32Exception)
                 {
                 }
-                catch (System.InvalidOperationException e)
+                catch (System.InvalidOperationException)
                 {
                 }
 
@@ -157,7 +163,7 @@ namespace wv2util
                         if (processModule.ModuleName.ToLower() == "embeddedbrowserwebview.dll")
                         {
                             HostAppEntry entry = new HostAppEntry(
-                                process.GetMainModuleFileName(),
+                                process.MainModule.FileName,
                                 process.Id,
                                 Path.Combine(processModule.FileName, "..\\..\\..\\msedgewebview2.exe"),
                                 null);
@@ -195,9 +201,9 @@ namespace wv2util
                 {
                     int? parentPID = process?.ParentProcess()?.Id;
                     HostAppEntry entry = new HostAppEntry(
-                        process?.ParentProcess()?.GetMainModuleFileName(),
+                        process?.ParentProcess()?.MainModule.FileName,
                         parentPID.GetValueOrDefault(0),
-                        process?.GetMainModuleFileName(),
+                        process?.MainModule.FileName,
                         userDataPath);
                     yield return entry;
                 }
@@ -207,36 +213,6 @@ namespace wv2util
 
     public static class ProcessExtensions
     {
-        private static string FindIndexedProcessName(int pid)
-        {
-            var processName = Process.GetProcessById(pid).ProcessName;
-            var processesByName = Process.GetProcessesByName(processName);
-            string processIndexdName = null;
-
-            for (var index = 0; index < processesByName.Length; index++)
-            {
-                processIndexdName = index == 0 ? processName : processName + "#" + index;
-                var processId = new PerformanceCounter("Process", "ID Process", processIndexdName);
-                if ((int)processId.NextValue() == pid)
-                {
-                    return processIndexdName;
-                }
-            }
-
-            return processIndexdName;
-        }
-
-        private static Process FindPidFromIndexedProcessName(string indexedProcessName)
-        {
-            var parentId = new PerformanceCounter("Process", "Creating Process ID", indexedProcessName);
-            return Process.GetProcessById((int)parentId.NextValue());
-        }
-
-        public static Process Parent(this Process process)
-        {
-            return FindPidFromIndexedProcessName(FindIndexedProcessName(process.Id));
-        }
-
         public static string GetCommandLine(this Process process)
         {
             using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id))
@@ -245,18 +221,6 @@ namespace wv2util
                 return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
             }
 
-        }
-
-        [DllImport("Kernel32.dll")]
-        private static extern bool QueryFullProcessImageName([In] IntPtr hProcess, [In] uint dwFlags, [Out] StringBuilder lpExeName, [In, Out] ref uint lpdwSize);
-
-        public static string GetMainModuleFileName(this Process process, int buffer = 1024)
-        {
-            var fileNameBuilder = new StringBuilder(buffer);
-            uint bufferLength = (uint)fileNameBuilder.Capacity + 1;
-            return QueryFullProcessImageName(process.Handle, 0, fileNameBuilder, ref bufferLength) ?
-                fileNameBuilder.ToString() :
-                null;
         }
     }
 
@@ -276,8 +240,9 @@ namespace wv2util
 
     public class ProcessSnapshot
     {
-        private static readonly uint TH32CS_SNAPPROCESS = 2;
+        private static readonly uint TH32CS_SNAPPROCESS = 0x2;
         private IntPtr m_hSnapshot = IntPtr.Zero;
+        private Dictionary<uint, uint> m_ChildPidToParentPid = new Dictionary<uint, uint>();
         public void Reload()
         {
             if (m_hSnapshot != IntPtr.Zero)
@@ -285,7 +250,29 @@ namespace wv2util
                 CloseHandle(m_hSnapshot);
             }
             m_hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            m_ChildPidToParentPid = CreateDictionaryCache();
+
         }
+
+        private Dictionary<uint, uint> CreateDictionaryCache()
+        {
+            Dictionary<uint, uint> childPidToParentPid = new Dictionary<uint, uint>();
+
+            PROCESSENTRY32 procInfo = new PROCESSENTRY32();
+            procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
+
+            if (Process32First(m_hSnapshot, ref procInfo))
+            {
+                do
+                {
+                    childPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
+                }
+                while (Process32Next(m_hSnapshot, ref procInfo)); // Read next
+            }
+
+            return childPidToParentPid;
+        }
+
         private void EnsureSnapshot()
         {
             if (m_hSnapshot == IntPtr.Zero)
@@ -301,39 +288,17 @@ namespace wv2util
         /// <returns>The Parent Process of the Process.</returns>
         public Process GetParentProcess(Process childProcess)
         {
-            int parentPid = 0;
-            int processPid = childProcess.Id;
+            uint parentPid = 0;
 
             EnsureSnapshot();
 
-            PROCESSENTRY32 procInfo = new PROCESSENTRY32();
-
-            procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
-
-            // Read first
-            if (Process32First(m_hSnapshot, ref procInfo) == false)
-            {
-                return null;
-            }
-
-            // Loop through the snapshot
-            do
-            {
-                // If it's me, then ask for my parent.
-                if (processPid == procInfo.th32ProcessID)
-                {
-                    parentPid = (int)procInfo.th32ParentProcessID;
-                }
-            }
-            while (parentPid == 0 && Process32Next(m_hSnapshot, ref procInfo)); // Read next
-
-            if (parentPid > 0)
+            if (m_ChildPidToParentPid.TryGetValue((uint)childProcess.Id, out parentPid))
             {
                 try
                 {
-                    return Process.GetProcessById(parentPid);
+                    return Process.GetProcessById((int)parentPid);
                 }
-                catch (ArgumentException e)
+                catch (ArgumentException)
                 {
                     return null;
                 }
