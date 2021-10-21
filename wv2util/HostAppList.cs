@@ -134,44 +134,18 @@ namespace wv2util
         //  * We don't know associated browser processes
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByClientDll()
         {
-            var currentSessionID = Process.GetCurrentProcess().SessionId;
-            var processes = Process.GetProcesses();
-            foreach (var process in processes)
+            foreach (var moduleEntry in ProcessSnapshotHelper.PidToClientDllPath)
             {
-                ProcessModuleCollection modules = null;
+                uint pid = moduleEntry.Key;
+                string clientDll = moduleEntry.Value;
+                Process process = Process.GetProcessById((int)pid);
+                HostAppEntry entry = new HostAppEntry(
+                    process.MainModule.FileName,
+                    process.Id,
+                    Path.Combine(clientDll, "..\\..\\..\\msedgewebview2.exe"),
+                    null);
 
-                try
-                {
-                    // Try to filter out things like lsass in session 0
-                    if (process.SessionId == currentSessionID)
-                    {
-                        modules = process.Modules;
-                    }
-                }
-                catch (System.ComponentModel.Win32Exception)
-                {
-                }
-                catch (System.InvalidOperationException)
-                {
-                }
-
-                if (modules != null)
-                {
-                    foreach (var moduleAsObject in modules)
-                    {
-                        var processModule = moduleAsObject as ProcessModule;
-                        if (processModule.ModuleName.ToLower() == "embeddedbrowserwebview.dll")
-                        {
-                            HostAppEntry entry = new HostAppEntry(
-                                process.MainModule.FileName,
-                                process.Id,
-                                Path.Combine(processModule.FileName, "..\\..\\..\\msedgewebview2.exe"),
-                                null);
-                            yield return entry;
-                            break;
-                        }
-                    }
-                }
+                yield return entry;
             }
         }
 
@@ -236,11 +210,14 @@ namespace wv2util
         {
             return s_snapShot.GetParentProcess(process);
         }
+        public static IReadOnlyDictionary<uint, string> PidToClientDllPath { get => s_snapShot.PidToClientDllPath; }
     }
-
+     
     public class ProcessSnapshot
     {
         private static readonly uint TH32CS_SNAPPROCESS = 0x2;
+        private static readonly uint TH32CS_SNAPMODULE = 0x8;
+        private static readonly uint TH32CS_SNAPMODULE32 = 0x10;
         private IntPtr m_hSnapshot = IntPtr.Zero;
         private Dictionary<uint, uint> m_ChildPidToParentPid = new Dictionary<uint, uint>();
         public void Reload()
@@ -249,14 +226,18 @@ namespace wv2util
             {
                 CloseHandle(m_hSnapshot);
             }
-            m_hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-            m_ChildPidToParentPid = CreateDictionaryCache();
+            CreateDictionaryCache();
 
+            m_hSnapshot = CreateToolhelp32Snapshot(
+                TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, 0);
         }
 
-        private Dictionary<uint, uint> CreateDictionaryCache()
+        public Dictionary<uint, string> PidToClientDllPath { get; private set; }
+
+        private void CreateDictionaryCache()
         {
-            Dictionary<uint, uint> childPidToParentPid = new Dictionary<uint, uint>();
+            m_ChildPidToParentPid = new Dictionary<uint, uint>();
+            PidToClientDllPath = new Dictionary<uint, string>();
 
             PROCESSENTRY32 procInfo = new PROCESSENTRY32();
             procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
@@ -265,12 +246,24 @@ namespace wv2util
             {
                 do
                 {
-                    childPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
+                    m_ChildPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
                 }
                 while (Process32Next(m_hSnapshot, ref procInfo)); // Read next
             }
 
-            return childPidToParentPid;
+            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
+            if (Module32First(m_hSnapshot, ref modEntry))
+            {
+
+                do
+                {
+                    if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
+                    {
+                        PidToClientDllPath.Add(modEntry.th32ProcessID, modEntry.szExePath);
+                    }
+                }
+                while (Module32Next(m_hSnapshot, ref modEntry));
+            }
         }
 
         private void EnsureSnapshot()
@@ -351,6 +344,29 @@ namespace wv2util
 
         [DllImport("kernel32.dll")]
         private static extern bool CloseHandle(IntPtr hSnapshot);
+
+        [DllImport("kernel32.dll")]
+        static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+
+        [DllImport("kernel32.dll")]
+        static extern bool Module32Next(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        public struct MODULEENTRY32
+        {
+            internal uint dwSize;
+            internal uint th32ModuleID;
+            internal uint th32ProcessID;
+            internal uint GlblcntUsage;
+            internal uint ProccntUsage;
+            internal IntPtr modBaseAddr;
+            internal uint modBaseSize;
+            internal IntPtr hModule;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+            internal string szModule;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            internal string szExePath;
+        }
 
         /// <summary>
         /// Describes an entry from a list of the processes residing 
