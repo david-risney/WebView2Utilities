@@ -44,6 +44,7 @@
                         x:Name="AppOverrideListBox" 
                         ItemsSource="{Binding}" 
                         ItemTemplate="{StaticResource AppOverrideListTemplate}"
+                        SelectionChanged="AppOverrideListBoxSelectionChanged"
                         IsSynchronizedWithCurrentItem="True"
                         HorizontalAlignment="Left" Width="322" Margin="10,10,0,30"/>
                     <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="10,0,0,5" Click="AddNewButton_Click"/>
@@ -139,6 +140,7 @@
                     <Label Style="{StaticResource heading}" Content="About" /><LineBreak/>
                     <Image Source="logo.ico" Height="128" Width="128"/>
                     <TextBlock>
+                    <TextBlock FontWeight="Bold" x:Name="VersionInfo">vN.N.N.N</TextBlock><LineBreak/>
                     <TextBlock>This is WebView2 Utilities. It helps with developing and debugging Microsoft Edge WebView2 usage.</TextBlock><LineBreak/>
                     <Hyperlink NavigateUri="https://github.com/david-risney/webview2-utils" RequestNavigate="Hyperlink_RequestNavigate">
                         WebView2 Tools GitHub

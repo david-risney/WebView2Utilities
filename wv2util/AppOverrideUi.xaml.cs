@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -67,6 +68,8 @@ namespace wv2util
         {
             InitializeComponent();
             ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
+            AppOverrideListBoxSelectionChanged(null, null);
+            VersionInfo.Text = "v" + Assembly.GetExecutingAssembly().GetName().Version;
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -281,6 +284,26 @@ namespace wv2util
             m_hostAppSortColumn.SelectColumn(5);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * left.ExecutablePath.CompareTo(right.ExecutablePath));
+        }
+
+        private void AppOverrideListBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int selectedIndex = AppOverrideListBox.SelectedIndex;
+            bool mutable = false;
+            if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
+            {
+                AppOverrideEntry selectedEntry = (AppOverrideEntry)AppOverrideListData[selectedIndex];
+                mutable = selectedEntry.Mutable;
+            }
+
+            if (RemoveButton != null)
+            {
+                RemoveButton.IsEnabled = mutable;
+            }
+            if (AppOverrideHostAppComboBox != null)
+            {
+                AppOverrideHostAppComboBox.IsEnabled = mutable;
+            }
         }
     }
 }

@@ -266,7 +266,7 @@ namespace wv2util
         {
             return GetInstalledRuntimes().Concat(
                 GetLocalRepoRuntimes()).Concat(
-                GetDownloadFolderRuntimes());
+                GetDownloadFolderRuntimes()).ToHashSet();
         }
     }
 }

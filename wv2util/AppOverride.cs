@@ -355,6 +355,14 @@ namespace wv2util
             }
         }
 
+        public bool Mutable
+        {
+            get
+            {
+                return HostApp != "*";
+            }
+        }
+
         public string HostApp
         {
             get { return m_HostApp; }
