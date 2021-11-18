@@ -226,10 +226,10 @@ namespace wv2util
             {
                 CloseHandle(m_hSnapshot);
             }
-            CreateDictionaryCache();
 
             m_hSnapshot = CreateToolhelp32Snapshot(
                 TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, 0);
+            CreateDictionaryCache();
         }
 
         public Dictionary<uint, string> PidToClientDllPath { get; private set; }
@@ -242,27 +242,35 @@ namespace wv2util
             PROCESSENTRY32 procInfo = new PROCESSENTRY32();
             procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
 
+            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
+
             if (Process32First(m_hSnapshot, ref procInfo))
             {
                 do
                 {
                     m_ChildPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
+                    string procInfoExeFile = procInfo.szExeFile.ToLowerInvariant();
+                    if (procInfoExeFile == "lsass.exe" || procInfoExeFile == "svchost.exe")
+                    {
+                        continue;
+                    }
+
+                    IntPtr procSnapShot = CreateToolhelp32Snapshot(
+                        TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, procInfo.th32ProcessID);
+                    if (Module32FirstW(procSnapShot, ref modEntry))
+                    {
+                        do
+                        {
+                            if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
+                            {
+                                PidToClientDllPath.Add(modEntry.th32ProcessID, modEntry.szExePath);
+                            }
+                        }
+                        while (Module32NextW(procSnapShot, ref modEntry));
+                    }
+                    CloseHandle(procSnapShot);
                 }
                 while (Process32Next(m_hSnapshot, ref procInfo)); // Read next
-            }
-
-            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
-            if (Module32First(m_hSnapshot, ref modEntry))
-            {
-
-                do
-                {
-                    if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
-                    {
-                        PidToClientDllPath.Add(modEntry.th32ProcessID, modEntry.szExePath);
-                    }
-                }
-                while (Module32Next(m_hSnapshot, ref modEntry));
             }
         }
 
@@ -346,10 +354,10 @@ namespace wv2util
         private static extern bool CloseHandle(IntPtr hSnapshot);
 
         [DllImport("kernel32.dll")]
-        static extern bool Module32First(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+        static extern bool Module32FirstW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         [DllImport("kernel32.dll")]
-        static extern bool Module32Next(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+        static extern bool Module32NextW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         [StructLayout(LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         public struct MODULEENTRY32
