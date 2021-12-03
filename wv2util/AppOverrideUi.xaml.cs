@@ -49,12 +49,42 @@ namespace wv2util
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInvalidSelection"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidSelection"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidAndFixedVersionSelection"));
+
+            if (m_Entry != null)
+            {
+                m_Entry.PropertyChanged -= Entry_PropertyChanged;
+            }
+            m_Entry = null;
+            if (IsValidSelection)
+            {
+                m_Entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                m_Entry.PropertyChanged += Entry_PropertyChanged;
+            }
+        }
+
+        private void Entry_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidAndFixedVersionSelection"));
         }
 
         private System.Windows.Controls.ListBox m_ListBox = null;
+        private AppOverrideEntry m_Entry = null;
 
         public bool IsInvalidSelection { get { return !IsValidSelection; } }
         public bool IsValidSelection { get { return ListBox != null && ListBox.SelectedIndex != -1; } }
+        public bool IsValidAndFixedVersionSelection
+        {
+            get
+            {
+                if (IsValidSelection)
+                {
+                    var entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    return entry.IsRuntimeFixedVersion;
+                }
+                return false;
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
     }
@@ -93,7 +123,6 @@ namespace wv2util
 
         protected RuntimeList RuntimeListData { get { return (RuntimeList)RuntimeList?.ItemsSource; } }
         protected HostAppList HostAppsListData { get { return (HostAppList)HostAppListView?.ItemsSource; } }
-
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {

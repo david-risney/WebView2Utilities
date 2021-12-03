@@ -335,7 +335,7 @@ namespace wv2util
 
         public bool ReverseSearchOrder
         {
-            get { return m_ReverseSearchOrder; }
+            get => m_ReverseSearchOrder;
             set
             {
                 if (m_ReverseSearchOrder != value)
@@ -347,25 +347,13 @@ namespace wv2util
         }
         private bool m_ReverseSearchOrder = false;
 
-        public string DisplayLabel
-        {
-            get
-            {
-                return HostApp == "*" ? "* (All other apps)" : HostApp;
-            }
-        }
+        public string DisplayLabel { get => HostApp == "*" ? "* (All other apps)" : HostApp; }
 
-        public bool Mutable
-        {
-            get
-            {
-                return HostApp != "*";
-            }
-        }
+        public bool Mutable { get => HostApp != "*"; }
 
         public string HostApp
         {
-            get { return m_HostApp; }
+            get => m_HostApp;
             set
             {
                 if (m_HostApp != value)
@@ -379,7 +367,7 @@ namespace wv2util
 
         public string RuntimePath
         {
-            get { return m_RuntimePath; }
+            get => m_RuntimePath;
             set
             {
                 if (m_RuntimePath != value)
@@ -393,7 +381,7 @@ namespace wv2util
 
         public string UserDataPath
         {
-            get { return m_UserDataPath; }
+            get => m_UserDataPath;
             set
             {
                 if (m_UserDataPath != value)
@@ -407,7 +395,7 @@ namespace wv2util
 
         public string BrowserArguments
         {
-            get { return m_BrowserArguments; }
+            get => m_BrowserArguments;
             set
             {
                 if (m_BrowserArguments != value)
@@ -418,6 +406,53 @@ namespace wv2util
             }
         }
         private string m_BrowserArguments = "";
+
+        public bool IsRuntimeEvergreen
+        {
+            get => m_RuntimeScenarioKind == RuntimeScenarioKind.Evergreen;
+            set
+            {
+                if (value)
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
+                    ReverseSearchOrder = false;
+                }
+                OnPropertyChanged("IsRuntimeEvergreen");
+            }
+        }
+        public bool IsRuntimeEvergreenPreview
+        {
+            get => m_RuntimeScenarioKind == RuntimeScenarioKind.EvergreenPreview;
+            set
+            {
+                if (value)
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
+                    ReverseSearchOrder = true;
+                }
+                OnPropertyChanged("IsRuntimeEvergreenPreview");
+            }
+        }
+        public bool IsRuntimeFixedVersion
+        {
+            get => m_RuntimeScenarioKind == RuntimeScenarioKind.FixedVersion;
+            set
+            {
+                if (value)
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
+                    ReverseSearchOrder = false;
+                }
+                OnPropertyChanged("IsRuntimeFixedVersion");
+            }
+        }
+        public enum RuntimeScenarioKind
+        {
+            Evergreen,
+            EvergreenPreview,
+            FixedVersion
+        };
+        private RuntimeScenarioKind m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
 
         private string NullToEmpty(string inp) { return inp == null ? "" : inp; }
     }
