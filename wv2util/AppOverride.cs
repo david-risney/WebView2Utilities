@@ -6,8 +6,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wv2util
 {
@@ -275,8 +273,8 @@ namespace wv2util
                 // recording the entry. An empty string browser arguments is fine because its merged with normal command line arguments
                 // and won't change anything, unlike the paths.
                 OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(
-                    entry.HostApp, 
-                    entry.BrowserArguments != null ? entry.BrowserArguments : "", 
+                    entry.HostApp,
+                    entry.BrowserArguments != null ? entry.BrowserArguments : "",
                     RegistryValueKind.String);
 
                 if (entry.RuntimePath != null && entry.RuntimePath != "")

@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace wv2util
@@ -24,7 +23,7 @@ namespace wv2util
             this.PID = pid;
         }
         public string ExecutableName
-        { 
+        {
             get
             {
                 return ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
@@ -162,7 +161,7 @@ namespace wv2util
                     string commandLinePartTrimmed = commandLinePart.Trim().Replace("\\\"", "\"").Trim('"');
                     if (commandLinePartTrimmed.StartsWith("--type"))
                     {
-                        processType = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' '});
+                        processType = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' ' });
                     }
 
                     if (commandLinePartTrimmed.StartsWith("--user-data-dir"))
@@ -212,7 +211,7 @@ namespace wv2util
         }
         public static IReadOnlyDictionary<uint, string> PidToClientDllPath { get => s_snapShot.PidToClientDllPath; }
     }
-     
+
     public class ProcessSnapshot
     {
         private static readonly uint TH32CS_SNAPPROCESS = 0x2;
@@ -239,11 +238,9 @@ namespace wv2util
             m_ChildPidToParentPid = new Dictionary<uint, uint>();
             PidToClientDllPath = new Dictionary<uint, string>();
 
-            PROCESSENTRY32 procInfo = new PROCESSENTRY32();
-            procInfo.dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32));
+            PROCESSENTRY32 procInfo = new PROCESSENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32)) };
 
             MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
-            modEntry.dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32));
 
             if (Process32First(m_hSnapshot, ref procInfo))
             {

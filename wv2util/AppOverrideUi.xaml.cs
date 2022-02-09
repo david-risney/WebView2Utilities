@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Clipboard = System.Windows.Clipboard;
 
 namespace wv2util
@@ -136,8 +125,8 @@ namespace wv2util
                 RuntimeEntry selection = (RuntimeEntry)RuntimeList.SelectedItem;
                 try
                 {
-                    Clipboard.SetText(selection.RuntimeLocation + "\t" + 
-                        selection.Version + "\t" + 
+                    Clipboard.SetText(selection.RuntimeLocation + "\t" +
+                        selection.Version + "\t" +
                         selection.Channel);
                 }
                 catch (System.Runtime.InteropServices.COMException)
@@ -153,8 +142,8 @@ namespace wv2util
                 HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
                 try
                 {
-                    Clipboard.SetText(selection.ExecutableName + "\t" + 
-                        selection.Runtime.RuntimeLocation + "\t" + 
+                    Clipboard.SetText(selection.ExecutableName + "\t" +
+                        selection.Runtime.RuntimeLocation + "\t" +
                         selection.Runtime.Version + "\t" +
                         selection.Runtime.Channel + "\t" +
                         selection.UserDataPath + "\t" +
@@ -165,7 +154,7 @@ namespace wv2util
                     // We might fail to open clipboard. Just ignore
                 }
             }
-        }       
+        }
 
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
         {
@@ -199,7 +188,7 @@ namespace wv2util
             RuntimesReload.IsEnabled = false;
 
             await RuntimeListData.FromDiskAsync();
-            
+
             RuntimesReload.Content = originalContent;
             RuntimesReload.IsEnabled = true;
         }
@@ -225,7 +214,7 @@ namespace wv2util
 
         private void RuntimeListMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            
+
         }
 
         private void MenuItemCopyRow(object sender, RoutedEventArgs e)
