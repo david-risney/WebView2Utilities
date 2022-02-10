@@ -164,6 +164,7 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.RuntimePath = (string)regKey.GetValue(valueName);
+                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -174,12 +175,15 @@ namespace wv2util
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 try
                 {
-                    entry.ReverseSearchOrder = (1 == (int)regKey.GetValue(valueName));
+                    var value = regKey.GetValue(valueName);
+                    int valueAsInt = (int)value;
+                    entry.ReverseSearchOrder = 1 == valueAsInt;
                 }
                 catch (InvalidCastException)
                 {
                     Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
                 }
+                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -189,6 +193,7 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.BrowserArguments = (string)regKey.GetValue(valueName);
+                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -198,6 +203,7 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.UserDataPath = (string)regKey.GetValue(valueName);
+                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -222,6 +228,7 @@ namespace wv2util
                 {
                     HostApp = "*"
                 };
+                entry.InitializationComplete();
                 collection.Insert(0, entry);
             }
         }
@@ -324,10 +331,18 @@ namespace wv2util
     public class AppOverrideEntry : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        private bool m_InitializationComplete = false;
+        public void InitializationComplete()
+        {
+            m_InitializationComplete = true;
+        }
         protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-            AppOverrideList.ApplyEntryToRegistry(this);
+            if (m_InitializationComplete)
+            {
+                AppOverrideList.ApplyEntryToRegistry(this);
+            }
         }
         public override string ToString()
         {
@@ -343,7 +358,6 @@ namespace wv2util
                 {
                     m_ReverseSearchOrder = value;
                     OnPropertyChanged("ReverseSearchOrder");
-                    UpdateRuntimeScenarioKindIfApplicable();
                 }
             }
         }
@@ -376,65 +390,10 @@ namespace wv2util
                 {
                     m_RuntimePath = NullToEmpty(value);
                     OnPropertyChanged("RuntimePath");
-                    UpdateRuntimeScenarioKindIfApplicable();
                 }
             }
         }
         private string m_RuntimePath = "";
-
-        private bool m_InRuntimeScenarioKindUpdate = false;
-        private void UpdateRuntimeScenarioKindIfApplicable()
-        {
-            if (!m_InRuntimeScenarioKindUpdate)
-            {
-                m_InRuntimeScenarioKindUpdate = true;
-                var previousRuntimeScenarioKind = m_RuntimeScenarioKind;
-                if (UserDataPath != null)
-                {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
-                }
-                else if (ReverseSearchOrder)
-                {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
-                }
-                else
-                {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
-                }
-                if (previousRuntimeScenarioKind != m_RuntimeScenarioKind)
-                {
-                    switch (previousRuntimeScenarioKind)
-                    {
-                        case RuntimeScenarioKind.Evergreen:
-                            OnPropertyChanged("IsRuntimeEvergreen");
-                            break;
-
-                        case RuntimeScenarioKind.EvergreenPreview:
-                            OnPropertyChanged("IsRuntimeEvergreenPreview");
-                            break;
-
-                        case RuntimeScenarioKind.FixedVersion:
-                            OnPropertyChanged("IsRuntimeFixedVersion");
-                            break;
-                    }
-                    switch (m_RuntimeScenarioKind)
-                    {
-                        case RuntimeScenarioKind.Evergreen:
-                            OnPropertyChanged("IsRuntimeEvergreen");
-                            break;
-
-                        case RuntimeScenarioKind.EvergreenPreview:
-                            OnPropertyChanged("IsRuntimeEvergreenPreview");
-                            break;
-
-                        case RuntimeScenarioKind.FixedVersion:
-                            OnPropertyChanged("IsRuntimeFixedVersion");
-                            break;
-                    }
-                }
-                m_InRuntimeScenarioKindUpdate = false;
-            }
-        }
 
         public string UserDataPath
         {
@@ -466,58 +425,43 @@ namespace wv2util
 
         public bool IsRuntimeEvergreen
         {
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.Evergreen;
+            get => !ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    m_InRuntimeScenarioKindUpdate = true;
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
                     ReverseSearchOrder = false;
-                    RuntimePath = "";
-                    m_InRuntimeScenarioKindUpdate = false;
+                    RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreen");
             }
         }
         public bool IsRuntimeEvergreenPreview
         {   
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.EvergreenPreview;
+            get => ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    m_InRuntimeScenarioKindUpdate = true;
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
                     ReverseSearchOrder = true;
-                    RuntimePath = "";
-                    m_InRuntimeScenarioKindUpdate = false;
+                    RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreenPreview");
             }
         }
         public bool IsRuntimeFixedVersion
         {
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.FixedVersion;
+            get => !ReverseSearchOrder && RuntimePath != "";
             set
             {
                 if (value)
                 {
-                    m_InRuntimeScenarioKindUpdate = true;
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
                     ReverseSearchOrder = false;
-                    m_InRuntimeScenarioKindUpdate = false;
+                    RuntimePath = ".";
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
             }
         }
-        public enum RuntimeScenarioKind
-        {
-            Evergreen,
-            EvergreenPreview,
-            FixedVersion
-        };
-        private RuntimeScenarioKind m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
 
         private string NullToEmpty(string inp) { return inp == null ? "" : inp; }
     }

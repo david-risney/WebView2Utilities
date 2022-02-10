@@ -106,6 +106,7 @@ namespace wv2util
             {
                 HostApp = "New " + (++m_NewEntriesCount)
             };
+            entry.InitializationComplete();
             AppOverrideListData.Add(entry);
         }
 
