@@ -20,15 +20,9 @@ namespace wv2util
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             Runtime = new RuntimeEntry(runtimePath);
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
-            this.PID = pid;
+            PID = pid;
         }
-        public string ExecutableName
-        {
-            get
-            {
-                return ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
-            }
-        }
+        public string ExecutableName => ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
         public int PID { get; private set; } = 0;
         public string ExecutablePath { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
@@ -86,39 +80,39 @@ namespace wv2util
         {
             // Use ToList to get a fixed collection that won't get angry that we're calling
             // Add and Remove on it while enumerating.
-            foreach (var entry in this.Except(newEntries).ToList<HostAppEntry>())
+            foreach (HostAppEntry entry in this.Except(newEntries).ToList<HostAppEntry>())
             {
-                this.Items.Remove(entry);
+                Items.Remove(entry);
             }
-            foreach (var entry in newEntries.Except(this).ToList<HostAppEntry>())
+            foreach (HostAppEntry entry in newEntries.Except(this).ToList<HostAppEntry>())
             {
-                this.Items.Add(entry);
+                Items.Add(entry);
             }
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
-            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public void Sort<T>(Comparison<T> comparison)
         {
-            ArrayList.Adapter((IList)this.Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
+            ArrayList.Adapter((IList)Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
 
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
-            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
         {
-            var entriesByClientDllList = GetHostAppEntriesFromMachineByClientDll().ToList();
-            var entriesByClientDll = entriesByClientDllList.ToLookup(entry => entry.PID);
-            var entriesBySnapshot = GetHostAppEntriesFromMachineByProcessSnapshot().ToList().Where(entry => entry.PID != 0);
+            List<HostAppEntry> entriesByClientDllList = GetHostAppEntriesFromMachineByClientDll().ToList();
+            ILookup<int, HostAppEntry> entriesByClientDll = entriesByClientDllList.ToLookup(entry => entry.PID);
+            IEnumerable<HostAppEntry> entriesBySnapshot = GetHostAppEntriesFromMachineByProcessSnapshot().ToList().Where(entry => entry.PID != 0);
 
-            foreach (var entry in entriesBySnapshot)
+            foreach (HostAppEntry entry in entriesBySnapshot)
             {
                 if (entry.UserDataPath != "Unknown")
                 {
-                    var entriesMatchingPID = entriesByClientDll[entry.PID];
-                    foreach (var entryMatch in entriesMatchingPID)
+                    IEnumerable<HostAppEntry> entriesMatchingPID = entriesByClientDll[entry.PID];
+                    foreach (HostAppEntry entryMatch in entriesMatchingPID)
                     {
                         entryMatch.UserDataPath = entry.UserDataPath;
                     }
@@ -133,7 +127,7 @@ namespace wv2util
         //  * We don't know associated browser processes
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByClientDll()
         {
-            foreach (var moduleEntry in ProcessSnapshotHelper.PidToClientDllPath)
+            foreach (KeyValuePair<uint, string> moduleEntry in ProcessSnapshotHelper.PidToClientDllPath)
             {
                 uint pid = moduleEntry.Key;
                 string clientDll = moduleEntry.Value;
@@ -150,13 +144,13 @@ namespace wv2util
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByProcessSnapshot()
         {
-            var processes = Process.GetProcessesByName("msedgewebview2");
-            foreach (var process in processes)
+            Process[] processes = Process.GetProcessesByName("msedgewebview2");
+            foreach (Process process in processes)
             {
-                var commandLineParts = process.GetCommandLine().Split(' ');
+                string[] commandLineParts = process.GetCommandLine().Split(' ');
                 string processType = null;
                 string userDataPath = null;
-                foreach (var commandLinePart in commandLineParts)
+                foreach (string commandLinePart in commandLineParts)
                 {
                     string commandLinePartTrimmed = commandLinePart.Trim().Replace("\\\"", "\"").Trim('"');
                     if (commandLinePartTrimmed.StartsWith("--type"))
@@ -199,7 +193,7 @@ namespace wv2util
 
     public static class ProcessSnapshotHelper
     {
-        private static ProcessSnapshot s_snapShot = new ProcessSnapshot();
+        private static readonly ProcessSnapshot s_snapShot = new ProcessSnapshot();
         public static void ReloadSnapshot()
         {
             s_snapShot.Reload();
@@ -209,7 +203,7 @@ namespace wv2util
         {
             return s_snapShot.GetParentProcess(process);
         }
-        public static IReadOnlyDictionary<uint, string> PidToClientDllPath { get => s_snapShot.PidToClientDllPath; }
+        public static IReadOnlyDictionary<uint, string> PidToClientDllPath => s_snapShot.PidToClientDllPath;
     }
 
     public class ProcessSnapshot
@@ -248,7 +242,9 @@ namespace wv2util
                 {
                     if (procInfo.szExeFile.ToLower() != "lsass.exe" ||
                         procInfo.szExeFile.ToLower() != "svchost.exe")
+                    {
                         m_ChildPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
+                    }
 
                     IntPtr hModuleSnapshot = CreateToolhelp32Snapshot(
                         TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, procInfo.th32ProcessID);
@@ -285,11 +281,10 @@ namespace wv2util
         /// <returns>The Parent Process of the Process.</returns>
         public Process GetParentProcess(Process childProcess)
         {
-            uint parentPid = 0;
 
             EnsureSnapshot();
 
-            if (m_ChildPidToParentPid.TryGetValue((uint)childProcess.Id, out parentPid))
+            if (m_ChildPidToParentPid.TryGetValue((uint)childProcess.Id, out uint parentPid))
             {
                 try
                 {
@@ -350,10 +345,10 @@ namespace wv2util
         private static extern bool CloseHandle(IntPtr hSnapshot);
 
         [DllImport("kernel32.dll")]
-        static extern bool Module32FirstW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+        private static extern bool Module32FirstW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         [DllImport("kernel32.dll")]
-        static extern bool Module32NextW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
+        private static extern bool Module32NextW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
 
         [StructLayout(LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         public struct MODULEENTRY32

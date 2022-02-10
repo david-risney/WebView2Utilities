@@ -18,7 +18,7 @@ namespace wv2util
             ExePath = location;
         }
         public string ExePath { get; protected set; }
-        public string RuntimeLocation { get { return Directory.GetParent(ExePath).FullName; } }
+        public string RuntimeLocation => Directory.GetParent(ExePath).FullName;
         public string Version
         {
             get
@@ -106,33 +106,33 @@ namespace wv2util
             // Only update the entries on the caller thread to ensure the
             // caller isn't trying to enumerate the entries while
             // we're updating them.
-            this.SetEntries(newEntries);
+            SetEntries(newEntries);
         }
 
         protected void SetEntries(IEnumerable<RuntimeEntry> newEntries)
         {
             // Use ToList to get a fixed collection that won't get angry that we're calling
             // Add and Remove on it while enumerating.
-            foreach (var entry in this.Except(newEntries).ToList<RuntimeEntry>())
+            foreach (RuntimeEntry entry in this.Except(newEntries).ToList<RuntimeEntry>())
             {
-                this.Items.Remove(entry);
+                Items.Remove(entry);
             }
-            foreach (var entry in newEntries.Except(this).ToList<RuntimeEntry>())
+            foreach (RuntimeEntry entry in newEntries.Except(this).ToList<RuntimeEntry>())
             {
-                this.Items.Add(entry);
+                Items.Add(entry);
             }
 
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Count"));
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
-            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged(new PropertyChangedEventArgs("Count"));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         public void Sort<T>(Comparison<T> comparison)
         {
-            ArrayList.Adapter((IList)this.Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
+            ArrayList.Adapter((IList)Items).Sort(new wv2util.SortUtil.ComparisonComparer<T>(comparison));
 
-            this.OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
-            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         private static List<RuntimeEntry> GetLocalRepoRuntimesInRoot(DirectoryInfo root)
@@ -140,7 +140,7 @@ namespace wv2util
             List<RuntimeEntry> runtimes = new List<RuntimeEntry>();
             try
             {
-                foreach (var subDirectory in root.GetDirectories())
+                foreach (DirectoryInfo subDirectory in root.GetDirectories())
                 {
                     try
                     {
@@ -152,7 +152,7 @@ namespace wv2util
                                 DirectoryInfo outDirectory = srcDirectory.GetDirectories("out").FirstOrDefault();
                                 if (outDirectory != null)
                                 {
-                                    foreach (var buildDirectory in outDirectory.GetDirectories("release_*"))
+                                    foreach (DirectoryInfo buildDirectory in outDirectory.GetDirectories("release_*"))
                                     {
                                         try
                                         {
@@ -179,12 +179,12 @@ namespace wv2util
         private static IEnumerable<RuntimeEntry> GetLocalRepoRuntimes()
         {
             IEnumerable<RuntimeEntry> runtimes = new List<RuntimeEntry>();
-            foreach (var driveInfo in DriveInfo.GetDrives().Where(
+            foreach (DriveInfo driveInfo in DriveInfo.GetDrives().Where(
                 drive => drive.IsReady && // Try to skip CDs or other removable media that's not ready
                 drive.TotalSize > 1073741824)) // Skip disks too small to contain local repos
             {
                 runtimes = runtimes.Concat(GetLocalRepoRuntimesInRoot(driveInfo.RootDirectory));
-                foreach (var rootFolder in driveInfo.RootDirectory.GetDirectories())
+                foreach (DirectoryInfo rootFolder in driveInfo.RootDirectory.GetDirectories())
                 {
                     try
                     {
@@ -208,7 +208,7 @@ namespace wv2util
 
             if (downloadFolder != null)
             {
-                foreach (var subFolder in downloadFolder.GetDirectories())
+                foreach (DirectoryInfo subFolder in downloadFolder.GetDirectories())
                 {
                     FileInfo exeFile = subFolder.GetFiles("msedgewebview2.exe").FirstOrDefault();
                     if (exeFile != null)

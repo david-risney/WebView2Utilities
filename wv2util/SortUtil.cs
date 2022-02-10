@@ -46,8 +46,8 @@ namespace wv2util
 
         public static int CompareVersionStrings(string left, string right)
         {
-            var leftParts = left.Split('.').Select(partAsString => int.Parse(partAsString));
-            var rightParts = right.Split('.').Select(partAsString => int.Parse(partAsString));
+            IEnumerable<int> leftParts = left.Split('.').Select(partAsString => int.Parse(partAsString));
+            IEnumerable<int> rightParts = right.Split('.').Select(partAsString => int.Parse(partAsString));
 
             while (leftParts.Count() < rightParts.Count())
             {
@@ -58,8 +58,8 @@ namespace wv2util
                 rightParts.Append(0);
             }
 
-            var leftEnum = leftParts.GetEnumerator();
-            var rightEnum = rightParts.GetEnumerator();
+            IEnumerator<int> leftEnum = leftParts.GetEnumerator();
+            IEnumerator<int> rightEnum = rightParts.GetEnumerator();
             while (leftEnum.MoveNext() && rightEnum.MoveNext())
             {
                 int diff = leftEnum.Current - rightEnum.Current;

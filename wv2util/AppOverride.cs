@@ -34,7 +34,7 @@ namespace wv2util
         {
             if (entries != null)
             {
-                foreach (var entry in entries)
+                foreach (AppOverrideEntry entry in entries)
                 {
                     entry.PropertyChanged += WatchedEntryChanged;
                 }
@@ -53,7 +53,7 @@ namespace wv2util
         {
             if (entries != null)
             {
-                foreach (var entry in entries)
+                foreach (AppOverrideEntry entry in entries)
                 {
                     entry.PropertyChanged -= WatchedEntryChanged;
                 }
@@ -132,11 +132,12 @@ namespace wv2util
 
         private static AppOverrideEntry GetOrCreateEntry(Dictionary<string, AppOverrideEntry> appNameToEntry, ObservableCollection<AppOverrideEntry> collection, string valueName)
         {
-            AppOverrideEntry entry = null;
-            if (!appNameToEntry.TryGetValue(valueName, out entry))
+            if (!appNameToEntry.TryGetValue(valueName, out AppOverrideEntry entry))
             {
-                entry = new AppOverrideEntry();
-                entry.HostApp = valueName;
+                entry = new AppOverrideEntry
+                {
+                    HostApp = valueName
+                };
                 appNameToEntry.Add(valueName, entry);
                 collection.Add(entry);
             }
@@ -151,7 +152,7 @@ namespace wv2util
             RegistryKey regKey;
             string[] valueNames;
 
-            foreach (var entry in collection)
+            foreach (AppOverrideEntry entry in collection)
             {
                 entriesToRemove.Add(entry);
                 appNameToEntry.Add(entry.HostApp, entry);
@@ -200,7 +201,7 @@ namespace wv2util
                 entriesToRemove.Remove(entry);
             }
 
-            foreach (var entry in entriesToRemove)
+            foreach (AppOverrideEntry entry in entriesToRemove)
             {
                 collection.Remove(entry);
             }
@@ -217,8 +218,10 @@ namespace wv2util
             // If we didn't have a wildcard entry, add it at the start
             if (collection.Count == 0 || collection[0].HostApp != "*")
             {
-                AppOverrideEntry entry = new AppOverrideEntry();
-                entry.HostApp = "*";
+                AppOverrideEntry entry = new AppOverrideEntry
+                {
+                    HostApp = "*"
+                };
                 collection.Insert(0, entry);
             }
         }
@@ -235,11 +238,11 @@ namespace wv2util
             if (!IgnoreUpdatesToRegistry)
             {
                 ObservableCollection<AppOverrideEntry> registryEntries = CreateCollectionFromRegistry();
-                foreach (var entry in registryEntries.Except(newEntries, new AppOverrideEntryHostAppEquality()))
+                foreach (AppOverrideEntry entry in registryEntries.Except(newEntries, new AppOverrideEntryHostAppEquality()))
                 {
                     RemoveEntryFromRegistry(entry);
                 }
-                foreach (var entry in newEntries)
+                foreach (AppOverrideEntry entry in newEntries)
                 {
                     ApplyEntryToRegistry(entry);
                 }
@@ -340,14 +343,15 @@ namespace wv2util
                 {
                     m_ReverseSearchOrder = value;
                     OnPropertyChanged("ReverseSearchOrder");
+                    UpdateRuntimeScenarioKindIfApplicable();
                 }
             }
         }
         private bool m_ReverseSearchOrder = false;
 
-        public string DisplayLabel { get => HostApp == "*" ? "* (All other apps)" : HostApp; }
+        public string DisplayLabel => HostApp == "*" ? "* (All other apps)" : HostApp;
 
-        public bool Mutable { get => HostApp != "*"; }
+        public bool Mutable => HostApp != "*";
 
         public string HostApp
         {
@@ -372,10 +376,65 @@ namespace wv2util
                 {
                     m_RuntimePath = NullToEmpty(value);
                     OnPropertyChanged("RuntimePath");
+                    UpdateRuntimeScenarioKindIfApplicable();
                 }
             }
         }
         private string m_RuntimePath = "";
+
+        private bool m_InRuntimeScenarioKindUpdate = false;
+        private void UpdateRuntimeScenarioKindIfApplicable()
+        {
+            if (!m_InRuntimeScenarioKindUpdate)
+            {
+                m_InRuntimeScenarioKindUpdate = true;
+                var previousRuntimeScenarioKind = m_RuntimeScenarioKind;
+                if (UserDataPath != null)
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
+                }
+                else if (ReverseSearchOrder)
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
+                }
+                else
+                {
+                    m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
+                }
+                if (previousRuntimeScenarioKind != m_RuntimeScenarioKind)
+                {
+                    switch (previousRuntimeScenarioKind)
+                    {
+                        case RuntimeScenarioKind.Evergreen:
+                            OnPropertyChanged("IsRuntimeEvergreen");
+                            break;
+
+                        case RuntimeScenarioKind.EvergreenPreview:
+                            OnPropertyChanged("IsRuntimeEvergreenPreview");
+                            break;
+
+                        case RuntimeScenarioKind.FixedVersion:
+                            OnPropertyChanged("IsRuntimeFixedVersion");
+                            break;
+                    }
+                    switch (m_RuntimeScenarioKind)
+                    {
+                        case RuntimeScenarioKind.Evergreen:
+                            OnPropertyChanged("IsRuntimeEvergreen");
+                            break;
+
+                        case RuntimeScenarioKind.EvergreenPreview:
+                            OnPropertyChanged("IsRuntimeEvergreenPreview");
+                            break;
+
+                        case RuntimeScenarioKind.FixedVersion:
+                            OnPropertyChanged("IsRuntimeFixedVersion");
+                            break;
+                    }
+                }
+                m_InRuntimeScenarioKindUpdate = false;
+            }
+        }
 
         public string UserDataPath
         {
@@ -412,21 +471,27 @@ namespace wv2util
             {
                 if (value)
                 {
+                    m_InRuntimeScenarioKindUpdate = true;
                     m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
                     ReverseSearchOrder = false;
+                    RuntimePath = "";
+                    m_InRuntimeScenarioKindUpdate = false;
                 }
                 OnPropertyChanged("IsRuntimeEvergreen");
             }
         }
         public bool IsRuntimeEvergreenPreview
-        {
+        {   
             get => m_RuntimeScenarioKind == RuntimeScenarioKind.EvergreenPreview;
             set
             {
                 if (value)
                 {
+                    m_InRuntimeScenarioKindUpdate = true;
                     m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
                     ReverseSearchOrder = true;
+                    RuntimePath = "";
+                    m_InRuntimeScenarioKindUpdate = false;
                 }
                 OnPropertyChanged("IsRuntimeEvergreenPreview");
             }
@@ -438,8 +503,10 @@ namespace wv2util
             {
                 if (value)
                 {
+                    m_InRuntimeScenarioKindUpdate = true;
                     m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
                     ReverseSearchOrder = false;
+                    m_InRuntimeScenarioKindUpdate = false;
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
             }

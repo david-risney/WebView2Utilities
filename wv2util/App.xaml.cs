@@ -17,11 +17,13 @@ namespace wv2util
             // So we check at runtime and rerun ourselves as admin.
             if (!IsRunAsAdministrator())
             {
-                var processInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().CodeBase);
+                ProcessStartInfo processInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().CodeBase)
+                {
 
-                // The following properties run the new process as administrator
-                processInfo.UseShellExecute = true;
-                processInfo.Verb = "runas";
+                    // The following properties run the new process as administrator
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
 
                 // Start the new process
                 try
@@ -40,8 +42,8 @@ namespace wv2util
         }
         private bool IsRunAsAdministrator()
         {
-            var wi = WindowsIdentity.GetCurrent();
-            var wp = new WindowsPrincipal(wi);
+            WindowsIdentity wi = WindowsIdentity.GetCurrent();
+            WindowsPrincipal wp = new WindowsPrincipal(wi);
 
             return wp.IsInRole(WindowsBuiltInRole.Administrator);
         }
