@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Clipboard = System.Windows.Clipboard;
 
 namespace wv2util
@@ -25,7 +14,7 @@ namespace wv2util
     {
         public System.Windows.Controls.ListBox ListBox
         {
-            get { return m_ListBox; }
+            get => m_ListBox;
 
             set
             {
@@ -71,15 +60,15 @@ namespace wv2util
         private System.Windows.Controls.ListBox m_ListBox = null;
         private AppOverrideEntry m_Entry = null;
 
-        public bool IsInvalidSelection { get { return !IsValidSelection; } }
-        public bool IsValidSelection { get { return ListBox != null && ListBox.SelectedIndex != -1; } }
+        public bool IsInvalidSelection => !IsValidSelection;
+        public bool IsValidSelection => ListBox != null && ListBox.SelectedIndex != -1;
         public bool IsValidAndFixedVersionSelection
         {
             get
             {
                 if (IsValidSelection)
                 {
-                    var entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
                     return entry.IsRuntimeFixedVersion;
                 }
                 return false;
@@ -113,16 +102,19 @@ namespace wv2util
 
         private void AddNewButton_Click(object sender, RoutedEventArgs e)
         {
-            AppOverrideEntry entry = new AppOverrideEntry();
-            entry.HostApp = "New " + (++m_NewEntriesCount);
+            AppOverrideEntry entry = new AppOverrideEntry
+            {
+                HostApp = "New " + (++m_NewEntriesCount)
+            };
+            entry.InitializationComplete();
             AppOverrideListData.Add(entry);
         }
 
-        protected AppOverrideList AppOverrideListData { get { return (AppOverrideList)AppOverrideListBox?.ItemsSource; } }
+        protected AppOverrideList AppOverrideListData => (AppOverrideList)AppOverrideListBox?.ItemsSource;
         private uint m_NewEntriesCount = 0;
 
-        protected RuntimeList RuntimeListData { get { return (RuntimeList)RuntimeList?.ItemsSource; } }
-        protected HostAppList HostAppsListData { get { return (HostAppList)HostAppListView?.ItemsSource; } }
+        protected RuntimeList RuntimeListData => (RuntimeList)RuntimeList?.ItemsSource;
+        protected HostAppList HostAppsListData => (HostAppList)HostAppListView?.ItemsSource;
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
@@ -136,8 +128,8 @@ namespace wv2util
                 RuntimeEntry selection = (RuntimeEntry)RuntimeList.SelectedItem;
                 try
                 {
-                    Clipboard.SetText(selection.RuntimeLocation + "\t" + 
-                        selection.Version + "\t" + 
+                    Clipboard.SetText(selection.RuntimeLocation + "\t" +
+                        selection.Version + "\t" +
                         selection.Channel);
                 }
                 catch (System.Runtime.InteropServices.COMException)
@@ -153,8 +145,8 @@ namespace wv2util
                 HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
                 try
                 {
-                    Clipboard.SetText(selection.ExecutableName + "\t" + 
-                        selection.Runtime.RuntimeLocation + "\t" + 
+                    Clipboard.SetText(selection.ExecutableName + "\t" +
+                        selection.Runtime.RuntimeLocation + "\t" +
                         selection.Runtime.Version + "\t" +
                         selection.Runtime.Channel + "\t" +
                         selection.UserDataPath + "\t" +
@@ -165,25 +157,29 @@ namespace wv2util
                     // We might fail to open clipboard. Just ignore
                 }
             }
-        }       
+        }
 
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
         {
-            var folderBrowserDialog = new FolderBrowserDialog();
-            folderBrowserDialog.Description = "Select a WebView2 Runtime folder";
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+            {
+                Description = "Select a WebView2 Runtime folder"
+            };
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                this.AppOverrideRuntimePathComboBox.Text = folderBrowserDialog.SelectedPath;
+                AppOverrideRuntimePathComboBox.Text = folderBrowserDialog.SelectedPath;
             }
         }
 
         private void AppOverrideUserDataPathButton_Click(object sender, RoutedEventArgs e)
         {
-            var folderBrowserDialog = new FolderBrowserDialog();
-            folderBrowserDialog.Description = "Select the path to a user data folder";
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+            {
+                Description = "Select the path to a user data folder"
+            };
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                this.AppOverrideUserDataPathTextBox.Text = folderBrowserDialog.SelectedPath;
+                AppOverrideUserDataPathTextBox.Text = folderBrowserDialog.SelectedPath;
             }
         }
 
@@ -194,19 +190,19 @@ namespace wv2util
 
         private async void RuntimesReload_Click(object sender, RoutedEventArgs e)
         {
-            var originalContent = RuntimesReload.Content;
+            object originalContent = RuntimesReload.Content;
             RuntimesReload.Content = "⌚";
             RuntimesReload.IsEnabled = false;
 
             await RuntimeListData.FromDiskAsync();
-            
+
             RuntimesReload.Content = originalContent;
             RuntimesReload.IsEnabled = true;
         }
 
         private async void HostAppsReload_Click(object sender, RoutedEventArgs e)
         {
-            var originalContent = HostAppsReload.Content;
+            object originalContent = HostAppsReload.Content;
             HostAppsReload.Content = "⌚";
             HostAppsReload.IsEnabled = false;
 
@@ -225,7 +221,7 @@ namespace wv2util
 
         private void RuntimeListMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            
+
         }
 
         private void MenuItemCopyRow(object sender, RoutedEventArgs e)
@@ -242,7 +238,7 @@ namespace wv2util
 
         }
 
-        private SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
+        private readonly SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
         private void GridViewColumnHeader_Runtime_Path_Click(object sender, RoutedEventArgs e)
         {
             m_runtimeSortColumn.SelectColumn(0);
@@ -265,7 +261,7 @@ namespace wv2util
                 m_runtimeSortColumn.SortDirection * SortUtil.CompareChannelStrings(left.Channel, right.Channel));
         }
 
-        private SortUtil.SortColumnContext m_hostAppSortColumn = new SortUtil.SortColumnContext();
+        private readonly SortUtil.SortColumnContext m_hostAppSortColumn = new SortUtil.SortColumnContext();
         private void GridViewColumnHeader_HostApps_Executable_Click(object sender, RoutedEventArgs e)
         {
             m_hostAppSortColumn.SelectColumn(0);
@@ -321,7 +317,7 @@ namespace wv2util
             bool mutable = false;
             if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
             {
-                AppOverrideEntry selectedEntry = (AppOverrideEntry)AppOverrideListData[selectedIndex];
+                AppOverrideEntry selectedEntry = AppOverrideListData[selectedIndex];
                 mutable = selectedEntry.Mutable;
             }
 

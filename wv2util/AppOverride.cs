@@ -6,8 +6,6 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wv2util
 {
@@ -36,7 +34,7 @@ namespace wv2util
         {
             if (entries != null)
             {
-                foreach (var entry in entries)
+                foreach (AppOverrideEntry entry in entries)
                 {
                     entry.PropertyChanged += WatchedEntryChanged;
                 }
@@ -55,7 +53,7 @@ namespace wv2util
         {
             if (entries != null)
             {
-                foreach (var entry in entries)
+                foreach (AppOverrideEntry entry in entries)
                 {
                     entry.PropertyChanged -= WatchedEntryChanged;
                 }
@@ -134,11 +132,12 @@ namespace wv2util
 
         private static AppOverrideEntry GetOrCreateEntry(Dictionary<string, AppOverrideEntry> appNameToEntry, ObservableCollection<AppOverrideEntry> collection, string valueName)
         {
-            AppOverrideEntry entry = null;
-            if (!appNameToEntry.TryGetValue(valueName, out entry))
+            if (!appNameToEntry.TryGetValue(valueName, out AppOverrideEntry entry))
             {
-                entry = new AppOverrideEntry();
-                entry.HostApp = valueName;
+                entry = new AppOverrideEntry
+                {
+                    HostApp = valueName
+                };
                 appNameToEntry.Add(valueName, entry);
                 collection.Add(entry);
             }
@@ -153,7 +152,12 @@ namespace wv2util
             RegistryKey regKey;
             string[] valueNames;
 
-            foreach (var entry in collection)
+            // We want to minimally change collection to make it match the registry
+            // We start by assuming everything in the collection is no longer in the
+            // registry. We add every entry to entriesToRemove. Later we go through
+            // the registry and remove reg entries from the entriesToRemove since
+            // they still exist.
+            foreach (AppOverrideEntry entry in collection)
             {
                 entriesToRemove.Add(entry);
                 appNameToEntry.Add(entry.HostApp, entry);
@@ -175,7 +179,9 @@ namespace wv2util
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 try
                 {
-                    entry.ReverseSearchOrder = (1 == (int)regKey.GetValue(valueName));
+                    var value = regKey.GetValue(valueName);
+                    int valueAsInt = (int)value;
+                    entry.ReverseSearchOrder = 1 == valueAsInt;
                 }
                 catch (InvalidCastException)
                 {
@@ -202,7 +208,7 @@ namespace wv2util
                 entriesToRemove.Remove(entry);
             }
 
-            foreach (var entry in entriesToRemove)
+            foreach (AppOverrideEntry entry in entriesToRemove)
             {
                 collection.Remove(entry);
             }
@@ -219,9 +225,19 @@ namespace wv2util
             // If we didn't have a wildcard entry, add it at the start
             if (collection.Count == 0 || collection[0].HostApp != "*")
             {
-                AppOverrideEntry entry = new AppOverrideEntry();
-                entry.HostApp = "*";
+                AppOverrideEntry entry = new AppOverrideEntry
+                {
+                    HostApp = "*"
+                };
                 collection.Insert(0, entry);
+            }
+
+            // We may have created entries above when going through the registry.
+            // Different reg entries can apply to the same AppOverrideEntry so we
+            // wait till the end to mark it initialized.
+            foreach (AppOverrideEntry entry in collection)
+            {
+                entry.InitializationComplete();
             }
         }
 
@@ -237,11 +253,11 @@ namespace wv2util
             if (!IgnoreUpdatesToRegistry)
             {
                 ObservableCollection<AppOverrideEntry> registryEntries = CreateCollectionFromRegistry();
-                foreach (var entry in registryEntries.Except(newEntries, new AppOverrideEntryHostAppEquality()))
+                foreach (AppOverrideEntry entry in registryEntries.Except(newEntries, new AppOverrideEntryHostAppEquality()))
                 {
                     RemoveEntryFromRegistry(entry);
                 }
-                foreach (var entry in newEntries)
+                foreach (AppOverrideEntry entry in newEntries)
                 {
                     ApplyEntryToRegistry(entry);
                 }
@@ -275,8 +291,8 @@ namespace wv2util
                 // recording the entry. An empty string browser arguments is fine because its merged with normal command line arguments
                 // and won't change anything, unlike the paths.
                 OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(
-                    entry.HostApp, 
-                    entry.BrowserArguments != null ? entry.BrowserArguments : "", 
+                    entry.HostApp,
+                    entry.BrowserArguments != null ? entry.BrowserArguments : "",
                     RegistryValueKind.String);
 
                 if (entry.RuntimePath != null && entry.RuntimePath != "")
@@ -323,10 +339,18 @@ namespace wv2util
     public class AppOverrideEntry : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
+        private bool m_InitializationComplete = false;
+        public void InitializationComplete()
+        {
+            m_InitializationComplete = true;
+        }
         protected void OnPropertyChanged(string name)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-            AppOverrideList.ApplyEntryToRegistry(this);
+            if (m_InitializationComplete)
+            {
+                AppOverrideList.ApplyEntryToRegistry(this);
+            }
         }
         public override string ToString()
         {
@@ -347,9 +371,9 @@ namespace wv2util
         }
         private bool m_ReverseSearchOrder = false;
 
-        public string DisplayLabel { get => HostApp == "*" ? "* (All other apps)" : HostApp; }
+        public string DisplayLabel => HostApp == "*" ? "* (All other apps)" : HostApp;
 
-        public bool Mutable { get => HostApp != "*"; }
+        public bool Mutable => HostApp != "*";
 
         public string HostApp
         {
@@ -409,50 +433,43 @@ namespace wv2util
 
         public bool IsRuntimeEvergreen
         {
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.Evergreen;
+            get => !ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
                     ReverseSearchOrder = false;
+                    RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreen");
             }
         }
         public bool IsRuntimeEvergreenPreview
-        {
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.EvergreenPreview;
+        {   
+            get => ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.EvergreenPreview;
                     ReverseSearchOrder = true;
+                    RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreenPreview");
             }
         }
         public bool IsRuntimeFixedVersion
         {
-            get => m_RuntimeScenarioKind == RuntimeScenarioKind.FixedVersion;
+            get => !ReverseSearchOrder && RuntimePath != "";
             set
             {
                 if (value)
                 {
-                    m_RuntimeScenarioKind = RuntimeScenarioKind.FixedVersion;
                     ReverseSearchOrder = false;
+                    RuntimePath = ".";
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
             }
         }
-        public enum RuntimeScenarioKind
-        {
-            Evergreen,
-            EvergreenPreview,
-            FixedVersion
-        };
-        private RuntimeScenarioKind m_RuntimeScenarioKind = RuntimeScenarioKind.Evergreen;
 
         private string NullToEmpty(string inp) { return inp == null ? "" : inp; }
     }
