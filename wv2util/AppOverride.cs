@@ -152,6 +152,11 @@ namespace wv2util
             RegistryKey regKey;
             string[] valueNames;
 
+            // We want to minimally change collection to make it match the registry
+            // We start by assuming everything in the collection is no longer in the
+            // registry. We add every entry to entriesToRemove. Later we go through
+            // the registry and remove reg entries from the entriesToRemove since
+            // they still exist.
             foreach (AppOverrideEntry entry in collection)
             {
                 entriesToRemove.Add(entry);
@@ -164,7 +169,6 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.RuntimePath = (string)regKey.GetValue(valueName);
-                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -183,7 +187,6 @@ namespace wv2util
                 {
                     Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
                 }
-                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -193,7 +196,6 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.BrowserArguments = (string)regKey.GetValue(valueName);
-                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -203,7 +205,6 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName);
                 entry.UserDataPath = (string)regKey.GetValue(valueName);
-                entry.InitializationComplete();
                 entriesToRemove.Remove(entry);
             }
 
@@ -228,8 +229,15 @@ namespace wv2util
                 {
                     HostApp = "*"
                 };
-                entry.InitializationComplete();
                 collection.Insert(0, entry);
+            }
+
+            // We may have created entries above when going through the registry.
+            // Different reg entries can apply to the same AppOverrideEntry so we
+            // wait till the end to mark it initialized.
+            foreach (AppOverrideEntry entry in collection)
+            {
+                entry.InitializationComplete();
             }
         }
 
