@@ -384,6 +384,7 @@ namespace wv2util
                 {
                     m_HostApp = NullToEmpty(value);
                     OnPropertyChanged("HostApp");
+                    OnPropertyChanged("DisplayLabel");
                 }
             }
         }

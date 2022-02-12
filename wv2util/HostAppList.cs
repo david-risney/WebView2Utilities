@@ -15,24 +15,51 @@ namespace wv2util
 {
     public class HostAppEntry : IEquatable<HostAppEntry>
     {
-        public HostAppEntry(string exePath, int pid, string runtimePath, string userDataPath)
+        public HostAppEntry(string exePath, int pid, string sdkPath, string runtimePath, string userDataPath)
         {
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             Runtime = new RuntimeEntry(runtimePath);
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
             PID = pid;
+            SdkInfo = new SdkFileInfo(sdkPath);
         }
         public string ExecutableName => ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
         public int PID { get; private set; } = 0;
         public string ExecutablePath { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
         public string UserDataPath { get; set; }
+        public SdkFileInfo SdkInfo { get; private set; }
 
         public bool Equals(HostAppEntry other)
         {
             return ExecutablePath == other.ExecutablePath &&
                 UserDataPath == other.UserDataPath &&
                 Runtime.Equals(other.Runtime);
+        }
+    }
+
+    public class SdkFileInfo
+    {
+        public SdkFileInfo(string sdkPath)
+        {
+            Path = sdkPath;
+        }
+
+        public string Path { get; private set; }
+        public string Version
+        {
+            get
+            {
+                try
+                {
+                    return FileVersionInfo.GetVersionInfo(Path).FileVersion;
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    // Somehow this is possible.
+                    return "File not found";
+                }
+            }
         }
     }
 
@@ -127,14 +154,16 @@ namespace wv2util
         //  * We don't know associated browser processes
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByClientDll()
         {
-            foreach (KeyValuePair<uint, string> moduleEntry in ProcessSnapshotHelper.PidToClientDllPath)
+            foreach (KeyValuePair<uint, string[]> moduleEntry in ProcessSnapshotHelper.PidToSdkAndClientDllPath)
             {
                 uint pid = moduleEntry.Key;
-                string clientDll = moduleEntry.Value;
+                string sdkDll = moduleEntry.Value[0];
+                string clientDll = moduleEntry.Value[1];
                 Process process = Process.GetProcessById((int)pid);
                 HostAppEntry entry = new HostAppEntry(
                     process.MainModule.FileName,
                     process.Id,
+                    sdkDll,
                     Path.Combine(clientDll, "..\\..\\..\\msedgewebview2.exe"),
                     null);
 
@@ -170,6 +199,7 @@ namespace wv2util
                     HostAppEntry entry = new HostAppEntry(
                         process?.ParentProcess()?.MainModule.FileName,
                         parentPID.GetValueOrDefault(0),
+                        null,
                         process?.MainModule.FileName,
                         userDataPath);
                     yield return entry;
@@ -203,7 +233,7 @@ namespace wv2util
         {
             return s_snapShot.GetParentProcess(process);
         }
-        public static IReadOnlyDictionary<uint, string> PidToClientDllPath => s_snapShot.PidToClientDllPath;
+        public static IReadOnlyDictionary<uint, string[]> PidToSdkAndClientDllPath => s_snapShot.PidToSdkAndClientDllPath;
     }
 
     public class ProcessSnapshot
@@ -225,12 +255,12 @@ namespace wv2util
             CreateDictionaryCache();
         }
 
-        public Dictionary<uint, string> PidToClientDllPath { get; private set; }
+        public Dictionary<uint, string[]> PidToSdkAndClientDllPath { get; private set; }
 
         private void CreateDictionaryCache()
         {
             m_ChildPidToParentPid = new Dictionary<uint, uint>();
-            PidToClientDllPath = new Dictionary<uint, string>();
+            PidToSdkAndClientDllPath = new Dictionary<uint, string[]>();
 
             PROCESSENTRY32 procInfo = new PROCESSENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32)) };
 
@@ -253,9 +283,35 @@ namespace wv2util
                     {
                         do
                         {
+                            string clientDllPath = null;
+                            string sdkDllPath = null;
                             if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
                             {
-                                PidToClientDllPath.Add(modEntry.th32ProcessID, modEntry.szExePath);
+                                clientDllPath = modEntry.szExePath;
+                            }
+                            else if (modEntry.szModule.ToLower() == "webview2loader.dll"
+                                || modEntry.szModule.ToLower() == "microsoft.web.webview2.core.dll")
+                            {
+                                sdkDllPath = modEntry.szExePath;
+                            }
+
+                            if (clientDllPath != null || sdkDllPath != null)
+                            {
+                                string[] entry;
+                                if (!PidToSdkAndClientDllPath.TryGetValue(modEntry.th32ProcessID, out entry))
+                                {
+                                    entry = new string[] { "", "" };
+                                    PidToSdkAndClientDllPath.Add(modEntry.th32ProcessID, entry);
+                                }
+
+                                if (sdkDllPath != null)
+                                {
+                                    entry[0] = sdkDllPath;
+                                }
+                                if (clientDllPath != null)
+                                {
+                                    entry[1] = clientDllPath;
+                                }
                             }
                         }
                         while (Module32NextW(hModuleSnapshot, ref modEntry));

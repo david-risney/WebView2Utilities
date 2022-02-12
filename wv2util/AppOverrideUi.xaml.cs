@@ -249,14 +249,14 @@ namespace wv2util
 
         private void GridViewColumnHeader_Runtime_Version_Click(object sender, RoutedEventArgs e)
         {
-            m_runtimeSortColumn.SelectColumn(1);
+            m_runtimeSortColumn.SelectColumn(2);
             RuntimeListData.Sort<RuntimeEntry>((left, right) =>
                 m_runtimeSortColumn.SortDirection * wv2util.SortUtil.CompareVersionStrings(left.Version, right.Version));
         }
 
         private void GridViewColumnHeader_Runtime_Channel_Click(object sender, RoutedEventArgs e)
         {
-            m_runtimeSortColumn.SelectColumn(1);
+            m_runtimeSortColumn.SelectColumn(2);
             RuntimeListData.Sort<RuntimeEntry>((left, right) =>
                 m_runtimeSortColumn.SortDirection * SortUtil.CompareChannelStrings(left.Channel, right.Channel));
         }
@@ -271,7 +271,7 @@ namespace wv2util
 
         private void GridViewColumnHeader_HostApps_PID_Click(object sender, RoutedEventArgs e)
         {
-            m_hostAppSortColumn.SelectColumn(6);
+            m_hostAppSortColumn.SelectColumn(7);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * (left.PID - right.PID));
         }
@@ -283,30 +283,37 @@ namespace wv2util
                 m_hostAppSortColumn.SortDirection * SortUtil.CompareVersionStrings(left.Runtime.Version, right.Runtime.Version));
         }
 
-        private void GridViewColumnHeader_HostApps_RuntimeChannel_Click(object sender, RoutedEventArgs e)
+        private void GridViewColumnHeader_HostApps_SdkVersion_Click(object sender, RoutedEventArgs e)
         {
             m_hostAppSortColumn.SelectColumn(2);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * SortUtil.CompareVersionStrings(left.SdkInfo.Version, right.SdkInfo.Version));
+        }
+
+        private void GridViewColumnHeader_HostApps_RuntimeChannel_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(3);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * SortUtil.CompareChannelStrings(left.Runtime.Channel, right.Runtime.Channel));
         }
 
         private void GridViewColumnHeader_HostApps_RuntimeLocation_Click(object sender, RoutedEventArgs e)
         {
-            m_hostAppSortColumn.SelectColumn(3);
+            m_hostAppSortColumn.SelectColumn(4);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * left.Runtime.RuntimeLocation.CompareTo(right.Runtime.RuntimeLocation));
         }
 
         private void GridViewColumnHeader_HostApps_UserDataPath_Click(object sender, RoutedEventArgs e)
         {
-            m_hostAppSortColumn.SelectColumn(4);
+            m_hostAppSortColumn.SelectColumn(5);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * left.UserDataPath.CompareTo(right.UserDataPath));
         }
 
         private void GridViewColumnHeader_HostApps_ExecutablePath_Click(object sender, RoutedEventArgs e)
         {
-            m_hostAppSortColumn.SelectColumn(5);
+            m_hostAppSortColumn.SelectColumn(6);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * left.ExecutablePath.CompareTo(right.ExecutablePath));
         }

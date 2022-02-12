@@ -101,6 +101,7 @@
     <Compile Include="HostAppList.cs" />
     <Compile Include="RuntimeList.cs" />
     <Compile Include="SortUtil.cs" />
+    <Compile Include="TextComboBox.cs" />
     <Page Include="AppOverrideUi.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

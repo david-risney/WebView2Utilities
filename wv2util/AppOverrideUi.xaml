@@ -51,7 +51,7 @@
                     <Button x:Name="RemoveButton" IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="257,0,0,5" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
 
                     <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
-                    <ComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,68,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26" />
+                    <local:TextComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,68,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26"/>
 
                     <GroupBox Height="120" VerticalAlignment="Top" Margin="339,48,10,0">
                         <GroupBox.Header>
@@ -63,7 +63,7 @@
                             <RadioButton Name="RuntimeScenarioFixedVersion" IsChecked="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Content="Fixed Version" ToolTip="Use the WebView2 Runtime at the specified path" GroupName="RuntimeScenario" Margin="10,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                         </Grid>
                     </GroupBox>
-                    <ComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,129,68,0" VerticalContentAlignment="Center"/>
+                    <local:TextComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,129,68,0" VerticalContentAlignment="Center"/>
                     <Button IsEnabled="{Binding Path=IsValidAndFixedVersionSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,131,21,0" Click="AppOverrideRuntimePathButton_Click"/>
 
                     <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,176,0,0" Width="126"/>
@@ -117,6 +117,9 @@
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding PID}">
                                 <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding SdkInfo.Version}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_SdkVersion_Click">SDK Version</GridViewColumnHeader>
                             </GridViewColumn>
                             <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
                                 <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
