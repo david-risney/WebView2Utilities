@@ -146,6 +146,7 @@ namespace wv2util
                 try
                 {
                     Clipboard.SetText(selection.ExecutableName + "\t" +
+                        selection.SdkInfo.Version + "\t" +
                         selection.Runtime.RuntimeLocation + "\t" +
                         selection.Runtime.Version + "\t" +
                         selection.Runtime.Channel + "\t" +
