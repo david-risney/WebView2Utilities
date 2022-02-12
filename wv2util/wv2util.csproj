@@ -25,7 +25,10 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://david-risney.github.io/webview2-utils/install/</InstallUrl>
+    <InstallUrl>https://david-risney.github.io/WebView2Utilities/install/</InstallUrl>
+    <SupportUrl>https://github.com/david-risney/WebView2Utilities/</SupportUrl>
+    <TargetCulture>en-US</TargetCulture>
+    <ProductName>WebView2 Utilities</ProductName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <ApplicationRevision>11</ApplicationRevision>
