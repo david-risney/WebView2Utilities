@@ -7,7 +7,7 @@
     <ProjectGuid>{3B31D688-B3A2-435A-9D52-4B089821AE6F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>wv2util</RootNamespace>
-    <AssemblyName>wv2util</AssemblyName>
+    <AssemblyName>WebView2Utilities</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -25,11 +25,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://david-risney.github.io/webview2-utils/install/</InstallUrl>
+    <InstallUrl>https://david-risney.github.io/WebView2Utilities/install/</InstallUrl>
+    <SupportUrl>https://david-risney.github.io/WebView2Utilities/</SupportUrl>
+    <ErrorReportUrl>https://david-risney.github.io/WebView2Utilities/</ErrorReportUrl>
+    <TargetCulture>en-US</TargetCulture>
+    <ProductName>WebView2Utilities</ProductName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>12</ApplicationRevision>
-    <ApplicationVersion>1.0.0.12</ApplicationVersion>
+    <ApplicationRevision>13</ApplicationRevision>
+    <ApplicationVersion>1.0.0.13</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

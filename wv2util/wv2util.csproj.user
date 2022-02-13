@@ -2,11 +2,11 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PublishUrlHistory>..\install\</PublishUrlHistory>
-    <InstallUrlHistory>https://david-risney.github.io/webview2-utils/install/|https://david-risney.github.io/WebView2Utilities/install/</InstallUrlHistory>
-    <SupportUrlHistory>https://david-risney.github.io/webview2-utils/|https://github.com/david-risney/WebView2Utilities/</SupportUrlHistory>
+    <InstallUrlHistory>https://david-risney.github.io/WebView2Utilities/install/</InstallUrlHistory>
+    <SupportUrlHistory>https://github.com/david-risney/WebView2Utilities/</SupportUrlHistory>
     <UpdateUrlHistory />
     <BootstrapperUrlHistory />
-    <ErrorReportUrlHistory>https://david-risney.github.io/webview2-utils/</ErrorReportUrlHistory>
+    <ErrorReportUrlHistory>https://david-risney.github.io/WebView2Utilities/</ErrorReportUrlHistory>
     <FallbackCulture>en-US</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
