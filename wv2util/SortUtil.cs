@@ -46,6 +46,15 @@ namespace wv2util
 
         public static int CompareVersionStrings(string left, string right)
         {
+            // If its not a version number just give it an effective 0 version.
+            if (!left.Contains('.'))
+            {
+                left = "0.0.0.0";
+            }
+            if (!right.Contains('.'))
+            {
+                right = "0.0.0.0";
+            }
             IEnumerable<int> leftParts = left.Split('.').Select(partAsString => int.Parse(partAsString));
             IEnumerable<int> rightParts = right.Split('.').Select(partAsString => int.Parse(partAsString));
 

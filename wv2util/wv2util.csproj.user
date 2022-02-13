@@ -2,8 +2,8 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <PublishUrlHistory>..\install\</PublishUrlHistory>
-    <InstallUrlHistory>https://david-risney.github.io/WebView2Utilities/install/|https://david-risney.github.io/webview2-utils/install/</InstallUrlHistory>
-    <SupportUrlHistory />
+    <InstallUrlHistory>https://david-risney.github.io/webview2-utils/install/</InstallUrlHistory>
+    <SupportUrlHistory>https://david-risney.github.io/webview2-utils/</SupportUrlHistory>
     <UpdateUrlHistory />
     <BootstrapperUrlHistory />
     <ErrorReportUrlHistory />

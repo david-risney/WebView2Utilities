@@ -107,7 +107,7 @@
                     </ListView>
                     <Expander Grid.Row="1">
                         <Expander.Header>
-                            <Label Style="{StaticResource subHeading}" Content="Find more WebView2 Runtimes" />
+                            <Label Content="Find more WebView2 Runtimes" />
                         </Expander.Header>
                         <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,0,0,10">
                             <TextBlock><Hyperlink NavigateUri="https://docs.microsoft.com/en-us/deployedge/microsoft-edge-release-schedule" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge release schedule</Hyperlink></TextBlock>
