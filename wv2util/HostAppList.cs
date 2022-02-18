@@ -162,12 +162,17 @@ namespace wv2util
                 uint pid = moduleEntry.Key;
                 string sdkDll = moduleEntry.Value[0];
                 string clientDll = moduleEntry.Value[1];
+                string runtimePath = "";
+                if (clientDll != "")
+                {
+                    runtimePath = Path.Combine(clientDll, "..\\..\\..\\msedgewebview2.exe");
+                }
                 Process process = Process.GetProcessById((int)pid);
                 HostAppEntry entry = new HostAppEntry(
                     process.MainModule.FileName,
                     process.Id,
                     sdkDll,
-                    Path.Combine(clientDll, "..\\..\\..\\msedgewebview2.exe"),
+                    runtimePath,
                     null);
 
                 yield return entry;

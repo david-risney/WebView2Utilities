@@ -18,7 +18,7 @@ namespace wv2util
             ExePath = location;
         }
         public string ExePath { get; protected set; }
-        public string RuntimeLocation => Directory.GetParent(ExePath).FullName;
+        public string RuntimeLocation => ExePath != "" ? Directory.GetParent(ExePath).FullName : "Unknown";
         public string Version
         {
             get
@@ -29,7 +29,10 @@ namespace wv2util
                 }
                 catch (System.IO.FileNotFoundException)
                 {
-                    // Somehow this is possible.
+                    return "File not found";
+                }
+                catch (System.ArgumentException)
+                {
                     return "File not found";
                 }
             }
