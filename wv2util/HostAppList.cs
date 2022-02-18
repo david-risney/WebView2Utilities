@@ -56,7 +56,10 @@ namespace wv2util
                 }
                 catch (System.IO.FileNotFoundException)
                 {
-                    // Somehow this is possible.
+                    return "File not found";
+                }
+                catch (System.ArgumentException)
+                {
                     return "File not found";
                 }
             }
