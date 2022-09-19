@@ -69,10 +69,10 @@ namespace wv2util
             ToRegistry();
         }
 
-        private static readonly string s_registryPathBrowserExecutableFolder = @"Software\Policies\Microsoft\Edge\WebView2\BrowserExecutableFolder";
-        private static readonly string s_registryPathReleaseChannelPreference = @"Software\Policies\Microsoft\Edge\WebView2\ReleaseChannelPreference";
-        private static readonly string s_registryPathAdditionalBrowserArguments = @"Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments";
-        private static readonly string s_registryPathUserDataFolder = @"Software\Policies\Microsoft\Edge\WebView2\UserDataFolder";
+        public static readonly string s_registryPathBrowserExecutableFolder = RegistryUtil.s_webView2RegKey + @"\BrowserExecutableFolder";
+        public static readonly string s_registryPathReleaseChannelPreference = RegistryUtil.s_webView2RegKey + @"\ReleaseChannelPreference";
+        public static readonly string s_registryPathAdditionalBrowserArguments = RegistryUtil.s_webView2RegKey + @"\AdditionalBrowserArguments";
+        public static readonly string s_registryPathUserDataFolder = RegistryUtil.s_webView2RegKey + @"\UserDataFolder";
         private static readonly string[] s_registryPaths =
         {
             s_registryPathAdditionalBrowserArguments,
@@ -80,55 +80,6 @@ namespace wv2util
             s_registryPathReleaseChannelPreference,
             s_registryPathUserDataFolder
         };
-
-        private static void EnsureRegistryPaths(RegistryKey root = null)
-        {
-            foreach (string registryPath in s_registryPaths)
-            {
-                EnsureRegistryPath(root == null ? Registry.CurrentUser : root, registryPath);
-            }
-        }
-
-        private static void EnsureRegistryPath(RegistryKey root, string registryPath)
-        {
-            RegistryKey parent = root;
-            foreach (string part in registryPath.Split('\\'))
-            {
-                RegistryKey child = null;
-                try
-                {
-                    child = parent.OpenSubKey(part, true);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error: " + e);
-                }
-                if (child == null)
-                {
-                    child = parent.CreateSubKey(part, true);
-                }
-                parent = child;
-            }
-        }
-
-        private static RegistryKey OpenRegistryPath(RegistryKey root, string registryPath, bool write)
-        {
-            RegistryKey parent = root;
-            foreach (string part in registryPath.Split('\\'))
-            {
-                RegistryKey child = null;
-                try
-                {
-                    child = parent.OpenSubKey(part, write);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Error: " + e);
-                }
-                parent = child;
-            }
-            return parent;
-        }
 
         private static AppOverrideEntry GetOrCreateEntry(Dictionary<string, AppOverrideEntry> appNameToEntry, ObservableCollection<AppOverrideEntry> collection, string valueName)
         {
@@ -146,7 +97,7 @@ namespace wv2util
 
         public static void UpdateCollectionFromRegistry(ObservableCollection<AppOverrideEntry> collection)
         {
-            EnsureRegistryPaths();
+            RegistryUtil.EnsureRegistryPaths(s_registryPaths);
             Dictionary<string, AppOverrideEntry> appNameToEntry = new Dictionary<string, AppOverrideEntry>();
             HashSet<AppOverrideEntry> entriesToRemove = new HashSet<AppOverrideEntry>();
             RegistryKey regKey;
@@ -163,7 +114,7 @@ namespace wv2util
                 appNameToEntry.Add(entry.HostApp, entry);
             }
 
-            regKey = OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, false);
+            regKey = RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, false);
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
@@ -172,7 +123,7 @@ namespace wv2util
                 entriesToRemove.Remove(entry);
             }
 
-            regKey = OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, false);
+            regKey = RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, false);
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
@@ -190,7 +141,7 @@ namespace wv2util
                 entriesToRemove.Remove(entry);
             }
 
-            regKey = OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, false);
+            regKey = RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, false);
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
@@ -199,7 +150,7 @@ namespace wv2util
                 entriesToRemove.Remove(entry);
             }
 
-            regKey = OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, false);
+            regKey = RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, false);
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
@@ -264,22 +215,14 @@ namespace wv2util
             }
         }
 
-        private static void DeleteValueIfItExists(RegistryKey key, string valueName)
-        {
-            if (key != null && key.GetValue(valueName) != null)
-            {
-                key.DeleteValue(valueName);
-            }
-        }
-
         private static void RemoveEntryFromRegistry(AppOverrideEntry entry)
         {
             if (!IgnoreUpdatesToRegistry)
             {
-                DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true), entry.HostApp);
-                DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
-                DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
-                DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
             }
         }
 
@@ -290,34 +233,34 @@ namespace wv2util
                 // Use empty string for browser arguments if its null. But always write it to ensure we have something in the registry
                 // recording the entry. An empty string browser arguments is fine because its merged with normal command line arguments
                 // and won't change anything, unlike the paths.
-                OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(
+                RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathAdditionalBrowserArguments, true)?.SetValue(
                     entry.HostApp,
                     entry.BrowserArguments != null ? entry.BrowserArguments : "",
                     RegistryValueKind.String);
 
                 if (entry.RuntimePath != null && entry.RuntimePath != "")
                 {
-                    OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true)?.SetValue(entry.HostApp, entry.RuntimePath, RegistryValueKind.String);
+                    RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true)?.SetValue(entry.HostApp, entry.RuntimePath, RegistryValueKind.String);
                 }
                 else
                 {
-                    DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
+                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
                 }
                 if (entry.ReverseSearchOrder)
                 {
-                    OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
+                    RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
                 }
                 else
                 {
-                    DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
+                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
                 }
                 if (entry.UserDataPath != null && entry.UserDataPath != "")
                 {
-                    OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true)?.SetValue(entry.HostApp, entry.UserDataPath, RegistryValueKind.String);
+                    RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true)?.SetValue(entry.HostApp, entry.UserDataPath, RegistryValueKind.String);
                 }
                 else
                 {
-                    DeleteValueIfItExists(OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
+                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
                 }
             }
         }

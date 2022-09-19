@@ -99,7 +99,6 @@ namespace wv2util
                 AppOverrideListData.RemoveAt(AppOverrideListBox.SelectedIndex);
             }
         }
-
         private void AddNewButton_Click(object sender, RoutedEventArgs e)
         {
             AppOverrideEntry entry = new AppOverrideEntry
@@ -108,6 +107,11 @@ namespace wv2util
             };
             entry.InitializationComplete();
             AppOverrideListData.Add(entry);
+        }
+
+        private void RegEditButton_Click(object sender, RoutedEventArgs e)
+        {
+            RegistryUtil.LaunchRegEdit();
         }
 
         protected AppOverrideList AppOverrideListData => (AppOverrideList)AppOverrideListBox?.ItemsSource;
