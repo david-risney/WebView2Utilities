@@ -244,7 +244,7 @@ namespace wv2util
                 }
                 else
                 {
-                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
+                    RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
                 }
                 if (entry.ReverseSearchOrder)
                 {
@@ -252,7 +252,7 @@ namespace wv2util
                 }
                 else
                 {
-                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
+                    RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathReleaseChannelPreference, true), entry.HostApp);
                 }
                 if (entry.UserDataPath != null && entry.UserDataPath != "")
                 {
@@ -260,7 +260,7 @@ namespace wv2util
                 }
                 else
                 {
-                    DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
+                    RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(Registry.CurrentUser, s_registryPathUserDataFolder, true), entry.HostApp);
                 }
             }
         }
