@@ -107,7 +107,7 @@
     <Compile Include="RuntimeList.cs" />
     <Compile Include="SortUtil.cs" />
     <Compile Include="TextComboBox.cs" />
-    <Page Include="AppOverrideUi.xaml">
+    <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -115,8 +115,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AppOverrideUi.xaml.cs">
-      <DependentUpon>AppOverrideUi.xaml</DependentUpon>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

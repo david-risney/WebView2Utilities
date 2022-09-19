@@ -81,9 +81,9 @@ namespace wv2util
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
-    public partial class AppOverrideUi : Window
+    public partial class MainWindow : Window
     {
-        public AppOverrideUi()
+        public MainWindow()
         {
             InitializeComponent();
             ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;

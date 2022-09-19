@@ -274,13 +274,16 @@ namespace wv2util
 
             MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
 
+            // Returns the first process in the snapshot
             if (Process32First(m_hSnapshot, ref procInfo))
             {
                 do
                 {
+                    // Exclude executables that can't be host to WebView2
                     if (procInfo.szExeFile.ToLower() != "lsass.exe" ||
                         procInfo.szExeFile.ToLower() != "svchost.exe")
                     {
+                        // Save the process id and parent id to create a tree 
                         m_ChildPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
                     }
 
