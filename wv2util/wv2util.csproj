@@ -103,10 +103,13 @@
     </ApplicationDefinition>
     <Compile Include="AppOverride.cs" />
     <Compile Include="HostAppList.cs" />
+    <Compile Include="HwndUtil.cs" />
+    <Compile Include="ProcessSnapshotUtil.cs" />
     <Compile Include="RegistryUtil.cs" />
     <Compile Include="RuntimeList.cs" />
     <Compile Include="SortUtil.cs" />
     <Compile Include="TextComboBox.cs" />
+    <Compile Include="VersionUtil.cs" />
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

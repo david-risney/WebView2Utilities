@@ -13,65 +13,47 @@ namespace wv2util
 {
     public class RuntimeEntry : IEquatable<RuntimeEntry>
     {
-        public RuntimeEntry(string location)
+        // Create with the path to msedgewebview2.exe of the
+        // corresponding WebView2 Runtime.
+        public RuntimeEntry(string webview2RuntimeExePath)
         {
-            ExePath = location;
+            ExePath = webview2RuntimeExePath;
         }
         public string ExePath { get; protected set; }
         public string RuntimeLocation => ExePath != "" ? Directory.GetParent(ExePath).FullName : "Unknown";
-        public string Version
-        {
-            get
-            {
-                try
-                {
-                    return FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
-                }
-                catch (System.IO.FileNotFoundException)
-                {
-                    return "File not found";
-                }
-                catch (System.ArgumentException)
-                {
-                    return "File not found";
-                }
-            }
-        }
+        public string Version => VersionUtil.GetVersionStringFromFilePath(ExePath);
         public string Channel
         {
             get
             {
-                if (ExePath.ToLower().Contains("\\edge sxs\\"))
+                if (ExePath != "" && ExePath != null)
                 {
-                    return "Canary";
+                    if (ExePath.ToLower().Contains("\\edge sxs\\"))
+                    {
+                        return "Canary";
+                    }
+                    else if (ExePath.ToLower().Contains("\\edge beta\\"))
+                    {
+                        return "Beta";
+                    }
+                    else if (ExePath.ToLower().Contains("\\edge dev\\"))
+                    {
+                        return "Dev";
+                    }
+                    else if (ExePath.ToLower().Contains("\\edge\\"))
+                    {
+                        return "Stable";
+                    }
+                    else if (ExePath.ToLower().Contains("\\edgewebview\\"))
+                    {
+                        return "Stable WebView2 Runtime";
+                    }
                 }
-                else if (ExePath.ToLower().Contains("\\edge beta\\"))
-                {
-                    return "Beta";
-                }
-                else if (ExePath.ToLower().Contains("\\edge dev\\"))
-                {
-                    return "Dev";
-                }
-                else if (ExePath.ToLower().Contains("\\edge\\"))
-                {
-                    return "Stable";
-                }
-                else if (ExePath.ToLower().Contains("\\edgewebview\\"))
-                {
-                    return "Stable WebView2 Runtime";
-                }
-                else
-                {
-                    return "Unknown";
-                }
+                return "Unknown";
             }
         }
 
-        public bool Equals(RuntimeEntry other)
-        {
-            return RuntimeLocation == other.RuntimeLocation;
-        }
+        public bool Equals(RuntimeEntry other) => RuntimeLocation == other.RuntimeLocation;
     }
 
     public class RuntimeList : ObservableCollection<RuntimeEntry>

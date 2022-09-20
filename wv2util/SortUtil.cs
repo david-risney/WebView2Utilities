@@ -44,6 +44,21 @@ namespace wv2util
             }
         }
 
+        public static int CompareStrings(string left, string right)
+        {
+            string effectiveLeft = left;
+            string effectiveRight = right;
+            if (effectiveLeft == null)
+            {
+                effectiveLeft = "";
+            }
+            if (effectiveRight == null)
+            {
+                effectiveRight = "";
+            }
+            return effectiveLeft.CompareTo(effectiveRight);
+        }
+
         public static int CompareVersionStrings(string left, string right)
         {
             // If its not a version number just give it an effective 0 version.

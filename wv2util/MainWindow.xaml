@@ -166,6 +166,9 @@
                             <GridViewColumn DisplayMemberBinding="{Binding ExecutablePath}">
                                 <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_ExecutablePath_Click">Executable Path</GridViewColumnHeader>
                             </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Browser_Process_PID_Click">Browser Process PID</GridViewColumnHeader>
+                            </GridViewColumn>
                         </GridView>
                     </ListView.View>
                 </ListView>
