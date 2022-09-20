@@ -139,46 +139,39 @@
                         <Button x:Name="HostAppsReload" Content="&#x1F503;" Click="HostAppsReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-                    <CheckBox x:Name="OnlyIncludeActiveCheckBox" Content="Only show apps with initialized WebView2" IsChecked="False" Click="OnlyIncludeActiveCheckBox_Clicked" Grid.Row="0" />
-                    <ListView x:Name="HostAppListView" Grid.Row="1" ItemsSource="{Binding HostAppCollectionsView}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="HostAppListViewSelectionChanged">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding PID}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding SdkInfo.Version}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_SdkVersion_Click">SDK Version</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Runtime.Channel}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeChannel_Click">Runtime Channel</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Runtime.RuntimeLocation}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeLocation_Click">Runtime Path</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding UserDataPath}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_UserDataPath_Click">User Data Path</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding ExecutablePath}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_ExecutablePath_Click">Executable Path</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Browser_Process_PID_Click">Browser Process PID</GridViewColumnHeader>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                </Grid>
+                <ListView x:Name="HostAppListView" Grid.Row="1" ItemsSource="{Binding HostAppCollectionsView}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="HostAppListViewSelectionChanged">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding PID}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding SdkInfo.Version}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_SdkVersion_Click">SDK Version</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Channel}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeChannel_Click">Runtime Channel</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.RuntimeLocation}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeLocation_Click">Runtime Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding UserDataPath}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_UserDataPath_Click">User Data Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding ExecutablePath}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_ExecutablePath_Click">Executable Path</GridViewColumnHeader>
+                            </GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
+                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Browser_Process_PID_Click">Browser Process PID</GridViewColumnHeader>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
             </TabItem>
             
             <!-- About tab -->

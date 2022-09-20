@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace wv2util
 {
-    internal class ProcessUtil
+    public static class ProcessUtil
     {
         /// <summary>
         /// Takes a snapshot of the specified processes, as well as the heaps, 
@@ -93,6 +95,50 @@ namespace wv2util
             public uint dwFlags;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
             public string szExeFile;
+        }
+
+        // private static readonly uint TH32CS_SNAPPROCESS = 0x2;
+        private static readonly uint TH32CS_SNAPMODULE = 0x8;
+        private static readonly uint TH32CS_SNAPMODULE32 = 0x10;
+
+        public static Tuple<string, string> GetClientDllPathAndSdkDllPathFromPid(uint pid)
+        {
+            string clientDllPath = null;
+            string sdkDllPath = null;
+            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
+            IntPtr hModuleSnapshot = CreateToolhelp32Snapshot(
+                TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
+
+            if (Module32FirstW(hModuleSnapshot, ref modEntry))
+            {
+                do
+                {
+                    if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
+                    {
+                        clientDllPath = modEntry.szExePath;
+                    }
+                    else if (modEntry.szModule.ToLower() == "webview2loader.dll"
+                        || modEntry.szModule.ToLower() == "microsoft.web.webview2.core.dll")
+                    {
+                        sdkDllPath = modEntry.szExePath;
+                    }
+                }
+                while (Module32NextW(hModuleSnapshot, ref modEntry));
+            }
+            CloseHandle(hModuleSnapshot);
+
+            return new Tuple<string, string>(clientDllPath, sdkDllPath);
+        }
+
+
+        public static string GetCommandLine(this Process process)
+        {
+            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + process.Id))
+            using (ManagementObjectCollection objects = searcher.Get())
+            {
+                return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
+            }
+
         }
     }
 }

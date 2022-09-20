@@ -69,7 +69,7 @@ namespace wv2util
             return hwnds;
         }
 
-        public static Dictionary<int, List<IntPtr>> CreatePidToHwndsFromHwnds(List<IntPtr> hwnds)
+        public static Dictionary<int, List<IntPtr>> CreatePidToHwndsMapFromHwnds(List<IntPtr> hwnds)
         {
             Dictionary<int, List<IntPtr>> pidToHwndMap = new Dictionary<int, List<IntPtr>>();
             // Turn the list of hwnds into a dictionary of pid to hwnd list.
@@ -89,7 +89,7 @@ namespace wv2util
 
         public static Dictionary<int, List<IntPtr>> GetPidToTopLevelHwndsMap(HwndFilterCallback filterCallback = null)
         {
-            return CreatePidToHwndsFromHwnds(GetTopLevelHwnds(filterCallback));
+            return CreatePidToHwndsMapFromHwnds(GetTopLevelHwnds(filterCallback));
         }
 
         public static List<IntPtr> GetChildWindows(IntPtr parentHwnd, HwndFilterCallback filterCallback = null)

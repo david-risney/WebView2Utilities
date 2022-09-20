@@ -68,25 +68,10 @@ namespace wv2util
             _ = FromMachineAsync();
             m_collectionViewSource = new CollectionViewSource();
             m_collectionViewSource.Source = this;
-            m_collectionViewSource.Filter += CollectionViewSource_Filter;
-        }
-
-        private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
-        {
-            var hostApp = e.Item as HostAppEntry;
-            // If we only want to see active WebView2's, check that there is a runtime location.
-            e.Accepted = (!OnlyIncludeActive || hostApp.Runtime.RuntimeLocation != "Unknown");
         }
 
         private CollectionViewSource m_collectionViewSource;
         public ICollectionView HostAppCollectionsView { get { return m_collectionViewSource.View; } }
-
-        private bool m_onlyIncludeActive = false;
-        public bool OnlyIncludeActive
-        {
-            get { return m_onlyIncludeActive; } 
-            set { m_onlyIncludeActive = value; m_collectionViewSource.View.Refresh(); }
-        }
 
         // This is clearly not thread safe. It assumes FromDiskAsync will only
         // be called from the same thread.
@@ -132,8 +117,6 @@ namespace wv2util
             {
                 Items.Add(entry);
             }
-
-
 
             OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
@@ -193,7 +176,7 @@ namespace wv2util
                 Process process = TryGetProcessById((int)pid);
                 if (process != null)
                 {
-                    var clientDllPathAndSdkDllPath = ProcessSnapshotUtil.GetClientDllPathAndSdkDllPathFromPid(pid);
+                    var clientDllPathAndSdkDllPath = ProcessUtil.GetClientDllPathAndSdkDllPathFromPid(pid);
                     string clientDllPath = clientDllPathAndSdkDllPath.Item1;
                     string sdkDllPath = clientDllPathAndSdkDllPath.Item2;
                     if (clientDllPath != null || sdkDllPath != null)
@@ -220,7 +203,7 @@ namespace wv2util
             // We do work to avoid calling EnumWindows more than once.
             var pids = hostAppEntries.Select(entry => entry.PID).ToList();
             var allTopLevelHwnds = HwndUtil.GetTopLevelHwnds(hwnd => pids.Contains(HwndUtil.GetWindowProcessId(hwnd)));
-            var pidToTopLevelHwndsMap = HwndUtil.CreatePidToHwndsFromHwnds(allTopLevelHwnds);
+            var pidToTopLevelHwndsMap = HwndUtil.CreatePidToHwndsMapFromHwnds(allTopLevelHwnds);
 
             // Now explore child windows to find running WebView2 runtime processes
             // We get all the PIDs of the host apps.

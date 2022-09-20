@@ -216,11 +216,6 @@ namespace wv2util
             HostAppsReload.IsEnabled = true;
         }
 
-        private void OnlyIncludeActiveCheckBox_Clicked(object sender, RoutedEventArgs e)
-        {
-            HostAppsListData.OnlyIncludeActive = OnlyIncludeActiveCheckBox.IsChecked ?? false;
-        }
-
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             // for .NET Core you need to add UseShellExecute = true
