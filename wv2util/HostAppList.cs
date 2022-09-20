@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using System.Windows.Navigation;
 
 namespace wv2util
@@ -65,6 +66,26 @@ namespace wv2util
         public HostAppList()
         {
             _ = FromMachineAsync();
+            m_collectionViewSource = new CollectionViewSource();
+            m_collectionViewSource.Source = this;
+            m_collectionViewSource.Filter += CollectionViewSource_Filter;
+        }
+
+        private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
+        {
+            var hostApp = e.Item as HostAppEntry;
+            // If we only want to see active WebView2's, check that there is a runtime location.
+            e.Accepted = (!OnlyIncludeActive || hostApp.Runtime.RuntimeLocation != "Unknown");
+        }
+
+        private CollectionViewSource m_collectionViewSource;
+        public ICollectionView HostAppCollectionsView { get { return m_collectionViewSource.View; } }
+
+        private bool m_onlyIncludeActive = false;
+        public bool OnlyIncludeActive
+        {
+            get { return m_onlyIncludeActive; } 
+            set { m_onlyIncludeActive = value; m_collectionViewSource.View.Refresh(); }
         }
 
         // This is clearly not thread safe. It assumes FromDiskAsync will only
@@ -111,6 +132,9 @@ namespace wv2util
             {
                 Items.Add(entry);
             }
+
+
+
             OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
@@ -315,6 +339,16 @@ namespace wv2util
             }
 
             return new Tuple<string, string>(userDataPath, processType);
+        }
+    }
+
+    public class HostAppListCollectionView : CollectionViewSource
+    {
+        public HostAppList HostAppList { get; private set; }
+
+        public HostAppListCollectionView()
+        {
+            HostAppList = new HostAppList();
         }
     }
 }
