@@ -118,7 +118,7 @@ namespace wv2util
         private uint m_NewEntriesCount = 0;
 
         protected RuntimeList RuntimeListData => (RuntimeList)RuntimeList?.ItemsSource;
-        protected HostAppList HostAppsListData => (HostAppList)HostAppListView?.ItemsSource;
+        protected HostAppList HostAppsListData => Resources["HostAppList"] as HostAppList;
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
@@ -214,6 +214,11 @@ namespace wv2util
             await HostAppsListData.FromMachineAsync();
             HostAppsReload.Content = originalContent;
             HostAppsReload.IsEnabled = true;
+        }
+
+        private void OnlyIncludeActiveCheckBox_Clicked(object sender, RoutedEventArgs e)
+        {
+            HostAppsListData.OnlyIncludeActive = OnlyIncludeActiveCheckBox.IsChecked ?? false;
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)

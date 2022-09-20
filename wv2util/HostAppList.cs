@@ -10,6 +10,7 @@ using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Windows.Data;
 
 namespace wv2util
 {
@@ -71,6 +72,26 @@ namespace wv2util
         public HostAppList()
         {
             _ = FromMachineAsync();
+            m_collectionViewSource = new CollectionViewSource();
+            m_collectionViewSource.Source = this;
+            m_collectionViewSource.Filter += CollectionViewSource_Filter;
+        }
+
+        private void CollectionViewSource_Filter(object sender, FilterEventArgs e)
+        {
+            var hostApp = e.Item as HostAppEntry;
+            // If we only want to see active WebView2's, check that there is a runtime location.
+            e.Accepted = (!OnlyIncludeActive || hostApp.Runtime.RuntimeLocation != "Unknown");
+        }
+
+        private CollectionViewSource m_collectionViewSource;
+        public ICollectionView HostAppCollectionsView { get { return m_collectionViewSource.View; } }
+
+        private bool m_onlyIncludeActive = false;
+        public bool OnlyIncludeActive
+        {
+            get { return m_onlyIncludeActive; } 
+            set { m_onlyIncludeActive = value; m_collectionViewSource.View.Refresh(); }
         }
 
         // This is clearly not thread safe. It assumes FromDiskAsync will only
@@ -118,6 +139,9 @@ namespace wv2util
             {
                 Items.Add(entry);
             }
+
+
+
             OnPropertyChanged(new PropertyChangedEventArgs("Count"));
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
@@ -255,10 +279,10 @@ namespace wv2util
         {
             if (m_hSnapshot != IntPtr.Zero)
             {
-                CloseHandle(m_hSnapshot);
+                ProcessUtil.CloseHandle(m_hSnapshot);
             }
 
-            m_hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            m_hSnapshot = ProcessUtil.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 
             CreateDictionaryCache();
         }
@@ -270,12 +294,16 @@ namespace wv2util
             m_ChildPidToParentPid = new Dictionary<uint, uint>();
             PidToSdkAndClientDllPath = new Dictionary<uint, string[]>();
 
-            PROCESSENTRY32 procInfo = new PROCESSENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(PROCESSENTRY32)) };
+            ProcessUtil.PROCESSENTRY32 procInfo = new ProcessUtil.PROCESSENTRY32() { 
+                dwSize = (uint)Marshal.SizeOf(typeof(ProcessUtil.PROCESSENTRY32)) 
+            };
 
-            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
+            ProcessUtil.MODULEENTRY32 modEntry = new ProcessUtil.MODULEENTRY32() { 
+                dwSize = (uint)Marshal.SizeOf(typeof(ProcessUtil.MODULEENTRY32)) 
+            };
 
             // Returns the first process in the snapshot
-            if (Process32First(m_hSnapshot, ref procInfo))
+            if (ProcessUtil.Process32First(m_hSnapshot, ref procInfo))
             {
                 do
                 {
@@ -287,10 +315,10 @@ namespace wv2util
                         m_ChildPidToParentPid.Add(procInfo.th32ProcessID, procInfo.th32ParentProcessID);
                     }
 
-                    IntPtr hModuleSnapshot = CreateToolhelp32Snapshot(
+                    IntPtr hModuleSnapshot = ProcessUtil.CreateToolhelp32Snapshot(
                         TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, procInfo.th32ProcessID);
 
-                    if (Module32FirstW(hModuleSnapshot, ref modEntry))
+                    if (ProcessUtil.Module32FirstW(hModuleSnapshot, ref modEntry))
                     {
                         do
                         {
@@ -325,11 +353,11 @@ namespace wv2util
                                 }
                             }
                         }
-                        while (Module32NextW(hModuleSnapshot, ref modEntry));
+                        while (ProcessUtil.Module32NextW(hModuleSnapshot, ref modEntry));
                     }
-                    CloseHandle(hModuleSnapshot);
+                    ProcessUtil.CloseHandle(hModuleSnapshot);
                 }
-                while (Process32Next(m_hSnapshot, ref procInfo)); // Read next
+                while (ProcessUtil.Process32Next(m_hSnapshot, ref procInfo)); // Read next
             }
         }
 
@@ -367,91 +395,15 @@ namespace wv2util
                 return null;
             }
         }
+    }
 
-        /// <summary>
-        /// Takes a snapshot of the specified processes, as well as the heaps, 
-        /// modules, and threads used by these processes.
-        /// </summary>
-        /// <param name="dwFlags">
-        /// The portions of the system to be included in the snapshot.
-        /// </param>
-        /// <param name="th32ProcessID">
-        /// The process identifier of the process to be included in the snapshot.
-        /// </param>
-        /// <returns>
-        /// If the function succeeds, it returns an open handle to the specified snapshot.
-        /// If the function fails, it returns INVALID_HANDLE_VALUE.
-        /// </returns>
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
+    public class HostAppListCollectionView : CollectionViewSource
+    {
+        public HostAppList HostAppList { get; private set; }
 
-        /// <summary>
-        /// Retrieves information about the first process encountered in a system snapshot.
-        /// </summary>
-        /// <param name="hSnapshot">A handle to the snapshot.</param>
-        /// <param name="lppe">A pointer to a PROCESSENTRY32 structure.</param>
-        /// <returns>
-        /// Returns TRUE if the first entry of the process list has been copied to the buffer.
-        /// Returns FALSE otherwise.
-        /// </returns>
-        [DllImport("kernel32.dll")]
-        private static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-        /// <summary>
-        /// Retrieves information about the next process recorded in a system snapshot.
-        /// </summary>
-        /// <param name="hSnapshot">A handle to the snapshot.</param>
-        /// <param name="lppe">A pointer to a PROCESSENTRY32 structure.</param>
-        /// <returns>
-        /// Returns TRUE if the next entry of the process list has been copied to the buffer.
-        /// Returns FALSE otherwise.</returns>
-        [DllImport("kernel32.dll")]
-        private static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool CloseHandle(IntPtr hSnapshot);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool Module32FirstW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
-
-        [DllImport("kernel32.dll")]
-        private static extern bool Module32NextW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
-        public struct MODULEENTRY32
+        public HostAppListCollectionView()
         {
-            internal uint dwSize;
-            internal uint th32ModuleID;
-            internal uint th32ProcessID;
-            internal uint GlblcntUsage;
-            internal uint ProccntUsage;
-            internal IntPtr modBaseAddr;
-            internal uint modBaseSize;
-            internal IntPtr hModule;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            internal string szModule;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            internal string szExePath;
-        }
-
-        /// <summary>
-        /// Describes an entry from a list of the processes residing 
-        /// in the system address space when a snapshot was taken.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        private struct PROCESSENTRY32
-        {
-            public uint dwSize;
-            public uint cntUsage;
-            public uint th32ProcessID;
-            public IntPtr th32DefaultHeapID;
-            public uint th32ModuleID;
-            public uint cntThreads;
-            public uint th32ParentProcessID;
-            public int pcPriClassBase;
-            public uint dwFlags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            public string szExeFile;
+            HostAppList = new HostAppList();
         }
     }
 }
