@@ -128,6 +128,43 @@ namespace wv2util
             AppOverrideListData.FromRegistry();
         }
 
+        private void HostAppsGoToOverride_Click(object sender, RoutedEventArgs e)
+        {
+            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            if (selectedHostAppEntry != null)
+            {
+                AppOverrideListData.FromRegistry();
+
+                int foundOverrideIdx = -1;
+                for (int appOverrideIdx = 0; appOverrideIdx < AppOverrideListData.Count; ++appOverrideIdx)
+                {
+                    var appOverride = AppOverrideListData[appOverrideIdx];
+                    if (appOverride.HostApp.ToLower() == selectedHostAppEntry.ExecutableName.ToLower())
+                    {
+                        foundOverrideIdx = appOverrideIdx;
+                        break;
+                    }
+                }
+
+                if (foundOverrideIdx == -1)
+                {
+                    // Add an Override to the end for this host app
+                    AppOverrideEntry entry = new AppOverrideEntry
+                    {
+                        HostApp = selectedHostAppEntry.ExecutableName
+                    };
+                    entry.InitializationComplete();
+                    AppOverrideListData.Add(entry);
+
+                    // And set foundOverrideIdx to the new value's index
+                    foundOverrideIdx = AppOverrideListData.Count - 1;
+                }
+
+                AppOverrideListBox.SelectedIndex = foundOverrideIdx;
+                TabControl.SelectedIndex = 2;
+            }
+        }
+
         private void RuntimeListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (RuntimeList.SelectedIndex >= 0)

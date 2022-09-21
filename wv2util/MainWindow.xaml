@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Icon="logo.ico"
         Title="WebView2Utilities"
-        Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="225">
+        Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
   <Window.Resources>
     <local:AppOverrideList x:Key="AppOverrideList" />
     <DataTemplate x:Key="AppOverrideListTemplate">
@@ -44,11 +44,17 @@
             <ColumnDefinition Width="300px"/>
             <ColumnDefinition />
           </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
 
           <ListView
               x:Name="HostAppListView"
               Grid.Row="0"
               Grid.Column="0"
+              Grid.RowSpan="20"
               ItemsSource="{Binding}"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch"
@@ -116,6 +122,7 @@
               <TextBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
             </Grid>
           </GroupBox>
+          <Button Grid.Row="1" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="View Overrides" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left"/>
         </Grid>
       </TabItem>
 
