@@ -133,45 +133,90 @@
 
             <!-- Host App list -->
             <TabItem DataContext="{Binding Source={StaticResource HostAppList}}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Host Apps "/>
-                        <Button x:Name="HostAppsReload" Content="&#x1F503;" Click="HostAppsReload_Click"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <ListView x:Name="HostAppListView" Grid.Row="1" ItemsSource="{Binding HostAppCollectionsView}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="HostAppListViewSelectionChanged">
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding PID}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding SdkInfo.Version}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_SdkVersion_Click">SDK Version</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Version}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeVersion_Click">Runtime Version</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.Channel}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeChannel_Click">Runtime Channel</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding Runtime.RuntimeLocation}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_RuntimeLocation_Click">Runtime Path</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding UserDataPath}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_UserDataPath_Click">User Data Path</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding ExecutablePath}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_ExecutablePath_Click">Executable Path</GridViewColumnHeader>
-                            </GridViewColumn>
-                            <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
-                                <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Browser_Process_PID_Click">Browser Process PID</GridViewColumnHeader>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
+              <TabItem.Header>
+                  <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="Host Apps "/>
+                      <Button x:Name="HostAppsReload" Content="&#x1F503;" Click="HostAppsReload_Click"/>
+                  </StackPanel>
+              </TabItem.Header>
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="300px"/>
+                  <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <ListView
+                    x:Name="HostAppListView" 
+                    Grid.Row="0" 
+                    Grid.Column="0" 
+                    ItemsSource="{Binding}" 
+                    HorizontalAlignment="Stretch" 
+                    VerticalAlignment="Stretch" 
+                    SelectionChanged="HostAppListViewSelectionChanged"
+                    IsSynchronizedWithCurrentItem="True">
+                  <ListView.View>
+                    <GridView>
+                      <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
+                        <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
+                      </GridViewColumn>
+                      <GridViewColumn DisplayMemberBinding="{Binding PID}">
+                        <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
+                      </GridViewColumn>
+                    </GridView>
+                  </ListView.View>
                 </ListView>
+
+                <GroupBox Grid.Row="0" Grid.Column="1" Height="Auto" VerticalAlignment="Top">
+                  <GroupBox.Header>
+                    <Label>Details</Label>
+                  </GroupBox.Header>
+
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The full path of the host application executable." Text="{Binding Path=/ExecutablePath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+                  
+                    <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="2" Grid.Column="0" Content="SDK DLL path" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path to the SDK DLL loaded in the host application." Text="{Binding Path=/SdkInfo.Path, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="3" Grid.Column="0" Content="SDK version" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the SDK used by the host application." Text="{Binding Path=/SdkInfo.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="4" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="5" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="6" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The channel of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Channel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="7" Grid.Column="0" Content="User data folder" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The user data folder used by the host application." Text="{Binding Path=/UserDataPath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+
+                    <Label   Grid.Row="8" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                    <TextBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+                  </Grid>
+                </GroupBox>
+              </Grid>
             </TabItem>
             
             <!-- About tab -->

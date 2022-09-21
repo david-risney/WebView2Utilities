@@ -7,13 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Data;
-using System.Windows.Navigation;
 
 namespace wv2util
 {
@@ -66,12 +60,7 @@ namespace wv2util
         public HostAppList()
         {
             _ = FromMachineAsync();
-            m_collectionViewSource = new CollectionViewSource();
-            m_collectionViewSource.Source = this;
         }
-
-        private CollectionViewSource m_collectionViewSource;
-        public ICollectionView HostAppCollectionsView { get { return m_collectionViewSource.View; } }
 
         // This is clearly not thread safe. It assumes FromDiskAsync will only
         // be called from the same thread.
@@ -322,16 +311,6 @@ namespace wv2util
             }
 
             return new Tuple<string, string>(userDataPath, processType);
-        }
-    }
-
-    public class HostAppListCollectionView : CollectionViewSource
-    {
-        public HostAppList HostAppList { get; private set; }
-
-        public HostAppListCollectionView()
-        {
-            HostAppList = new HostAppList();
         }
     }
 }

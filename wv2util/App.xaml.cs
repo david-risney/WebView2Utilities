@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Principal;
 using System.Windows;
+using WpfBindingErrors;
 
 namespace wv2util
 {
@@ -40,6 +41,17 @@ namespace wv2util
                 Application.Current.Shutdown();
             }
         }
+        
+        protected override void OnStartup(StartupEventArgs args)
+        {
+            base.OnStartup(args);
+
+            // Start listening for WPF binding error.
+            // After that line, a BindingException will be thrown each time
+            // a binding error occurs.
+            BindingExceptionThrower.Attach();
+        }
+
         private bool IsRunAsAdministrator()
         {
             WindowsIdentity wi = WindowsIdentity.GetCurrent();
