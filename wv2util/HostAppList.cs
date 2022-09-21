@@ -285,22 +285,10 @@ namespace wv2util
 
         private static Tuple<string, string> GetUserDataPathAndProcessTypeFromProcessViaCommandLine(Process process)
         {
-            string[] commandLineParts = process.GetCommandLine().Split(' ');
-            string processType = null;
-            string userDataPath = null;
-            foreach (string commandLinePart in commandLineParts)
-            {
-                string commandLinePartTrimmed = commandLinePart.Trim().Replace("\\\"", "\"").Trim('"');
-                if (commandLinePartTrimmed.StartsWith("--type"))
-                {
-                    processType = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' ' });
-                }
+            CommandLineUtil.CommandLine commandLine = new CommandLineUtil.CommandLine(process.GetCommandLine());
+            string processType = commandLine.GetKeyValue("--type");
+            string userDataPath = commandLine.GetKeyValue("--user-data-dir");
 
-                if (commandLinePartTrimmed.StartsWith("--user-data-dir"))
-                {
-                    userDataPath = commandLinePartTrimmed.Split('=')[1].Trim(new char[] { '"', ' ' });
-                }
-            }
             if (userDataPath == "")
             {
                 userDataPath = null;
