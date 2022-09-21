@@ -72,7 +72,7 @@
             </ListView.View>
           </ListView>
 
-          <GroupBox Grid.Row="0" Grid.Column="1" Height="Auto" VerticalAlignment="Top">
+          <GroupBox Grid.Row="0" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
             <GroupBox.Header>
               <Label>Details</Label>
             </GroupBox.Header>
@@ -94,35 +94,35 @@
                 <ColumnDefinition />
               </Grid.ColumnDefinitions>
 
-              <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The full path of the host application executable." Text="{Binding Path=/ExecutablePath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The full path of the host application executable." Text="{Binding Path=/ExecutablePath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="2" Grid.Column="0" Content="SDK DLL path" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path to the SDK DLL loaded in the host application." Text="{Binding Path=/SdkInfo.Path, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="2" Grid.Column="0" Content="SDK DLL path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path to the SDK DLL loaded in the host application." Text="{Binding Path=/SdkInfo.Path, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="3" Grid.Column="0" Content="SDK version" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the SDK used by the host application." Text="{Binding Path=/SdkInfo.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="3" Grid.Column="0" Content="SDK version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the SDK used by the host application." Text="{Binding Path=/SdkInfo.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="4" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="4" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="5" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="5" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="5" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="6" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The channel of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Channel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="6" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="6" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The channel of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Channel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="7" Grid.Column="0" Content="User data folder" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The user data folder used by the host application." Text="{Binding Path=/UserDataPath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="7" Grid.Column="0" Content="User data folder" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The user data folder used by the host application." Text="{Binding Path=/UserDataPath, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
-              <Label   Grid.Row="8" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top" />
-              <TextBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center"/>
+              <Label   Grid.Row="8" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
             </Grid>
           </GroupBox>
-          <Button Grid.Row="1" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="View Overrides" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left"/>
+          <Button Grid.Row="1" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
         </Grid>
       </TabItem>
 
