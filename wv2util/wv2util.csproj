@@ -104,7 +104,6 @@
     <Compile Include="AppOverride.cs" />
     <Compile Include="HostAppList.cs" />
     <Compile Include="HwndUtil.cs" />
-    <Compile Include="ProcessSnapshotUtil.cs" />
     <Compile Include="ProcessUtil.cs" />
     <Compile Include="RegistryUtil.cs" />
     <Compile Include="RuntimeList.cs" />
