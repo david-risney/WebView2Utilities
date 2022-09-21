@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace wv2util
 {
-    public class RuntimeEntry : IEquatable<RuntimeEntry>
+    public class RuntimeEntry : IEquatable<RuntimeEntry>, IComparable<RuntimeEntry>
     {
         // Create with the path to msedgewebview2.exe of the
         // corresponding WebView2 Runtime.
@@ -54,6 +54,20 @@ namespace wv2util
         }
 
         public bool Equals(RuntimeEntry other) => RuntimeLocation == other.RuntimeLocation;
+
+        // The default comparison for a RuntimeEntry is by channel (most stable first) then by version (newest first)
+        public int CompareTo(RuntimeEntry other)
+        {
+            int comparison = -SortUtil.CompareChannelStrings(this.Channel, other.Channel);
+            if (comparison == 0)
+            {
+                comparison = -SortUtil.CompareVersionStrings(this.Version, other.Version);
+            }
+            return comparison;
+        }
+
+        public static Comparison<RuntimeEntry> Comparison = (left, right) => left.CompareTo(right);
+
     }
 
     public class RuntimeList : ObservableCollection<RuntimeEntry>
@@ -78,6 +92,9 @@ namespace wv2util
                 m_inProgressFromDisk = FromDiskInnerAsync();
                 await m_inProgressFromDisk;
                 m_inProgressFromDisk = null;
+
+                // Use default sort
+                Sort<RuntimeEntry>(RuntimeEntry.Comparison);
             }
         }
 
