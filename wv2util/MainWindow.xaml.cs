@@ -2,7 +2,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -91,7 +93,7 @@ namespace wv2util
             InitializeComponent();
             ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
             AppOverrideListBoxSelectionChanged(null, null);
-            VersionInfo.Text = "v" + Assembly.GetExecutingAssembly().GetName().Version;
+            VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -126,6 +128,43 @@ namespace wv2util
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
             AppOverrideListData.FromRegistry();
+        }
+
+        private async void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
+        {
+            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            if (selectedHostAppEntry != null)
+            {
+                string originalButtonName = (string)HostAppsCreateReport.Content;
+                HostAppsCreateReport.IsEnabled = false;
+                HostAppsCreateReport.Content = "Creating Report...";
+                // Prompt the user to pick a path to save the report zip
+                SaveFileDialog saveFileDialog = new SaveFileDialog
+                {
+                    Filter = "Zip files (*.zip)|*.zip|All files (*.*)|*.*",
+                    FileName = ReportCreator.GenerateReportFileName(selectedHostAppEntry.ExecutableName),
+                    FilterIndex = 1,
+                    RestoreDirectory = true
+                };
+                if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    // Open the zip file path
+                    string zipPath = saveFileDialog.FileName;
+
+                    try
+                    {
+                        await ReportCreator.CreateReportAsync(zipPath, selectedHostAppEntry, AppOverrideListData, RuntimeListData);
+                        ProcessUtil.OpenExplorerToFile(zipPath);
+                    }
+                    catch (Exception error)
+                    {
+                        // Show a message box displaying the exception
+                        System.Windows.MessageBox.Show(error.ToString(), "Unable to create report", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                HostAppsCreateReport.IsEnabled = true;
+                HostAppsCreateReport.Content = originalButtonName;
+            }
         }
 
         private void HostAppsGoToOverride_Click(object sender, RoutedEventArgs e)

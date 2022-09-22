@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using System.Reflection;
 
 namespace wv2util
 {
@@ -28,6 +24,11 @@ namespace wv2util
             }
             return "Unknown";
 
+        }
+
+        public static string GetWebView2UtilitiesVersion()
+        {
+            return Assembly.GetExecutingAssembly().GetName().Version.ToString();
         }
     }
 }

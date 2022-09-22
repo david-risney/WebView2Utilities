@@ -138,7 +138,11 @@ namespace wv2util
             {
                 return objects.Cast<ManagementBaseObject>().SingleOrDefault()?["CommandLine"]?.ToString();
             }
+        }
 
+        public static void OpenExplorerToFile(string path)
+        {
+            Process.Start("explorer.exe", "/select,\"" + path + "\"");
         }
     }
 }
