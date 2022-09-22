@@ -255,7 +255,7 @@ namespace wv2util
             // processes which we can check for by looking for them loading
             // embeddedbrowserwebview.dll
             string[] namedPipePaths = System.IO.Directory.GetFiles("\\\\.\\pipe\\");
-            HashSet<uint> pids = new HashSet<uint>();
+            HashSet<int> pids = new HashSet<int>();
 
             foreach (string namedPipePath in namedPipePaths)
             {
@@ -269,7 +269,7 @@ namespace wv2util
                     string[] mojoPipeNameParts = mojoPipeName.Split('.');
                     if (mojoPipeNameParts.Length > 1)
                     {
-                        if (UInt32.TryParse(mojoPipeNameParts[1], out uint pid))
+                        if (Int32.TryParse(mojoPipeNameParts[1], out int pid))
                         {
                             pids.Add(pid);
                         }
@@ -283,7 +283,7 @@ namespace wv2util
             List<HostAppEntry> hostAppEntries = new List<HostAppEntry>();
             foreach (var pid in pids)
             {
-                Process process = TryGetProcessById((int)pid);
+                Process process = TryGetProcessById(pid);
                 if (process != null)
                 {
                     var interestingDlls = ProcessUtil.GetInterestingDllsUsedByPid(pid);
@@ -339,7 +339,7 @@ namespace wv2util
                         IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
                         if (childHwnd == IntPtr.Zero)
                         {
-                            childHwnd = HwndUtil.GetPropW(hostAppLeafHwnd, "CrossProcessParentHWND");
+                            childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessParentHWND");
                         }
                         if (childHwnd != IntPtr.Zero)
                         {
