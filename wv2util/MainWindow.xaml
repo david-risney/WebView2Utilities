@@ -89,6 +89,11 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
               </Grid.RowDefinitions>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -121,6 +126,13 @@
 
               <Label   Grid.Row="8" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
               <TextBox Grid.Row="8" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+
+              <Label   Grid.Row="9" Grid.Column="0" Content="Probable API Kind" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="9" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The kind of WebView2 API (.NET, WinRT, Win32) the host application is using." Text="{Binding Path=/SdkInfo.ApiKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+
+              <Label   Grid.Row="10" Grid.Column="0" Content="Probable UI Framework" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="10" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The UI framework used to display the WebView2 (WinForms, WPF, WinUI2, WinUI3)." Text="{Binding Path=/SdkInfo.UIFrameworkKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+
             </Grid>
           </GroupBox>
           <Button Grid.Row="1" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>

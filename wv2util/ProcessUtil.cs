@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -97,14 +101,51 @@ namespace wv2util
             public string szExeFile;
         }
 
+        private readonly static string[] InterestingDllFileNames = new string[]
+        {
+            "embeddedbrowserwebview.dll",
+            "microsoft.ui.xaml.dll",
+            "microsoft.web.webview2.core.dll",
+            "microsoft.web.webview2.core.winmd",
+            "microsoft.web.webview2.winforms.dll",
+            "microsoft.web.webview2.wpf.dll",
+            "presentationframework.dll",
+            "presentationframework.ni.dll",
+            "system.windows.forms.dll",
+            "system.windows.forms.ni.dll",
+            "webview2loader.dll",
+        };
+
         // private static readonly uint TH32CS_SNAPPROCESS = 0x2;
         private static readonly uint TH32CS_SNAPMODULE = 0x8;
         private static readonly uint TH32CS_SNAPMODULE32 = 0x10;
 
-        public static Tuple<string, string> GetClientDllPathAndSdkDllPathFromPid(uint pid)
+        public static Tuple<string, string, string[]> GetInterestingDllsUsedByPid(uint pid)
         {
+            string[] interestingDllPaths = GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(pid);
+
             string clientDllPath = null;
             string sdkDllPath = null;
+            foreach (string interestingDllPath in interestingDllPaths)
+            {
+                string interestingDllFileName = Path.GetFileName(interestingDllPath).ToLower();
+                if (interestingDllFileName == "embeddedbrowserwebview.dll")
+                {
+                    clientDllPath = interestingDllPath;
+                }
+                else if ((interestingDllFileName == "webview2loader.dll" && sdkDllPath == null)
+                    || interestingDllFileName == "microsoft.web.webview2.core.dll")
+                {
+                    // Microsoft.Web.WebView2.Core.dll provides more info about the host app so let that win against webview2loader.dll
+                    sdkDllPath = interestingDllPath;
+                }
+            }
+            return new Tuple<string, string, string[]>(clientDllPath, sdkDllPath, interestingDllPaths);
+        }
+
+        public static string[] GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(uint pid)
+        { 
+            List<string> interestingDllPaths = new List<string>();
             MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
             IntPtr hModuleSnapshot = CreateToolhelp32Snapshot(
                 TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
@@ -113,23 +154,17 @@ namespace wv2util
             {
                 do
                 {
-                    if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
+                    if (InterestingDllFileNames.Contains(modEntry.szModule.ToLower()))
                     {
-                        clientDllPath = modEntry.szExePath;
-                    }
-                    else if (modEntry.szModule.ToLower() == "webview2loader.dll"
-                        || modEntry.szModule.ToLower() == "microsoft.web.webview2.core.dll")
-                    {
-                        sdkDllPath = modEntry.szExePath;
+                        interestingDllPaths.Add(modEntry.szExePath);
                     }
                 }
                 while (Module32NextW(hModuleSnapshot, ref modEntry));
             }
             CloseHandle(hModuleSnapshot);
 
-            return new Tuple<string, string>(clientDllPath, sdkDllPath);
+            return interestingDllPaths.ToArray();
         }
-
 
         public static string GetCommandLine(this Process process)
         {
@@ -143,6 +178,24 @@ namespace wv2util
         public static void OpenExplorerToFile(string path)
         {
             Process.Start("explorer.exe", "/select,\"" + path + "\"");
+        }
+
+        // Returns true if the path is a DotNet DLL and returns false if its a Win32 DLL.
+        public static bool IsDllDotNet(string path)
+        {
+            if (path != null && path != "")
+            {
+                try
+                {
+                    AssemblyName.GetAssemblyName(path);
+                    return true;
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            return false;
         }
     }
 }

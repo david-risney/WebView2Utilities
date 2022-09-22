@@ -19,13 +19,15 @@ namespace wv2util
             string sdkPath, // Path to a WebView2 SDK DLL
             string runtimePath, // Path to the WebView2 client DLL
             string userDataPath, // Path to the user data folder
+            string[] interestingLoadedDllPaths, // a list of full paths of DLLs that are related to WebView2 in some way
             int browserProcessPid) // PID of the browser process
         {
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             PID = pid;
-            SdkInfo = new SdkFileInfo(sdkPath);
+            SdkInfo = new SdkFileInfo(sdkPath, interestingLoadedDllPaths);
             Runtime = new RuntimeEntry(runtimePath);
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
+            InterestingLoadedDllPaths = interestingLoadedDllPaths;
             BrowserProcessPID = browserProcessPid;
         }
 
@@ -34,7 +36,8 @@ namespace wv2util
         public int PID { get; private set; } = 0;
         public SdkFileInfo SdkInfo { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
-        public string UserDataPath { get; set; }
+        public string UserDataPath { get; private set; }
+        public string[] InterestingLoadedDllPaths { get; private set; }
         public int BrowserProcessPID { get; private set; } = 0;
 
         public bool Equals(HostAppEntry other)
@@ -47,12 +50,130 @@ namespace wv2util
 
     public class SdkFileInfo
     {
+        public enum SdkApiKind
+        {
+            Unknown,
+            Win32,
+            DotNet,
+            WinRT,
+        };
+
+        public enum SdkUIFrameworkKind
+        {
+            Unknown,
+            WinForms,
+            WPF,
+            WinUI2,
+            WinUI3,
+        };
+
         // Create an SdkFileInfo object from a path to a WebView2 SDK DLL
         // such as the full path to Microsoft.Web.WebView2.Core.dll or WebView2Loader.dll.
-        public SdkFileInfo(string sdkPath) { Path = sdkPath; }
+        public SdkFileInfo(string sdkPath, string[] interestingDlls)
+        {
+            Path = sdkPath;
+            m_interestingDlls = interestingDlls;
 
+            string fileName = System.IO.Path.GetFileName(Path).ToLower();
+            m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
+                (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
+        }
+        private readonly bool m_isWinRT = false;
+        private readonly string[] m_interestingDlls;
+        
         public string Path { get; private set; }
         public string Version => VersionUtil.GetVersionStringFromFilePath(Path);
+        
+        public SdkApiKind ApiKind
+        {
+            get
+            {
+                // Because DLL enumeration isn't telling us about .NET DLLs we
+                // assume the API kind based on the UI framework if we have it.
+                switch (UIFrameworkKind)
+                {
+                    case SdkUIFrameworkKind.WinForms:
+                    case SdkUIFrameworkKind.WPF:
+                        return SdkApiKind.DotNet;
+                    case SdkUIFrameworkKind.WinUI2:
+                    case SdkUIFrameworkKind.WinUI3:
+                        return SdkApiKind.WinRT;
+                    default:
+                        {
+                            if (Path != null && Path != "")
+                            {
+                                string fileName = System.IO.Path.GetFileName(Path).ToLower();
+                                if (fileName == "webview2loader.dll")
+                                {
+                                    return SdkApiKind.Win32;
+                                }
+                                else if (fileName == "microsoft.web.webview2.core.dll")
+                                {
+                                    return m_isWinRT ? SdkApiKind.WinRT : SdkApiKind.DotNet;
+                                }
+                            }
+                            break;
+                        }
+                }
+                return SdkApiKind.Unknown;
+            }
+        }
+        
+        public SdkUIFrameworkKind UIFrameworkKind
+        {
+            get
+            {
+                string xamlDllPath = m_interestingDlls.FirstOrDefault(
+                    dllPath => System.IO.Path.GetFileName(dllPath).ToLower() == "microsoft.ui.xaml.dll");
+                if (xamlDllPath != null)
+                {
+                    var xamlDllVersion = VersionUtil.TryGetVersionFromFilePath(xamlDllPath);
+                    if (xamlDllVersion != null)
+                    {
+                        switch (xamlDllVersion.ProductMajorPart)
+                        {
+                            case 2:
+                                return SdkUIFrameworkKind.WinUI2;
+                            case 3:
+                                return SdkUIFrameworkKind.WinUI3;
+                            default:
+                                return SdkUIFrameworkKind.Unknown;
+                        }
+                    }
+                }
+                else
+                {
+                    string wpfDllPath = m_interestingDlls.FirstOrDefault(dllPath =>
+                        {
+                            string dllName = System.IO.Path.GetFileName(dllPath).ToLower();
+                            return dllName == "microsoft.web.webview2.wpf.dll" ||
+                                   dllName == "presentationframework.ni.dll" ||
+                                   dllName == "presentationframework.dll";
+                        });
+                    if (wpfDllPath != null)
+                    {
+                        return SdkUIFrameworkKind.WPF;
+                    }
+                    else
+                    {
+                        string winFormsDllPath = m_interestingDlls.FirstOrDefault(dllPath =>
+                            {
+                                string dllName = System.IO.Path.GetFileName(dllPath).ToLower();
+                                return dllName == "microsoft.web.webview2.winforms.dll" ||
+                                       dllName == "system.windows.forms.ni.dll" ||
+                                       dllName == "system.windows.forms.dll";
+
+                            });
+                        if (winFormsDllPath != null)
+                        {
+                            return SdkUIFrameworkKind.WinForms;
+                        }
+                    }
+                }
+                
+                return SdkUIFrameworkKind.Unknown;
+            }
+        }
     }
 
     public class HostAppList : ObservableCollection<HostAppEntry>
@@ -165,9 +286,10 @@ namespace wv2util
                 Process process = TryGetProcessById((int)pid);
                 if (process != null)
                 {
-                    var clientDllPathAndSdkDllPath = ProcessUtil.GetClientDllPathAndSdkDllPathFromPid(pid);
-                    string clientDllPath = clientDllPathAndSdkDllPath.Item1;
-                    string sdkDllPath = clientDllPathAndSdkDllPath.Item2;
+                    var interestingDlls = ProcessUtil.GetInterestingDllsUsedByPid(pid);
+                    string clientDllPath = interestingDlls.Item1;
+                    string sdkDllPath = interestingDlls.Item2;
+                    string[] interestingDllPaths = interestingDlls.Item3;
                     if (clientDllPath != null || sdkDllPath != null)
                     {
                         hostAppEntries.Add(new HostAppEntry(
@@ -176,6 +298,7 @@ namespace wv2util
                             sdkDllPath,
                             ClientDllPathToRuntimePath(clientDllPath),
                             null,
+                            interestingDllPaths,
                             0));
                     }
                 }
@@ -241,6 +364,7 @@ namespace wv2util
                             hostAppEntry.SdkInfo.Path,
                             hostAppEntry.Runtime.ExePath,
                             userDataFolder,
+                            hostAppEntry.InterestingLoadedDllPaths,
                             runtimePid);
                         hostAppEntriesWithRuntimePID.Add(runtimeEntry);
                         added = true;
