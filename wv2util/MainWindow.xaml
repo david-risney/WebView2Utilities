@@ -133,6 +133,9 @@
               <Label   Grid.Row="10" Grid.Column="0" Content="Probable UI Framework" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
               <TextBox Grid.Row="10" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The UI framework used to display the WebView2 (WinForms, WPF, WinUI2, WinUI3)." Text="{Binding Path=/SdkInfo.UIFrameworkKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
+              <Label   Grid.Row="11" Grid.Column="0" Content="IL" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBox Grid.Row="11" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The integrity level of the host app process." Text="{Binding Path=/IntegrityLevel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+
             </Grid>
           </GroupBox>
           <Button Grid.Row="1" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>

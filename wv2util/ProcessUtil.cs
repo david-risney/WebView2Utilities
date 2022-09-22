@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Policy;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,7 +55,7 @@ namespace wv2util
         }
 
         public static string[] GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(int pid)
-        { 
+        {
             List<string> interestingDllPaths = new List<string>();
 
             unsafe
@@ -112,6 +113,19 @@ namespace wv2util
             }
 
             return false;
+        }
+
+        public static string GetIntegrityLevelOfProcess(int pid)
+        {
+            // Determine if this is admin
+            /* WIP 
+            var processHandle = PInvoke.Kernel32.OpenProcess(PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION, false, pid);
+            PInvoke.AdvApi32.OpenProcessToken(processHandle.DangerousGetHandle(), (PInvoke.Kernel32.ACCESS_MASK)0x8, out var tokenHandle);
+            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE elevationType;
+            PInvoke.AdvApi32.GetTokenInformation(tokenHandle, PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType, Marshal. elevationType, 1, out int returnLength);
+            */
+
+            return "Medium IL";
         }
     }
 }

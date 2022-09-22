@@ -39,6 +39,7 @@ namespace wv2util
         public string UserDataPath { get; private set; }
         public string[] InterestingLoadedDllPaths { get; private set; }
         public int BrowserProcessPID { get; private set; } = 0;
+        public string IntegrityLevel { get => ProcessUtil.GetIntegrityLevelOfProcess(PID); }
 
         public bool Equals(HostAppEntry other)
         {
