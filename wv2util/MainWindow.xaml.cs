@@ -143,7 +143,6 @@ namespace wv2util
                 {
                     Filter = "Zip files (*.zip)|*.zip|All files (*.*)|*.*",
                     FileName = ReportCreator.GenerateReportFileName(selectedHostAppEntry.ExecutableName),
-                    FilterIndex = 1,
                     RestoreDirectory = true
                 };
                 if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
@@ -155,6 +154,7 @@ namespace wv2util
                     {
                         await ReportCreator.CreateReportAsync(zipPath, selectedHostAppEntry, AppOverrideListData, RuntimeListData);
                         ProcessUtil.OpenExplorerToFile(zipPath);
+                        System.Windows.MessageBox.Show("The report was created.\n\nWARNING: The report file may contain personally identifiable information. Share this file only with people you trust.", "Report Created", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                     catch (Exception error)
                     {
