@@ -231,7 +231,62 @@ namespace wv2util
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
         {
-            return AddRuntimeProcessInfoToHostAppEntries(GetHostAppEntriesFromMachineByPipeEnumeration());
+            var results = AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(GetHostAppEntriesFromMachineByPipeEnumeration());
+
+            // HWND walking only examines the top level HWNDs so may miss host apps
+            // that only own child HWNDs parented to the HWND of another process.
+            // For example prevhost.exe is a child of explorer.exe and hosts a WebView2
+            // to display file previews.
+            // In case there are any left over processes we'll look for the parent PIDs
+            // of all the msedgewebview2.exe processes and see if those help. This has
+            // the problem of not finding the connection between subsequent host apps 
+            // sharing a browser process. Hopefully the overlap between the two discovery
+            // mechanisms will leave just a small area left.
+            // But as it turns out this is much much slower so we disable for now.
+            // Maybe add a button that will take longer but work harder.
+            // if (results.Any(entry => entry.BrowserProcessPID == 0))
+            // {
+                // results = AddRuntimeProcessInfoToHostAppEntriesByParentProcess(results);
+            // }
+            return results;
+        }
+
+        private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntriesByParentProcess(IEnumerable<HostAppEntry> hostAppEntriesOriginal)
+        {
+            // Put in a list so we can replace entries or not as we go.
+            List<HostAppEntry> hostAppEntriesResult = hostAppEntriesOriginal.ToList();
+            var msedgewebview2Processes = Process.GetProcessesByName("msedgewebview2");
+            foreach (var msedgewebview2Process in msedgewebview2Processes)
+            {
+                int pid = msedgewebview2Process.Id;
+                // Get parent process of pid
+                var parentProcess = msedgewebview2Process.GetParentProcess();
+                if (parentProcess.ProcessName.ToLower() != "msedgewebview2")
+                {
+                    int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
+                    if (idx != -1)
+                    {
+                        var hostAppEntry = hostAppEntriesResult[idx];
+                        if (hostAppEntry.BrowserProcessPID == 0)
+                        {
+                            hostAppEntriesResult.RemoveAt(idx);
+
+                            var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
+                            string userDataFolder = userDataPathAndProcessType.Item1;
+                            hostAppEntriesResult.Add(
+                                new HostAppEntry(
+                                    hostAppEntry.ExecutablePath,
+                                    hostAppEntry.PID,
+                                    hostAppEntry.SdkInfo.Path,
+                                    hostAppEntry.Runtime.ExePath,
+                                    userDataFolder,
+                                    hostAppEntry.InterestingLoadedDllPaths,
+                                    msedgewebview2Process.Id));
+                        }
+                    }
+                }
+            }
+            return hostAppEntriesResult;
         }
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByPipeEnumeration()
@@ -295,9 +350,11 @@ namespace wv2util
             return hostAppEntries;
         }
 
-        private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntries(
+        private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(
             IEnumerable<HostAppEntry> hostAppEntries)
         {
+            Trace.TraceInformation("Starting Host App discovery via HWND walking");
+
             List<HostAppEntry> hostAppEntriesWithRuntimePID = new List<HostAppEntry>();
 
             // We do work to avoid calling EnumWindows more than once.
@@ -307,55 +364,59 @@ namespace wv2util
 
             // Now explore child windows to find running WebView2 runtime processes
             // We get all the PIDs of the host apps.
-            foreach (var hostAppEntry in hostAppEntries)
+            foreach (HostAppEntry hostAppEntry in hostAppEntries)
             {
-                HashSet<int> runtimePids = new HashSet<int>();
-
-                // And find corresponding top level windows for just this PID.
-                var topLevelHwnds = pidToTopLevelHwndsMap[hostAppEntry.PID];
-
-                // Then find all child (and child of child of...) windows that have appropriate class name
-                foreach (var topLevelHwnd in topLevelHwnds)
+                bool added = false;
+                
+                if (hostAppEntry.BrowserProcessPID == 0)
                 {
-                    const string hostAppLeafHwndClassName = "Chrome_WidgetWin_0";
-                    var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
-                        topLevelHwnd,
-                        hwnd => HwndUtil.GetClassName(hwnd) != hostAppLeafHwndClassName,
-                        hwnd => HwndUtil.GetClassName(hwnd) == hostAppLeafHwndClassName);
-                    foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
+                    HashSet<int> runtimePids = new HashSet<int>();
+
+                    // And find corresponding top level windows for just this PID.
+                    var topLevelHwnds = pidToTopLevelHwndsMap[hostAppEntry.PID];
+
+                    // Then find all child (and child of child of...) windows that have appropriate class name
+                    foreach (var topLevelHwnd in topLevelHwnds)
                     {
-                        IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
-                        if (childHwnd == IntPtr.Zero)
+                        const string hostAppLeafHwndClassName = "Chrome_WidgetWin_0";
+                        var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
+                            topLevelHwnd,
+                            hwnd => HwndUtil.GetClassName(hwnd) != hostAppLeafHwndClassName,
+                            hwnd => HwndUtil.GetClassName(hwnd) == hostAppLeafHwndClassName);
+                        foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
                         {
-                            childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
-                        }
-                        if (childHwnd != IntPtr.Zero)
-                        {
-                            runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                            IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
+                            if (childHwnd == IntPtr.Zero)
+                            {
+                                childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
+                            }
+                            if (childHwnd != IntPtr.Zero)
+                            {
+                                runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                            }
                         }
                     }
-                }
 
-                bool added = false;
-                foreach (var runtimePid in runtimePids)
-                {
-                    string userDataFolder = null;
-                    Process runtimeProcess = TryGetProcessById(runtimePid);
-                    if (runtimeProcess != null)
+                    foreach (var runtimePid in runtimePids)
                     {
-                        var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
-                        userDataFolder = userDataPathAndProcessType.Item1;
+                        string userDataFolder = null;
+                        Process runtimeProcess = TryGetProcessById(runtimePid);
+                        if (runtimeProcess != null)
+                        {
+                            var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                            userDataFolder = userDataPathAndProcessType.Item1;
 
-                        var runtimeEntry = new HostAppEntry(
-                            hostAppEntry.ExecutablePath,
-                            hostAppEntry.PID,
-                            hostAppEntry.SdkInfo.Path,
-                            hostAppEntry.Runtime.ExePath,
-                            userDataFolder,
-                            hostAppEntry.InterestingLoadedDllPaths,
-                            runtimePid);
-                        hostAppEntriesWithRuntimePID.Add(runtimeEntry);
-                        added = true;
+                            var runtimeEntry = new HostAppEntry(
+                                hostAppEntry.ExecutablePath,
+                                hostAppEntry.PID,
+                                hostAppEntry.SdkInfo.Path,
+                                hostAppEntry.Runtime.ExePath,
+                                userDataFolder,
+                                hostAppEntry.InterestingLoadedDllPaths,
+                                runtimePid);
+                            hostAppEntriesWithRuntimePID.Add(runtimeEntry);
+                            added = true;
+                        }
                     }
                 }
 
@@ -364,6 +425,8 @@ namespace wv2util
                     hostAppEntriesWithRuntimePID.Add(hostAppEntry);
                 }
             }
+
+            Trace.TraceInformation("Completed Host App discovery via HWND walking");
 
             return hostAppEntriesWithRuntimePID;
         }
