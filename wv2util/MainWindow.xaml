@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Icon="logo.ico"
         Title="WebView2Utilities"
-        Height="499.605" Width="855.923" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
+        Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
   <Window.Resources>
     <local:AppOverrideList x:Key="AppOverrideList" />
     <DataTemplate x:Key="AppOverrideListTemplate">
