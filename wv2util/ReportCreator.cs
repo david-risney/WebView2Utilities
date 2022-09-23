@@ -27,7 +27,7 @@ namespace wv2util
             ZipArchiveEntry archiveEntry = destinationAsZipArchive.CreateEntry(entryName);
             using (StreamWriter streamWriter = new StreamWriter(archiveEntry.Open()))
             {
-                string json = JsonSerializer.Serialize(obj);
+                string json = JsonSerializer.Serialize(obj, new JsonSerializerOptions() { WriteIndented = true });
                 await streamWriter.WriteAsync(json);
             }
         }

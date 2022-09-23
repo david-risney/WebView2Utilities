@@ -54,23 +54,6 @@ namespace wv2util
 
     public class SdkFileInfo
     {
-        public enum SdkApiKind
-        {
-            Unknown,
-            Win32,
-            DotNet,
-            WinRT,
-        };
-
-        public enum SdkUIFrameworkKind
-        {
-            Unknown,
-            WinForms,
-            WPF,
-            WinUI2,
-            WinUI3,
-        };
-
         // Create an SdkFileInfo object from a path to a WebView2 SDK DLL
         // such as the full path to Microsoft.Web.WebView2.Core.dll or WebView2Loader.dll.
         public SdkFileInfo(string sdkPath, string[] interestingDlls)
@@ -89,7 +72,7 @@ namespace wv2util
         public string PathDirectory => System.IO.Path.GetDirectoryName(Path);
         public string Version => VersionUtil.GetVersionStringFromFilePath(Path);
         
-        public SdkApiKind ApiKind
+        public string ApiKind
         {
             get
             {
@@ -97,12 +80,12 @@ namespace wv2util
                 // assume the API kind based on the UI framework if we have it.
                 switch (UIFrameworkKind)
                 {
-                    case SdkUIFrameworkKind.WinForms:
-                    case SdkUIFrameworkKind.WPF:
-                        return SdkApiKind.DotNet;
-                    case SdkUIFrameworkKind.WinUI2:
-                    case SdkUIFrameworkKind.WinUI3:
-                        return SdkApiKind.WinRT;
+                    case "WinForms":
+                    case "WPF":
+                        return "DotNet";
+                    case "WinUI2":
+                    case "WinUI3":
+                        return "WinRT";
                     default:
                         {
                             if (Path != null && Path != "")
@@ -110,21 +93,21 @@ namespace wv2util
                                 string fileName = System.IO.Path.GetFileName(Path).ToLower();
                                 if (fileName == "webview2loader.dll")
                                 {
-                                    return SdkApiKind.Win32;
+                                    return "Win32";
                                 }
                                 else if (fileName == "microsoft.web.webview2.core.dll")
                                 {
-                                    return m_isWinRT ? SdkApiKind.WinRT : SdkApiKind.DotNet;
+                                    return m_isWinRT ? "WinRT" : "DotNet";
                                 }
                             }
                             break;
                         }
                 }
-                return SdkApiKind.Unknown;
+                return "Unknown";
             }
         }
         
-        public SdkUIFrameworkKind UIFrameworkKind
+        public string UIFrameworkKind
         {
             get
             {
@@ -138,11 +121,11 @@ namespace wv2util
                         switch (xamlDllVersion.ProductMajorPart)
                         {
                             case 2:
-                                return SdkUIFrameworkKind.WinUI2;
+                                return "WinUI2";
                             case 3:
-                                return SdkUIFrameworkKind.WinUI3;
+                                return "WinUI3";
                             default:
-                                return SdkUIFrameworkKind.Unknown;
+                                return "Unknown";
                         }
                     }
                 }
@@ -157,7 +140,7 @@ namespace wv2util
                         });
                     if (wpfDllPath != null)
                     {
-                        return SdkUIFrameworkKind.WPF;
+                        return "WPF";
                     }
                     else
                     {
@@ -171,12 +154,12 @@ namespace wv2util
                             });
                         if (winFormsDllPath != null)
                         {
-                            return SdkUIFrameworkKind.WinForms;
+                            return "WinForms";
                         }
                     }
                 }
                 
-                return SdkUIFrameworkKind.Unknown;
+                return "Unknown";
             }
         }
     }
