@@ -33,7 +33,8 @@ namespace wv2util
         }
 
         public string ExecutablePath { get; private set; }
-        public string ExecutableName => ExecutablePath.Split(new char[] { '\\', '/' }).ToList<string>().Last<string>();
+        public string ExecutableName => Path.GetFileName(ExecutablePath);
+        public string ExecutablePathDirectory => Path.GetDirectoryName(ExecutablePath);
         public int PID { get; private set; } = 0;
         public SdkFileInfo SdkInfo { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
@@ -85,6 +86,7 @@ namespace wv2util
         private readonly string[] m_interestingDlls;
         
         public string Path { get; private set; }
+        public string PathDirectory => System.IO.Path.GetDirectoryName(Path);
         public string Version => VersionUtil.GetVersionStringFromFilePath(Path);
         
         public SdkApiKind ApiKind
