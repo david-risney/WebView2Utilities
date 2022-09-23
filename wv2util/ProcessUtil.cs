@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Security.Policy;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,125 +16,72 @@ namespace wv2util
 {
     public static class ProcessUtil
     {
-        /// <summary>
-        /// Takes a snapshot of the specified processes, as well as the heaps, 
-        /// modules, and threads used by these processes.
-        /// </summary>
-        /// <param name="dwFlags">
-        /// The portions of the system to be included in the snapshot.
-        /// </param>
-        /// <param name="th32ProcessID">
-        /// The process identifier of the process to be included in the snapshot.
-        /// </param>
-        /// <returns>
-        /// If the function succeeds, it returns an open handle to the specified snapshot.
-        /// If the function fails, it returns INVALID_HANDLE_VALUE.
-        /// </returns>
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern IntPtr CreateToolhelp32Snapshot(uint dwFlags, uint th32ProcessID);
-
-        /// <summary>
-        /// Retrieves information about the first process encountered in a system snapshot.
-        /// </summary>
-        /// <param name="hSnapshot">A handle to the snapshot.</param>
-        /// <param name="lppe">A pointer to a PROCESSENTRY32 structure.</param>
-        /// <returns>
-        /// Returns TRUE if the first entry of the process list has been copied to the buffer.
-        /// Returns FALSE otherwise.
-        /// </returns>
-        [DllImport("kernel32.dll")]
-        public static extern bool Process32First(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-        /// <summary>
-        /// Retrieves information about the next process recorded in a system snapshot.
-        /// </summary>
-        /// <param name="hSnapshot">A handle to the snapshot.</param>
-        /// <param name="lppe">A pointer to a PROCESSENTRY32 structure.</param>
-        /// <returns>
-        /// Returns TRUE if the next entry of the process list has been copied to the buffer.
-        /// Returns FALSE otherwise.</returns>
-        [DllImport("kernel32.dll")]
-        public static extern bool Process32Next(IntPtr hSnapshot, ref PROCESSENTRY32 lppe);
-
-        [DllImport("kernel32.dll")]
-        public static extern bool CloseHandle(IntPtr hSnapshot);
-
-        [DllImport("kernel32.dll")]
-        public static extern bool Module32FirstW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
-
-        [DllImport("kernel32.dll")]
-        public static extern bool Module32NextW(IntPtr hSnapshot, ref MODULEENTRY32 lpme);
-
-        [StructLayout(LayoutKind.Sequential, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
-        public struct MODULEENTRY32
+        private readonly static string[] InterestingDllFileNames = new string[]
         {
-            internal uint dwSize;
-            internal uint th32ModuleID;
-            internal uint th32ProcessID;
-            internal uint GlblcntUsage;
-            internal uint ProccntUsage;
-            internal IntPtr modBaseAddr;
-            internal uint modBaseSize;
-            internal IntPtr hModule;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-            internal string szModule;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            internal string szExePath;
-        }
+            "embeddedbrowserwebview.dll",
+            "microsoft.ui.xaml.dll",
+            "microsoft.web.webview2.core.dll",
+            "microsoft.web.webview2.core.winmd",
+            "microsoft.web.webview2.winforms.dll",
+            "microsoft.web.webview2.wpf.dll",
+            "presentationframework.dll",
+            "presentationframework.ni.dll",
+            "system.windows.forms.dll",
+            "system.windows.forms.ni.dll",
+            "webview2loader.dll",
+        };
 
-        /// <summary>
-        /// Describes an entry from a list of the processes residing 
-        /// in the system address space when a snapshot was taken.
-        /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
-        public struct PROCESSENTRY32
+        public static Tuple<string, string, string[]> GetInterestingDllsUsedByPid(int pid)
         {
-            public uint dwSize;
-            public uint cntUsage;
-            public uint th32ProcessID;
-            public IntPtr th32DefaultHeapID;
-            public uint th32ModuleID;
-            public uint cntThreads;
-            public uint th32ParentProcessID;
-            public int pcPriClassBase;
-            public uint dwFlags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            public string szExeFile;
-        }
+            string[] interestingDllPaths = GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(pid);
 
-        // private static readonly uint TH32CS_SNAPPROCESS = 0x2;
-        private static readonly uint TH32CS_SNAPMODULE = 0x8;
-        private static readonly uint TH32CS_SNAPMODULE32 = 0x10;
-
-        public static Tuple<string, string> GetClientDllPathAndSdkDllPathFromPid(uint pid)
-        {
             string clientDllPath = null;
             string sdkDllPath = null;
-            MODULEENTRY32 modEntry = new MODULEENTRY32() { dwSize = (uint)Marshal.SizeOf(typeof(MODULEENTRY32)) };
-            IntPtr hModuleSnapshot = CreateToolhelp32Snapshot(
-                TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
-
-            if (Module32FirstW(hModuleSnapshot, ref modEntry))
+            foreach (string interestingDllPath in interestingDllPaths)
             {
-                do
+                string interestingDllFileName = Path.GetFileName(interestingDllPath).ToLower();
+                if (interestingDllFileName == "embeddedbrowserwebview.dll")
                 {
-                    if (modEntry.szModule.ToLower() == "embeddedbrowserwebview.dll")
-                    {
-                        clientDllPath = modEntry.szExePath;
-                    }
-                    else if (modEntry.szModule.ToLower() == "webview2loader.dll"
-                        || modEntry.szModule.ToLower() == "microsoft.web.webview2.core.dll")
-                    {
-                        sdkDllPath = modEntry.szExePath;
-                    }
+                    clientDllPath = interestingDllPath;
                 }
-                while (Module32NextW(hModuleSnapshot, ref modEntry));
+                else if ((interestingDllFileName == "webview2loader.dll" && sdkDllPath == null)
+                    || interestingDllFileName == "microsoft.web.webview2.core.dll")
+                {
+                    // Microsoft.Web.WebView2.Core.dll provides more info about the host app so let that win against webview2loader.dll
+                    sdkDllPath = interestingDllPath;
+                }
             }
-            CloseHandle(hModuleSnapshot);
-
-            return new Tuple<string, string>(clientDllPath, sdkDllPath);
+            return new Tuple<string, string, string[]>(clientDllPath, sdkDllPath, interestingDllPaths);
         }
 
+        public static string[] GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(int pid)
+        {
+            List<string> interestingDllPaths = new List<string>();
+
+            unsafe
+            {
+                PInvoke.Kernel32.MODULEENTRY32 modEntry = new PInvoke.Kernel32.MODULEENTRY32() { dwSize = Marshal.SizeOf(typeof(PInvoke.Kernel32.MODULEENTRY32)) };
+                var moduleSnapshot = PInvoke.Kernel32.CreateToolhelp32Snapshot(
+                    PInvoke.Kernel32.CreateToolhelp32SnapshotFlags.TH32CS_SNAPMODULE | PInvoke.Kernel32.CreateToolhelp32SnapshotFlags.TH32CS_SNAPMODULE32, pid);
+
+                if (PInvoke.Kernel32.Module32First(moduleSnapshot, ref modEntry))
+                {
+                    do
+                    {
+                        string moduleFileName = new string(modEntry.szModule).ToLower();
+                        string modulePath = new string(modEntry.szExePath).ToLower();
+                        if (InterestingDllFileNames.Contains(moduleFileName))
+                        {
+                            interestingDllPaths.Add(modulePath);
+                        }
+                    }
+                    while (PInvoke.Kernel32.Module32Next(moduleSnapshot, ref modEntry));
+                }
+                moduleSnapshot.Close();
+            }
+
+            return interestingDllPaths.ToArray();
+        }
 
         public static string GetCommandLine(this Process process)
         {
@@ -143,6 +95,37 @@ namespace wv2util
         public static void OpenExplorerToFile(string path)
         {
             Process.Start("explorer.exe", "/select,\"" + path + "\"");
+        }
+
+        // Returns true if the path is a DotNet DLL and returns false if its a Win32 DLL.
+        public static bool IsDllDotNet(string path)
+        {
+            if (path != null && path != "")
+            {
+                try
+                {
+                    AssemblyName.GetAssemblyName(path);
+                    return true;
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            return false;
+        }
+
+        public static string GetIntegrityLevelOfProcess(int pid)
+        {
+            // Determine if this is admin
+            /* WIP 
+            var processHandle = PInvoke.Kernel32.OpenProcess(PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION, false, pid);
+            PInvoke.AdvApi32.OpenProcessToken(processHandle.DangerousGetHandle(), (PInvoke.Kernel32.ACCESS_MASK)0x8, out var tokenHandle);
+            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE elevationType;
+            PInvoke.AdvApi32.GetTokenInformation(tokenHandle, PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType, Marshal. elevationType, 1, out int returnLength);
+            */
+
+            return "Medium IL";
         }
     }
 }

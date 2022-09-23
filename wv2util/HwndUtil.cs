@@ -7,55 +7,23 @@ namespace wv2util
 {
     public static class HwndUtil
     {
-        public delegate bool EnumWindowsCallback(IntPtr hwnd, int lParam);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumWindows(EnumWindowsCallback callback, IntPtr extraData);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumChildWindows(IntPtr hwndParent, EnumWindowsCallback callback, IntPtr extraData);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int GetWindowThreadProcessId(IntPtr hwnd, out int processId);
-
-        public enum GetWindowType : uint
-        {
-            GW_HWNDFIRST = 0, /// The retrieved handle identifies the window of the same type that is highest in the Z order.
-            GW_HWNDLAST = 1, /// The retrieved handle identifies the window of the same type that is lowest in the Z order.
-            GW_HWNDNEXT = 2, /// The retrieved handle identifies the window below the specified window in the Z order.
-            GW_HWNDPREV = 3, /// The retrieved handle identifies the window above the specified window in the Z order.
-            GW_OWNER = 4, /// The retrieved handle identifies the specified window's owner window, if any.
-                          /// <summary>
-                          /// The retrieved handle identifies the child window at the top of the Z order,
-                          /// if the specified window is a parent window; otherwise, the retrieved handle is NULL.
-                          /// The function examines only child windows of the specified window. It does not examine descendant windows.
-                          /// </summary>
-            GW_CHILD = 5,
-            /// <summary>
-            /// The retrieved handle identifies the enabled popup window owned by the specified window (the
-            /// search uses the first such window found using GW_HWNDNEXT); otherwise, if there are no enabled
-            /// popup windows, the retrieved handle is that of the specified window.
-            /// </summary>
-            GW_ENABLEDPOPUP = 6
-        }
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetWindow(IntPtr hWnd, GetWindowType uCmd);
-        public static IntPtr GetChildWindow(IntPtr hwnd) { return GetWindow(hwnd, GetWindowType.GW_CHILD); }
-
         public static int GetWindowProcessId(IntPtr hwnd)
         {
-            GetWindowThreadProcessId(hwnd, out int processId);
+            PInvoke.User32.GetWindowThreadProcessId(hwnd, out int processId);
             return processId;
         }
+
+        public static IntPtr GetChildWindow(IntPtr hwnd)
+        {
+            return PInvoke.User32.GetWindow(hwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
+        }        
 
         public delegate bool HwndFilterCallback(IntPtr hwnd);
         public static List<IntPtr> GetTopLevelHwnds(HwndFilterCallback filterCallback = null)
         {
             List<IntPtr> hwnds = new List<IntPtr>();
 
-            EnumWindowsCallback enumCallback = (hwnd, lParam) =>
+            PInvoke.User32.EnumWindows((hwnd, lParam) =>
             {
                 if (filterCallback == null || filterCallback(hwnd))
                 {
@@ -63,8 +31,7 @@ namespace wv2util
                 }
                 // Always return true to keep enumerating.
                 return true;
-            };
-            EnumWindows(enumCallback, IntPtr.Zero);
+            }, IntPtr.Zero);
 
             return hwnds;
         }
@@ -96,7 +63,7 @@ namespace wv2util
         {
             List<IntPtr> hwnds = new List<IntPtr>();
 
-            EnumWindowsCallback enumCallback = (hwnd, lParam) =>
+            PInvoke.User32.WNDENUMPROC enumCallback = (hwnd, lParam) =>
             {
                 if (filterCallback == null || filterCallback(hwnd))
                 {
@@ -105,7 +72,8 @@ namespace wv2util
                 // Always return true to keep enumerating.
                 return true;
             };
-            EnumChildWindows(parentHwnd, enumCallback, IntPtr.Zero);
+            IntPtr enumCallbackIntPtr = Marshal.GetFunctionPointerForDelegate(enumCallback);
+            PInvoke.User32.EnumChildWindows(parentHwnd, enumCallbackIntPtr, IntPtr.Zero);
 
             return hwnds;
         }
@@ -143,17 +111,17 @@ namespace wv2util
             return resultHwnds;
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern int GetClassName(IntPtr hwnd, StringBuilder lpClassName, int nMaxCount);
-
         public static string GetClassName(IntPtr hwnd)
         {
-            StringBuilder className = new StringBuilder(256);
-            GetClassName(hwnd, className, className.Capacity);
-            return className.ToString();
+            const int bufferSize = 256;
+            string className = null;
+            unsafe
+            {
+                char* buffer = stackalloc char[bufferSize];
+                PInvoke.User32.GetClassName(hwnd, buffer, bufferSize);
+                className = new string(buffer);
+            }
+            return className;
         }
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern IntPtr GetPropW(IntPtr hwnd, string propertyName);
     }
 }
