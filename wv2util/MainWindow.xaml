@@ -70,7 +70,10 @@
                   <GridViewColumnHeader HorizontalAlignment="Stretch"  Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
                 </GridViewColumn>
                 <GridViewColumn DisplayMemberBinding="{Binding PID}">
-                  <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">PID</GridViewColumnHeader>
+                  <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">App PID</GridViewColumnHeader>
+                </GridViewColumn>
+                <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
+                  <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_BrowserPID_Click">Browser PID</GridViewColumnHeader>
                 </GridViewColumn>
               </GridView>
             </ListView.View>
@@ -212,7 +215,8 @@
                   <TextBlock Text="{Binding Path=/UserDataPath, Mode=OneWay}"/>
                 </Hyperlink>
               </TextBlock>
-                            <Label   Grid.Row="4" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              
+              <Label   Grid.Row="4" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
               <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
             </Grid>
           </GroupBox>
