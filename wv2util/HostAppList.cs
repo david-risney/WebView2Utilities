@@ -342,7 +342,7 @@ namespace wv2util
                         IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
                         if (childHwnd == IntPtr.Zero)
                         {
-                            childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessParentHWND");
+                            childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
                         }
                         if (childHwnd != IntPtr.Zero)
                         {
