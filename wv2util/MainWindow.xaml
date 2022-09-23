@@ -169,7 +169,7 @@
             
           <GroupBox Grid.Row="2" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
             <GroupBox.Header>
-              <Label>Runtime details</Label>
+              <Label>WebView2 Instance details</Label>
             </GroupBox.Header>
 
             <Grid>
@@ -195,9 +195,12 @@
               </Grid.ColumnDefinitions>
             
               <Label   Grid.Row="0" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-              <TextBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The path of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-              <Label   Grid.Row="1" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+              <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The path of the WebView2 Runtime used by this WebView2 instance." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
+                <Hyperlink NavigateUri="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                  <TextBlock Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}"/>
+                </Hyperlink>
+              </TextBlock>
+                            <Label   Grid.Row="1" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
               <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
               <Label   Grid.Row="2" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
