@@ -20,9 +20,28 @@ namespace wv2util
                 return GetKeyValue(m_parts, key);
             }
 
-            public string[] Parts {  get => m_parts.ToArray(); }
+            public string[] Parts => m_parts.ToArray();
 
-            private readonly List<string> m_parts;
+            public override string ToString() {
+                return String.Join(" ", 
+                    Parts.Select(part => part.Contains(" ") ? ('"' + part + '"') : part));
+            }
+            
+            public bool Contains(string entry) => Parts.Contains(entry);
+            
+            public bool Add(string entry)
+            {
+                if (!m_parts.Contains(entry))
+                {
+                    m_parts.Add(entry);
+                    return true;
+                }
+                return false;
+            }
+
+            public bool Remove(string entry) => m_parts.Remove(entry);
+
+            private List<string> m_parts;
 
             private static string GetKeyValue(List<string> all, string key)
             {

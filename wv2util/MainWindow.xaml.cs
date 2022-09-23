@@ -386,5 +386,45 @@ namespace wv2util
                 AppOverrideHostAppComboBox.IsEnabled = mutable;
             }
         }
+
+        private void AppOverrideArgumentsAutoOpenDevTools_Checked(object sender, RoutedEventArgs e)
+        {
+            if (AppOverrideArgumentsAutoOpenDevTools != null)
+            {
+                bool add = (bool)AppOverrideArgumentsAutoOpenDevTools.IsChecked;
+                const string arg = "--auto-open-devtools-for-tabs";
+                AppOverrideArgumentsAddRemove(new string[] { arg }, add);
+            }
+        }
+
+        private void AppOverrideArgumentsLogging_Checked(object sender, RoutedEventArgs e)
+        {
+            if (AppOverrideArgumentsLogging != null)
+            {
+                bool add = (bool)AppOverrideArgumentsLogging.IsChecked;
+                string[] args = new string[] { "--enable-logging", "--v=1" };
+                AppOverrideArgumentsAddRemove(args, add);
+            }
+        }
+
+        private void AppOverrideArgumentsAddRemove(string[] args, bool add)
+        {
+            if (AppOverrideBrowserArgumentsTextBox != null)
+            {
+                var commandLine = new CommandLineUtil.CommandLine(AppOverrideBrowserArgumentsTextBox.Text);
+                foreach (string arg in args)
+                {
+                    if (add)
+                    {
+                        commandLine.Add(arg);
+                    }
+                    else
+                    {
+                        commandLine.Remove(arg);
+                    }
+                }
+                AppOverrideBrowserArgumentsTextBox.Text = commandLine.ToString();
+            }
+        }
     }
 }
