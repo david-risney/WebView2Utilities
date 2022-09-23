@@ -115,17 +115,111 @@ namespace wv2util
             return false;
         }
 
+        // PInvoke for GetPackageFullName. Why doesn't PInvoke.Kernel32 have this?
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int GetPackageFullName(IntPtr hProcess, ref uint packageFullNameLength, StringBuilder packageFullName);
+
+        // Wrapper for the Win32 PInvoke GetPackageFullName to make it more C# friendly
+        public static string GetPackageFullName(int processId)
+        {
+            string packageFullName = null;
+            
+            try
+            {
+                var processSafeHandle = PInvoke.Kernel32.OpenProcess(
+                    (PInvoke.Kernel32.ACCESS_MASK)0x1000, // PROCESS_QUERY_LIMITED_INFORMATION
+                    false, 
+                    processId);
+                if (!processSafeHandle.IsInvalid)
+                {
+                    uint packageFullNameLength = 0;
+                    int result = GetPackageFullName(processSafeHandle.DangerousGetHandle(), ref packageFullNameLength, null);
+                    if (result == (int)PInvoke.Win32ErrorCode.ERROR_INSUFFICIENT_BUFFER)
+                    {
+                        StringBuilder packageFullNameBuilder = new StringBuilder((int)packageFullNameLength);
+                        result = GetPackageFullName(processSafeHandle.DangerousGetHandle(), ref packageFullNameLength, packageFullNameBuilder);
+                        if (result == (int)PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                        {
+                            packageFullName = packageFullNameBuilder.ToString();
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Process may be gone when go to learn package full name and that's fine.
+            }
+
+            return packageFullName;
+        }
+
         public static string GetIntegrityLevelOfProcess(int pid)
         {
             // Determine if this is admin
-            /* WIP 
-            var processHandle = PInvoke.Kernel32.OpenProcess(PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION, false, pid);
-            PInvoke.AdvApi32.OpenProcessToken(processHandle.DangerousGetHandle(), (PInvoke.Kernel32.ACCESS_MASK)0x8, out var tokenHandle);
-            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE elevationType;
-            PInvoke.AdvApi32.GetTokenInformation(tokenHandle, PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType, Marshal. elevationType, 1, out int returnLength);
-            */
+            var processSafeHandle = PInvoke.Kernel32.OpenProcess(
+                PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION, 
+                false, 
+                pid);
+            if (!PInvoke.AdvApi32.OpenProcessToken(
+                processSafeHandle.DangerousGetHandle(), 
+                (PInvoke.Kernel32.ACCESS_MASK)0x8, // TOKEN_QUERY
+                out var tokenHandle))
+            {
+                PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                {
+                    throw new PInvoke.Win32Exception(errorCode, "Error calling OpenProcessToken");
+                }
+            }
+            
+            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE[] elevationType = 
+                new PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE[] { PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault };
+            unsafe
+            {
+                fixed(void* elevationTypeAsVoidPointer = elevationType)
+                if (!PInvoke.AdvApi32.GetTokenInformation(
+                    tokenHandle,
+                    PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType,
+                    elevationTypeAsVoidPointer,
+                    sizeof(PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE),
+                    out int returnLength))
+                {
+                    PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                    if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    {
+                        throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                    }
+                }
+                if (elevationType[0] == PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull)
+                {
+                    return "High";
+                }
+            }
 
-            return "Medium IL";
+            UInt32[] isAppContainer = new UInt32[] { 0 };
+            unsafe
+            {
+                fixed (void* isAppContainerAsVoidPointer = isAppContainer)
+                if (!PInvoke.AdvApi32.GetTokenInformation(
+                        tokenHandle,
+                        PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenIsAppContainer,
+                        isAppContainerAsVoidPointer,
+                        sizeof(UInt32),
+                        out int returnLength))
+                {
+                    PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                    if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    {
+                        throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                    }
+                }
+                if (isAppContainer[0] == 1)
+                {
+                    return "AppContainer";
+                }
+            }
+
+            return "Normal";
         }
     }
 }

@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace wv2util
@@ -40,6 +41,7 @@ namespace wv2util
         public string[] InterestingLoadedDllPaths { get; private set; }
         public int BrowserProcessPID { get; private set; } = 0;
         public string IntegrityLevel { get => ProcessUtil.GetIntegrityLevelOfProcess(PID); }
+        public string PackageFullName { get => ProcessUtil.GetPackageFullName(PID); }
 
         public bool Equals(HostAppEntry other)
         {
