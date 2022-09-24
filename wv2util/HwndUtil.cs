@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -19,24 +20,26 @@ namespace wv2util
         }        
 
         public delegate bool HwndFilterCallback(IntPtr hwnd);
-        public static List<IntPtr> GetTopLevelHwnds(HwndFilterCallback filterCallback = null)
+        public static IEnumerable<IntPtr> GetTopLevelHwnds(HwndFilterCallback filterCallback = null, bool includeHwndMessage = false)
         {
-            List<IntPtr> hwnds = new List<IntPtr>();
+            IntPtr child = IntPtr.Zero;
+            var results = GetChildWindows(IntPtr.Zero, filterCallback);
 
-            PInvoke.User32.EnumWindows((hwnd, lParam) =>
+            if (includeHwndMessage)
             {
-                if (filterCallback == null || filterCallback(hwnd))
-                {
-                    hwnds.Add(hwnd);
-                }
-                // Always return true to keep enumerating.
-                return true;
-            }, IntPtr.Zero);
+                // HWND_MESSAGE = -3
+                results = results.Concat(GetChildWindows((IntPtr)(-3), filterCallback));
+            }
 
-            return hwnds;
+            if (filterCallback != null)
+            {
+                results = results.Where(hwnd => filterCallback(hwnd));
+            }
+
+            return results;
         }
 
-        public static Dictionary<int, List<IntPtr>> CreatePidToHwndsMapFromHwnds(List<IntPtr> hwnds)
+        public static Dictionary<int, List<IntPtr>> CreatePidToHwndsMapFromHwnds(IEnumerable<IntPtr> hwnds)
         {
             Dictionary<int, List<IntPtr>> pidToHwndMap = new Dictionary<int, List<IntPtr>>();
             // Turn the list of hwnds into a dictionary of pid to hwnd list.
@@ -59,23 +62,23 @@ namespace wv2util
             return CreatePidToHwndsMapFromHwnds(GetTopLevelHwnds(filterCallback));
         }
 
-        public static List<IntPtr> GetChildWindows(IntPtr parentHwnd, HwndFilterCallback filterCallback = null)
+        public static IEnumerable<IntPtr> GetChildWindows(IntPtr parentHwnd, HwndFilterCallback filterCallback = null)
         {
             List<IntPtr> hwnds = new List<IntPtr>();
 
-            PInvoke.User32.WNDENUMPROC enumCallback = (hwnd, lParam) =>
+            IntPtr child = IntPtr.Zero;
+            while ((child = PInvoke.User32.FindWindowEx(parentHwnd, child, null, null)) != IntPtr.Zero)
             {
-                if (filterCallback == null || filterCallback(hwnd))
-                {
-                    hwnds.Add(hwnd);
-                }
-                // Always return true to keep enumerating.
-                return true;
-            };
-            IntPtr enumCallbackIntPtr = Marshal.GetFunctionPointerForDelegate(enumCallback);
-            PInvoke.User32.EnumChildWindows(parentHwnd, enumCallbackIntPtr, IntPtr.Zero);
+                hwnds.Add(child);
+            }
 
-            return hwnds;
+            IEnumerable<IntPtr> hwndsResult = hwnds;
+            if (filterCallback != null)
+            {
+                hwndsResult = hwndsResult.Where(hwnd => filterCallback(hwnd));
+            }
+
+            return hwndsResult;
         }
 
         public static HashSet<IntPtr> GetDescendantWindows(

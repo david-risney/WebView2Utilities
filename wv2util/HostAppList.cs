@@ -231,7 +231,9 @@ namespace wv2util
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
         {
-            var results = AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(GetHostAppEntriesFromMachineByPipeEnumeration());
+            var results = GetHostAppEntriesFromMachineByPipeEnumeration();
+            //results = AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(results);
+            results = AddRuntimeProcessInfoToHostAppEntriesByAllHwndWalking(results);
 
             // HWND walking only examines the top level HWNDs so may miss host apps
             // that only own child HWNDs parented to the HWND of another process.
@@ -246,7 +248,7 @@ namespace wv2util
             // Maybe add a button that will take longer but work harder.
             // if (results.Any(entry => entry.BrowserProcessPID == 0))
             // {
-                // results = AddRuntimeProcessInfoToHostAppEntriesByParentProcess(results);
+            // results = AddRuntimeProcessInfoToHostAppEntriesByParentProcess(results);
             // }
             return results;
         }
@@ -353,8 +355,6 @@ namespace wv2util
         private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(
             IEnumerable<HostAppEntry> hostAppEntries)
         {
-            Trace.TraceInformation("Starting Host App discovery via HWND walking");
-
             List<HostAppEntry> hostAppEntriesWithRuntimePID = new List<HostAppEntry>();
 
             // We do work to avoid calling EnumWindows more than once.
@@ -426,11 +426,106 @@ namespace wv2util
                 }
             }
 
-            Trace.TraceInformation("Completed Host App discovery via HWND walking");
-
             return hostAppEntriesWithRuntimePID;
         }
 
+        private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntriesByAllHwndWalking(
+            IEnumerable<HostAppEntry> hostAppEntriesOriginal)
+        {
+            if (hostAppEntriesOriginal.Any(entry => entry.BrowserProcessPID == 0))
+            {
+                List<HostAppEntry> hostAppEntriesResults = new List<HostAppEntry>();
+                Dictionary<int, HashSet<int>> parentPidToChildPidsMap = new Dictionary<int, HashSet<int>>();
+                var topLevelHwnds = HwndUtil.GetTopLevelHwnds(null, true);
+
+                Trace.WriteLine("\nFinding all parent/child WebView2 HWNDs");
+                // Then find all child (and child of child of...) windows that have appropriate class name
+                foreach (var topLevelHwnd in topLevelHwnds)
+                {
+                    const string hostAppLeafHwndClassName = "Chrome_WidgetWin_0";
+                    var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
+                        topLevelHwnd,
+                        hwnd => HwndUtil.GetClassName(hwnd) != hostAppLeafHwndClassName,
+                        hwnd => HwndUtil.GetClassName(hwnd) == hostAppLeafHwndClassName);
+                    foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
+                    {
+                        IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
+                        if (childHwnd == IntPtr.Zero)
+                        {
+                            childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
+                        }
+                        if (childHwnd != IntPtr.Zero)
+                        {
+                            int parentPid = HwndUtil.GetWindowProcessId(hostAppLeafHwnd);
+                            int childPid = HwndUtil.GetWindowProcessId(childHwnd);
+
+                            if (!parentPidToChildPidsMap.TryGetValue(parentPid, out HashSet<int> childPids))
+                            {
+                                parentPidToChildPidsMap.Add(parentPid, (childPids = new HashSet<int>()));
+                            }
+                            childPids.Add(childPid);
+                            Trace.WriteLine(" - " + parentPid + " -> " + childPid);
+                        }
+                    }
+                }
+                Trace.WriteLine("Done\n");
+
+                foreach (var hostAppEntry in hostAppEntriesOriginal)
+                {
+                    bool added = false;
+
+                    if (hostAppEntry.BrowserProcessPID == 0)
+                    {
+                        if (parentPidToChildPidsMap.TryGetValue(hostAppEntry.PID, out HashSet<int> childPids))
+                        {
+                            foreach (int childPid in childPids)
+                            {
+                                Process runtimeProcess = TryGetProcessById(childPid);
+                                if (runtimeProcess != null)
+                                {
+                                    var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                                    string userDataFolder = userDataPathAndProcessType.Item1;
+
+                                    var runtimeEntry = new HostAppEntry(
+                                        hostAppEntry.ExecutablePath,
+                                        hostAppEntry.PID,
+                                        hostAppEntry.SdkInfo.Path,
+                                        hostAppEntry.Runtime.ExePath,
+                                        userDataFolder,
+                                        hostAppEntry.InterestingLoadedDllPaths,
+                                        childPid);
+                                    hostAppEntriesResults.Add(runtimeEntry);
+                                    added = true;
+                                }
+                            }
+                        }
+                    }
+                    parentPidToChildPidsMap.Remove(hostAppEntry.PID);
+
+                    if (!added)
+                    {
+                        hostAppEntriesResults.Add(hostAppEntry);
+                    }
+                }
+
+                Trace.WriteLine("\nUnused entries");
+                if (parentPidToChildPidsMap.Count > 0)
+                {
+                    foreach (var entry in parentPidToChildPidsMap)
+                    {
+                        foreach (var child in entry.Value)
+                        {
+                            Trace.WriteLine(" - " + entry.Key + " -> " + child);
+                        }
+                    }
+                }
+                Trace.WriteLine("Done\n");
+                
+                return hostAppEntriesResults;
+            }
+            return hostAppEntriesOriginal;
+        }
+        
         private static Process TryGetProcessById(int pid)
         {
             Process process = null;
