@@ -186,6 +186,7 @@ namespace wv2util
                 m_fromMachineInProgress = null;
             }
         }
+        public bool ShouldDiscoverSlowly { get; set; } = false;
         protected Task m_fromMachineInProgress = null;
         protected async Task FromMachineInnerAsync()
         {
@@ -194,7 +195,7 @@ namespace wv2util
 
             await Task.Factory.StartNew(() =>
             {
-                newEntries = GetHostAppEntriesFromMachine().ToList<HostAppEntry>();
+                newEntries = GetHostAppEntriesFromMachine(ShouldDiscoverSlowly).ToList<HostAppEntry>();
             });
 
             // Only update the entries on the caller thread to ensure the
@@ -229,27 +230,21 @@ namespace wv2util
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine()
+        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachine(bool shouldDiscoverSlowly)
         {
-            var results = GetHostAppEntriesFromMachineByPipeEnumeration();
-            //results = AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(results);
-            results = AddRuntimeProcessInfoToHostAppEntriesByAllHwndWalking(results);
+            IEnumerable<HostAppEntry> results;
+            if (!shouldDiscoverSlowly)
+            {
+                results = GetHostAppEntriesFromMachineByPipeEnumeration();
+                results = AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(results);
+            }
+            else
+            {
+                results = GetHostAppEntriesFromMachineByProcessModules();
+                results = AddRuntimeProcessInfoToHostAppEntriesByAllHwndWalking(results);
+                results = AddRuntimeProcessInfoToHostAppEntriesByParentProcess(results);
+            }
 
-            // HWND walking only examines the top level HWNDs so may miss host apps
-            // that only own child HWNDs parented to the HWND of another process.
-            // For example prevhost.exe is a child of explorer.exe and hosts a WebView2
-            // to display file previews.
-            // In case there are any left over processes we'll look for the parent PIDs
-            // of all the msedgewebview2.exe processes and see if those help. This has
-            // the problem of not finding the connection between subsequent host apps 
-            // sharing a browser process. Hopefully the overlap between the two discovery
-            // mechanisms will leave just a small area left.
-            // But as it turns out this is much much slower so we disable for now.
-            // Maybe add a button that will take longer but work harder.
-            // if (results.Any(entry => entry.BrowserProcessPID == 0))
-            // {
-            // results = AddRuntimeProcessInfoToHostAppEntriesByParentProcess(results);
-            // }
             return results;
         }
 
@@ -289,6 +284,27 @@ namespace wv2util
                 }
             }
             return hostAppEntriesResult;
+        }
+
+        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByProcessModules()
+        {
+            List<HostAppEntry> results = new List<HostAppEntry>();
+            foreach (Process process in Process.GetProcesses())
+            {
+                var interestingDllPaths = ProcessUtil.GetInterestingDllsUsedByPid(process.Id);
+                if (interestingDllPaths.Item1 != null || interestingDllPaths.Item2 != null)
+                {
+                    results.Add(new HostAppEntry(
+                            process.MainModule.FileName,
+                            process.Id,
+                            interestingDllPaths.Item2,
+                            ClientDllPathToRuntimePath(interestingDllPaths.Item1),
+                            null,
+                            interestingDllPaths.Item3,
+                            0));
+                }
+            }
+            return results;
         }
 
         private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByPipeEnumeration()
@@ -438,7 +454,6 @@ namespace wv2util
                 Dictionary<int, HashSet<int>> parentPidToChildPidsMap = new Dictionary<int, HashSet<int>>();
                 var topLevelHwnds = HwndUtil.GetTopLevelHwnds(null, true);
 
-                Trace.WriteLine("\nFinding all parent/child WebView2 HWNDs");
                 // Then find all child (and child of child of...) windows that have appropriate class name
                 foreach (var topLevelHwnd in topLevelHwnds)
                 {
@@ -464,11 +479,9 @@ namespace wv2util
                                 parentPidToChildPidsMap.Add(parentPid, (childPids = new HashSet<int>()));
                             }
                             childPids.Add(childPid);
-                            Trace.WriteLine(" - " + parentPid + " -> " + childPid);
                         }
                     }
                 }
-                Trace.WriteLine("Done\n");
 
                 foreach (var hostAppEntry in hostAppEntriesOriginal)
                 {
@@ -508,19 +521,6 @@ namespace wv2util
                     }
                 }
 
-                Trace.WriteLine("\nUnused entries");
-                if (parentPidToChildPidsMap.Count > 0)
-                {
-                    foreach (var entry in parentPidToChildPidsMap)
-                    {
-                        foreach (var child in entry.Value)
-                        {
-                            Trace.WriteLine(" - " + entry.Key + " -> " + child);
-                        }
-                    }
-                }
-                Trace.WriteLine("Done\n");
-                
                 return hostAppEntriesResults;
             }
             return hostAppEntriesOriginal;

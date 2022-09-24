@@ -20,7 +20,7 @@ namespace wv2util
             ExePath = webview2RuntimeExePath;
         }
         public string ExePath { get; protected set; }
-        public string RuntimeLocation => ExePath != "" ? Directory.GetParent(ExePath).FullName : "Unknown";
+        public string RuntimeLocation => (ExePath != "" && ExePath != null) ? Directory.GetParent(ExePath).FullName : "Unknown";
         public string Version => VersionUtil.GetVersionStringFromFilePath(ExePath);
         public string Channel
         {

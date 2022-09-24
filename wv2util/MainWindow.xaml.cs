@@ -6,6 +6,8 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
@@ -425,6 +427,16 @@ namespace wv2util
                 }
                 AppOverrideBrowserArgumentsTextBox.Text = commandLine.ToString();
             }
+        }
+
+        private void HostAppsDiscoverSlowlyCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            // The data binding will update the property on the HostAppList
+            // This method will additionally ensure we refresh the list (by programmatically
+            // clicking the refresh button) to match the new option.
+            ButtonAutomationPeer peer = new ButtonAutomationPeer(this.HostAppsReload);
+            IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+            invokeProv.Invoke();
         }
     }
 }

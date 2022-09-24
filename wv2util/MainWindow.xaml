@@ -50,12 +50,13 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-
+                    <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverMoreSlowlyCheckbox_Checked"/>
                     <ListView
               x:Name="HostAppListView"
-              Grid.Row="0"
+              Grid.Row="1"
               Grid.Column="0"
               Grid.RowSpan="20"
               ItemsSource="{Binding}"
@@ -79,7 +80,7 @@
                         </ListView.View>
                     </ListView>
 
-                    <GroupBox Grid.Row="0" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+                    <GroupBox Grid.Row="1" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
                         <GroupBox.Header>
                             <Label>Host app details</Label>
                         </GroupBox.Header>
@@ -126,7 +127,7 @@
                         </Grid>
                     </GroupBox>
 
-                    <GroupBox Grid.Row="1" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+                    <GroupBox Grid.Row="2" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
                         <GroupBox.Header>
                             <Label>SDK details</Label>
                         </GroupBox.Header>
@@ -170,7 +171,7 @@
                         </Grid>
                     </GroupBox>
 
-                    <GroupBox Grid.Row="2" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+                    <GroupBox Grid.Row="3" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
                         <GroupBox.Header>
                             <Label>WebView2 Instance details</Label>
                         </GroupBox.Header>
@@ -220,8 +221,8 @@
                             <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
                         </Grid>
                     </GroupBox>
-                    <Button Grid.Row="3" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                    <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsCreateReport" Content="Create Report" Click="HostAppsCreateReport_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+                    <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+                    <Button Grid.Row="5" Grid.Column="1" x:Name="HostAppsCreateReport" Content="Create Report" Click="HostAppsCreateReport_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
                 </Grid>
             </TabItem>
 
