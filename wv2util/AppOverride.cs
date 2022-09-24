@@ -437,7 +437,7 @@ namespace wv2util
             }
         }
         public bool IsRuntimeEvergreenPreview
-        {   
+        {
             get => ReverseSearchOrder && RuntimePath == "";
             set
             {

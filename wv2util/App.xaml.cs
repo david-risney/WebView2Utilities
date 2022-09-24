@@ -41,7 +41,7 @@ namespace wv2util
                 Application.Current.Shutdown();
             }
         }
-        
+
         protected override void OnStartup(StartupEventArgs args)
         {
             base.OnStartup(args);

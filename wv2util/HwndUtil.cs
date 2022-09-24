@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace wv2util
 {
@@ -17,7 +15,7 @@ namespace wv2util
         public static IntPtr GetChildWindow(IntPtr hwnd)
         {
             return PInvoke.User32.GetWindow(hwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
-        }        
+        }
 
         public delegate bool HwndFilterCallback(IntPtr hwnd);
         public static IEnumerable<IntPtr> GetTopLevelHwnds(HwndFilterCallback filterCallback = null, bool includeHwndMessage = false)

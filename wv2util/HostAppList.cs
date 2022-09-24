@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace wv2util
@@ -67,11 +66,11 @@ namespace wv2util
         }
         private readonly bool m_isWinRT = false;
         private readonly string[] m_interestingDlls;
-        
+
         public string Path { get; private set; }
         public string PathDirectory => System.IO.Path.GetDirectoryName(Path);
         public string Version => VersionUtil.GetVersionStringFromFilePath(Path);
-        
+
         public string ApiKind
         {
             get
@@ -106,7 +105,7 @@ namespace wv2util
                 return "Unknown";
             }
         }
-        
+
         public string UIFrameworkKind
         {
             get
@@ -158,7 +157,7 @@ namespace wv2util
                         }
                     }
                 }
-                
+
                 return "Unknown";
             }
         }
@@ -383,7 +382,7 @@ namespace wv2util
             foreach (HostAppEntry hostAppEntry in hostAppEntries)
             {
                 bool added = false;
-                
+
                 if (hostAppEntry.BrowserProcessPID == 0)
                 {
                     HashSet<int> runtimePids = new HashSet<int>();
@@ -525,7 +524,7 @@ namespace wv2util
             }
             return hostAppEntriesOriginal;
         }
-        
+
         private static Process TryGetProcessById(int pid)
         {
             Process process = null;

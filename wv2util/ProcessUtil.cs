@@ -6,11 +6,7 @@ using System.Linq;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Security.Policy;
-using System.Security.Principal;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace wv2util
 {
@@ -123,12 +119,12 @@ namespace wv2util
         public static string GetPackageFullName(int processId)
         {
             string packageFullName = null;
-            
+
             try
             {
                 var processSafeHandle = PInvoke.Kernel32.OpenProcess(
                     (PInvoke.Kernel32.ACCESS_MASK)0x1000, // PROCESS_QUERY_LIMITED_INFORMATION
-                    false, 
+                    false,
                     processId);
                 if (!processSafeHandle.IsInvalid)
                 {
@@ -157,11 +153,11 @@ namespace wv2util
         {
             // Determine if this is admin
             var processSafeHandle = PInvoke.Kernel32.OpenProcess(
-                PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION, 
-                false, 
+                PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION,
+                false,
                 pid);
             if (!PInvoke.AdvApi32.OpenProcessToken(
-                processSafeHandle.DangerousGetHandle(), 
+                processSafeHandle.DangerousGetHandle(),
                 (PInvoke.Kernel32.ACCESS_MASK)0x8, // TOKEN_QUERY
                 out var tokenHandle))
             {
@@ -171,25 +167,25 @@ namespace wv2util
                     throw new PInvoke.Win32Exception(errorCode, "Error calling OpenProcessToken");
                 }
             }
-            
-            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE[] elevationType = 
+
+            PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE[] elevationType =
                 new PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE[] { PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE.TokenElevationTypeDefault };
             unsafe
             {
-                fixed(void* elevationTypeAsVoidPointer = elevationType)
-                if (!PInvoke.AdvApi32.GetTokenInformation(
-                    tokenHandle,
-                    PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType,
-                    elevationTypeAsVoidPointer,
-                    sizeof(PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE),
-                    out int returnLength))
-                {
-                    PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
-                    if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                fixed (void* elevationTypeAsVoidPointer = elevationType)
+                    if (!PInvoke.AdvApi32.GetTokenInformation(
+                        tokenHandle,
+                        PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenElevationType,
+                        elevationTypeAsVoidPointer,
+                        sizeof(PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE),
+                        out int returnLength))
                     {
-                        throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                        PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                        if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                        {
+                            throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                        }
                     }
-                }
                 if (elevationType[0] == PInvoke.AdvApi32.TOKEN_ELEVATION_TYPE.TokenElevationTypeFull)
                 {
                     return "High";
@@ -200,19 +196,19 @@ namespace wv2util
             unsafe
             {
                 fixed (void* isAppContainerAsVoidPointer = isAppContainer)
-                if (!PInvoke.AdvApi32.GetTokenInformation(
-                        tokenHandle,
-                        PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenIsAppContainer,
-                        isAppContainerAsVoidPointer,
-                        sizeof(UInt32),
-                        out int returnLength))
-                {
-                    PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
-                    if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    if (!PInvoke.AdvApi32.GetTokenInformation(
+                            tokenHandle,
+                            PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenIsAppContainer,
+                            isAppContainerAsVoidPointer,
+                            sizeof(UInt32),
+                            out int returnLength))
                     {
-                        throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                        PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                        if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                        {
+                            throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                        }
                     }
-                }
                 if (isAppContainer[0] == 1)
                 {
                     return "AppContainer";
@@ -259,7 +255,7 @@ namespace wv2util
             {
                 Process process = Process.GetProcessById(id);
                 return GetParentProcess(process.Handle);
-            }        
+            }
 
             /// <summary>
             /// Gets the parent process of a specified process.

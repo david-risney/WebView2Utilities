@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wv2util
 {
@@ -22,13 +20,14 @@ namespace wv2util
 
             public string[] Parts => m_parts.ToArray();
 
-            public override string ToString() {
-                return String.Join(" ", 
+            public override string ToString()
+            {
+                return String.Join(" ",
                     Parts.Select(part => part.Contains(" ") ? ('"' + part + '"') : part));
             }
-            
+
             public bool Contains(string entry) => Parts.Contains(entry);
-            
+
             public bool Add(string entry)
             {
                 if (!m_parts.Contains(entry))

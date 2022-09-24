@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.IO.Compression;
-using System.Threading.Tasks;
 using System.IO;
+using System.IO.Compression;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace wv2util
 {
@@ -55,10 +53,10 @@ namespace wv2util
                     using (ZipArchive destinationAsZipArchive = new ZipArchive(destinationAsFileStream, ZipArchiveMode.Create))
                     {
                         await WriteObjectToZipArchiveEntryAsync(destinationAsZipArchive, new SummaryInfo
-                            {
-                                WebView2UtilitiesVersion = VersionUtil.GetWebView2UtilitiesVersion(),
-                                CreationDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
-                            }, "summary.json");
+                        {
+                            WebView2UtilitiesVersion = VersionUtil.GetWebView2UtilitiesVersion(),
+                            CreationDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        }, "summary.json");
                         await WriteObjectToZipArchiveEntryAsync(destinationAsZipArchive, hostAppEntry, "hostApp.json");
                         await WriteObjectToZipArchiveEntryAsync(destinationAsZipArchive, appOverrideList, "appOverrideList.json");
                         await WriteObjectToZipArchiveEntryAsync(destinationAsZipArchive, runtimeList, "runtimeList.json");
