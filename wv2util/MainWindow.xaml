@@ -240,7 +240,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" MouseRightButtonUp="RuntimeListMouseRightButtonUp" Grid.Row="0">
+                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn DisplayMemberBinding="{Binding RuntimeLocation}">

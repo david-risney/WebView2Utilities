@@ -305,25 +305,6 @@ namespace wv2util
             e.Handled = true;
         }
 
-        private void RuntimeListMouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-
-        }
-
-        private void MenuItemCopyRow(object sender, RoutedEventArgs e)
-        {
-            string text = ((System.Windows.Controls.ListView)sender).SelectedItem.ToString();
-            try
-            {
-                Clipboard.SetText(text);
-            }
-            catch (System.Runtime.InteropServices.COMException)
-            {
-                // We might fail to open clipboard. Just ignore
-            }
-
-        }
-
         private readonly SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
         private void GridViewColumnHeader_Runtime_Path_Click(object sender, RoutedEventArgs e)
         {
