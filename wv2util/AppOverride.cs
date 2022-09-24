@@ -375,6 +375,54 @@ namespace wv2util
         }
         private string m_BrowserArguments = "";
 
+        public bool IsCommonBrowserArgumentEnabledLogging
+        {
+            get
+            {
+                var commandLine = new CommandLineUtil.CommandLine(BrowserArguments);
+                return commandLine.Contains("--enable-logging") && commandLine.Contains("--v=1");
+            }
+
+            set
+            {
+                var commandLine = new CommandLineUtil.CommandLine(BrowserArguments);
+                if (value)
+                {
+                    commandLine.Add("--enable-logging");
+                    commandLine.Add("--v=1");
+                }
+                else
+                {
+                    commandLine.Remove("--enable-logging");
+                    commandLine.Remove("--v=1");
+                }
+                BrowserArguments = commandLine.ToString();
+            }
+        }
+
+        public bool IsCommonBrowserArgumentEnabledAutoOpenDevTools
+        {
+            get
+            {
+                var commandLine = new CommandLineUtil.CommandLine(BrowserArguments);
+                return commandLine.Contains("--auto-open-devtools-for-tabs");
+            }
+
+            set
+            {
+                var commandLine = new CommandLineUtil.CommandLine(BrowserArguments);
+                if (value)
+                {
+                    commandLine.Add("--auto-open-devtools-for-tabs");
+                }
+                else
+                {
+                    commandLine.Remove("--auto-open-devtools-for-tabs");
+                }
+                BrowserArguments = commandLine.ToString();
+            }
+        }
+
         public bool IsRuntimeEvergreen
         {
             get => !ReverseSearchOrder && RuntimePath == "";
