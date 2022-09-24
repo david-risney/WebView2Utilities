@@ -53,7 +53,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverMoreSlowlyCheckbox_Checked"/>
+                    <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverSlowlyCheckbox_Checked"/>
                     <ListView
               x:Name="HostAppListView"
               Grid.Row="1"
