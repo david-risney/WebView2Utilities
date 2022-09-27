@@ -1,10 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using wv2util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace wv2util.Tests
 {
@@ -25,7 +19,7 @@ namespace wv2util.Tests
             Assert.AreEqual(results[idx++], "--noerrdialogs");
             Assert.AreEqual(results[idx++], "--embedded-browser-webview-dpi-awareness=2");
             Assert.AreEqual(results[idx++], "--allow-file-access-from-files");
-            Assert.AreEqual(results[idx++], "--mojo-named-platform-channel-pipe=40932.32536.5816090101267860823");              
+            Assert.AreEqual(results[idx++], "--mojo-named-platform-channel-pipe=40932.32536.5816090101267860823");
         }
 
         [TestMethod()]
