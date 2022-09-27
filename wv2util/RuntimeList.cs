@@ -53,15 +53,20 @@ namespace wv2util
             }
         }
 
-        public bool Equals(RuntimeEntry other) => RuntimeLocation == other.RuntimeLocation;
+        public bool Equals(RuntimeEntry other) => this.CompareTo(other) == 0;
 
-        // The default comparison for a RuntimeEntry is by channel (most stable first) then by version (newest first)
+        // The default comparison for a RuntimeEntry is by channel (most stable first) then by version (newest first).
+        // And last sorted by the RuntimeLocation which determines equality.
         public int CompareTo(RuntimeEntry other)
         {
             int comparison = -SortUtil.CompareChannelStrings(this.Channel, other.Channel);
             if (comparison == 0)
             {
                 comparison = -SortUtil.CompareVersionStrings(this.Version, other.Version);
+                if (comparison == 0)
+                {
+                    comparison = RuntimeLocation.ToLower().CompareTo(other.RuntimeLocation.ToLower());
+                }
             }
             return comparison;
         }

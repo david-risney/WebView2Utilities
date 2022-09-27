@@ -60,6 +60,11 @@ namespace wv2util
                 bool inQuote = false;
                 string part = "";
 
+                if (commandLine == null)
+                {
+                    commandLine = "";
+                }
+
                 for (int curIdx = 0; curIdx < commandLine.Length; ++curIdx)
                 {
                     char curChar = commandLine[curIdx];

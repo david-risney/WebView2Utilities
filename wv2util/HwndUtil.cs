@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace wv2util
 {
@@ -62,13 +64,33 @@ namespace wv2util
 
         public static IEnumerable<IntPtr> GetChildWindows(IntPtr parentHwnd, HwndFilterCallback filterCallback = null)
         {
-            List<IntPtr> hwnds = new List<IntPtr>();
+            HashSet<IntPtr> hwnds = new HashSet<IntPtr>();
 
             IntPtr child = IntPtr.Zero;
             while ((child = PInvoke.User32.FindWindowEx(parentHwnd, child, null, null)) != IntPtr.Zero)
             {
                 hwnds.Add(child);
             }
+
+            /* // GetWindow GW_CHILD/GW_HWNDNEXT seems to find the same HWNDs as FindWindowEx
+            child = PInvoke.User32.GetWindow(parentHwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
+            if (child != IntPtr.Zero)
+            {
+                do
+                {
+                    hwnds.Add(child);
+                } while ((child = PInvoke.User32.GetWindow(child, PInvoke.User32.GetWindowCommands.GW_HWNDNEXT)) != IntPtr.Zero);
+            }
+            */
+            // EnumChildWindows finds HWNDs that FindWindowEx does not and vice versa.
+            // So we run both and collect HWNDs from both.
+            HwndFilterCallback enumChildrenCallback = childHwnd =>
+            {
+                hwnds.Add(childHwnd);
+                // Always return true to indicate to keep enumerating.
+                return true;
+            };
+            PInvoke.User32.EnumChildWindows(parentHwnd, Marshal.GetFunctionPointerForDelegate(enumChildrenCallback), IntPtr.Zero);
 
             IEnumerable<IntPtr> hwndsResult = hwnds;
             if (filterCallback != null)

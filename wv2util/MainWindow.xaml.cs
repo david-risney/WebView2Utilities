@@ -1,13 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Navigation;
+using System.Windows.Threading;
+using CheckBox = System.Windows.Controls.CheckBox;
 using Clipboard = System.Windows.Clipboard;
+using ElapsedEventArgs = System.Timers.ElapsedEventArgs;
+using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
+using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
+using Timer = System.Timers.Timer;
 
 namespace wv2util
 {
@@ -90,6 +98,10 @@ namespace wv2util
             ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
             AppOverrideListBoxSelectionChanged(null, null);
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
+            
+            m_watchForChangesTimer.Interval = 3000;
+            m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
+            m_watchForChangesTimer.Enabled = HostAppsWatchForChangesCheckbox.IsChecked.Value;
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -372,6 +384,48 @@ namespace wv2util
             ButtonAutomationPeer peer = new ButtonAutomationPeer(this.HostAppsReload);
             IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
             invokeProv.Invoke();
+        }
+
+        private Timer m_watchForChangesTimer = new Timer();
+        private IEnumerable<HostAppEntry> m_previousHostAppEntries = null;
+        private void HostAppsWatchForChangesCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            CheckBox checkbox = (CheckBox)sender;
+            m_watchForChangesTimer.Enabled = checkbox.IsChecked.Value;
+        }
+
+        private void WatchForChangesTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            // When the timer elapses we want to check if there are any new hostt apps or
+            // old host apps removed.
+            var currentHostAppEntries = HostAppList.GetHostAppEntriesFromMachineByPipeEnumeration();
+            // If we haven't run before then previous host app entries is null and we just
+            // record this run's host app entries to compare against next time's run.
+            if (m_previousHostAppEntries != null)
+            {
+                int previousCount = m_previousHostAppEntries.Count();
+                // We know there are changes if the count of host apps has changed
+                bool changed = currentHostAppEntries.Count() != previousCount;
+                if (!changed)
+                {
+                    // If they're the same size, then we can check if any entry from one list
+                    // isn't in the other to know if they're equal.
+                    changed = currentHostAppEntries.Any(entry => !m_previousHostAppEntries.Contains(entry));
+                }
+
+                // If we have seen differences in the host app entries then we want to
+                // 'click' the refresh button to update the UI.
+                if (changed)
+                {
+                    // The Timer thread isn't the UI thread, so switch to the UI thread
+                    // in order to programmatically 'click' the refresh button.
+                    Dispatcher.Invoke(DispatcherPriority.Background, new ThreadStart(delegate
+                    {
+                        HostAppsReload.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                    }));
+                }
+            }
+            m_previousHostAppEntries = currentHostAppEntries;            
         }
     }
 }

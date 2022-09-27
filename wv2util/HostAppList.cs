@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace wv2util
 {
-    public class HostAppEntry : IEquatable<HostAppEntry>
+    public class HostAppEntry : IEquatable<HostAppEntry>, IComparable<HostAppEntry>
     {
         public HostAppEntry(
             string exePath, // Path to the host app executable
@@ -43,11 +43,23 @@ namespace wv2util
         public string IntegrityLevel { get => ProcessUtil.GetIntegrityLevelOfProcess(PID); }
         public string PackageFullName { get => ProcessUtil.GetPackageFullName(PID); }
 
+        public int CompareTo(HostAppEntry other)
+        {
+            int result = this.ExecutablePath.ToLower().CompareTo(other.ExecutablePath.ToLower());
+            if (result == 0)
+            {
+                result = this.UserDataPath.ToLower().CompareTo(other.UserDataPath.ToLower());
+                if (result == 0)
+                {
+                    result = this.Runtime.CompareTo(other.Runtime);
+                }
+            }
+            return result;
+        }
+
         public bool Equals(HostAppEntry other)
         {
-            return ExecutablePath == other.ExecutablePath &&
-                UserDataPath == other.UserDataPath &&
-                Runtime.Equals(other.Runtime);
+            return this.CompareTo(other) == 0;
         }
     }
 
@@ -189,7 +201,6 @@ namespace wv2util
         protected Task m_fromMachineInProgress = null;
         protected async Task FromMachineInnerAsync()
         {
-
             IEnumerable<HostAppEntry> newEntries = null;
 
             await Task.Factory.StartNew(() =>
@@ -306,7 +317,7 @@ namespace wv2util
             return results;
         }
 
-        private static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByPipeEnumeration()
+        public static IEnumerable<HostAppEntry> GetHostAppEntriesFromMachineByPipeEnumeration()
         {
             // Mojo creates named pipes with a name like
             //  \\.\pipe\(LOCAL\)mojo.({name}_){creation PID}.{number}.{number}
@@ -367,6 +378,12 @@ namespace wv2util
             return hostAppEntries;
         }
 
+        private static readonly string[] s_hostAppLeafHwndClassNames = new string[]
+        {
+            "Chrome_WidgetWin_0",
+            "Windows.UI.Core.CoreComponentInputSource"
+        };
+
         private static IEnumerable<HostAppEntry> AddRuntimeProcessInfoToHostAppEntriesByHwndWalking(
             IEnumerable<HostAppEntry> hostAppEntries)
         {
@@ -393,11 +410,10 @@ namespace wv2util
                     // Then find all child (and child of child of...) windows that have appropriate class name
                     foreach (var topLevelHwnd in topLevelHwnds)
                     {
-                        const string hostAppLeafHwndClassName = "Chrome_WidgetWin_0";
                         var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
                             topLevelHwnd,
-                            hwnd => HwndUtil.GetClassName(hwnd) != hostAppLeafHwndClassName,
-                            hwnd => HwndUtil.GetClassName(hwnd) == hostAppLeafHwndClassName);
+                            hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
+                            hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
                         foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
                         {
                             IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
@@ -456,11 +472,10 @@ namespace wv2util
                 // Then find all child (and child of child of...) windows that have appropriate class name
                 foreach (var topLevelHwnd in topLevelHwnds)
                 {
-                    const string hostAppLeafHwndClassName = "Chrome_WidgetWin_0";
                     var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
                         topLevelHwnd,
-                        hwnd => HwndUtil.GetClassName(hwnd) != hostAppLeafHwndClassName,
-                        hwnd => HwndUtil.GetClassName(hwnd) == hostAppLeafHwndClassName);
+                        hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
+                        hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
                     foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
                     {
                         IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
