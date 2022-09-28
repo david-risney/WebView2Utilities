@@ -40,7 +40,23 @@ namespace wv2util
         public string UserDataPath { get; private set; }
         public string[] InterestingLoadedDllPaths { get; private set; }
         public int BrowserProcessPID { get; private set; } = 0;
-        public string IntegrityLevel { get => ProcessUtil.GetIntegrityLevelOfProcess(PID); }
+        public string IntegrityLevel
+        {
+            get
+            {
+                try
+                {
+                    return ProcessUtil.GetIntegrityLevelOfProcess(PID);
+                }
+                catch (Exception)
+                {
+                    // This may fail if PID is already invalid because
+                    // the process closed. That's fine. Just return a
+                    // unknown in that case.
+                }
+                return "Unknown";
+            }
+        }
         public string PackageFullName { get => ProcessUtil.GetPackageFullName(PID); }
 
         public int CompareTo(HostAppEntry other)
