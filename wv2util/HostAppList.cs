@@ -281,32 +281,41 @@ namespace wv2util
             var msedgewebview2Processes = Process.GetProcessesByName("msedgewebview2");
             foreach (var msedgewebview2Process in msedgewebview2Processes)
             {
-                int pid = msedgewebview2Process.Id;
-                // Get parent process of pid
-                var parentProcess = msedgewebview2Process.GetParentProcess();
-                if (parentProcess.ProcessName.ToLower() != "msedgewebview2")
+                try
                 {
-                    int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
-                    if (idx != -1)
+                    int pid = msedgewebview2Process.Id;
+                    // Get parent process of pid
+                    var parentProcess = msedgewebview2Process.GetParentProcess();
+                    if (parentProcess != null &&
+                        parentProcess.ProcessName.ToLower() != "msedgewebview2")
                     {
-                        var hostAppEntry = hostAppEntriesResult[idx];
-                        if (hostAppEntry.BrowserProcessPID == 0)
+                        int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
+                        if (idx != -1)
                         {
-                            hostAppEntriesResult.RemoveAt(idx);
+                            var hostAppEntry = hostAppEntriesResult[idx];
+                            if (hostAppEntry.BrowserProcessPID == 0)
+                            {
+                                hostAppEntriesResult.RemoveAt(idx);
 
-                            var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
-                            string userDataFolder = userDataPathAndProcessType.Item1;
-                            hostAppEntriesResult.Add(
-                                new HostAppEntry(
-                                    hostAppEntry.ExecutablePath,
-                                    hostAppEntry.PID,
-                                    hostAppEntry.SdkInfo.Path,
-                                    hostAppEntry.Runtime.ExePath,
-                                    userDataFolder,
-                                    hostAppEntry.InterestingLoadedDllPaths,
-                                    msedgewebview2Process.Id));
+                                var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
+                                string userDataFolder = userDataPathAndProcessType.Item1;
+                                hostAppEntriesResult.Add(
+                                    new HostAppEntry(
+                                        hostAppEntry.ExecutablePath,
+                                        hostAppEntry.PID,
+                                        hostAppEntry.SdkInfo.Path,
+                                        hostAppEntry.Runtime.ExePath,
+                                        userDataFolder,
+                                        hostAppEntry.InterestingLoadedDllPaths,
+                                        msedgewebview2Process.Id));
+                            }
                         }
                     }
+                }
+                catch (Exception)
+                {
+                    // Exceptions from interacting with a process that's already terminated
+                    // Just to be safe, catch those and skip the entry.
                 }
             }
             return hostAppEntriesResult;
@@ -421,48 +430,49 @@ namespace wv2util
                     HashSet<int> runtimePids = new HashSet<int>();
 
                     // And find corresponding top level windows for just this PID.
-                    var topLevelHwnds = pidToTopLevelHwndsMap[hostAppEntry.PID];
-
-                    // Then find all child (and child of child of...) windows that have appropriate class name
-                    foreach (var topLevelHwnd in topLevelHwnds)
+                    if (pidToTopLevelHwndsMap.TryGetValue(hostAppEntry.PID, out var topLevelHwnds))
                     {
-                        var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
-                            topLevelHwnd,
-                            hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
-                            hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
-                        foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
+                        // Then find all child (and child of child of...) windows that have appropriate class name
+                        foreach (var topLevelHwnd in topLevelHwnds)
                         {
-                            IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
-                            if (childHwnd == IntPtr.Zero)
+                            var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
+                                topLevelHwnd,
+                                hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
+                                hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
+                            foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
                             {
-                                childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
-                            }
-                            if (childHwnd != IntPtr.Zero)
-                            {
-                                runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                                IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
+                                if (childHwnd == IntPtr.Zero)
+                                {
+                                    childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
+                                }
+                                if (childHwnd != IntPtr.Zero)
+                                {
+                                    runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                                }
                             }
                         }
-                    }
 
-                    foreach (var runtimePid in runtimePids)
-                    {
-                        string userDataFolder = null;
-                        Process runtimeProcess = TryGetProcessById(runtimePid);
-                        if (runtimeProcess != null)
+                        foreach (var runtimePid in runtimePids)
                         {
-                            var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
-                            userDataFolder = userDataPathAndProcessType.Item1;
+                            string userDataFolder = null;
+                            Process runtimeProcess = TryGetProcessById(runtimePid);
+                            if (runtimeProcess != null)
+                            {
+                                var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                                userDataFolder = userDataPathAndProcessType.Item1;
 
-                            var runtimeEntry = new HostAppEntry(
-                                hostAppEntry.ExecutablePath,
-                                hostAppEntry.PID,
-                                hostAppEntry.SdkInfo.Path,
-                                hostAppEntry.Runtime.ExePath,
-                                userDataFolder,
-                                hostAppEntry.InterestingLoadedDllPaths,
-                                runtimePid);
-                            hostAppEntriesWithRuntimePID.Add(runtimeEntry);
-                            added = true;
+                                var runtimeEntry = new HostAppEntry(
+                                    hostAppEntry.ExecutablePath,
+                                    hostAppEntry.PID,
+                                    hostAppEntry.SdkInfo.Path,
+                                    hostAppEntry.Runtime.ExePath,
+                                    userDataFolder,
+                                    hostAppEntry.InterestingLoadedDllPaths,
+                                    runtimePid);
+                                hostAppEntriesWithRuntimePID.Add(runtimeEntry);
+                                added = true;
+                            }
                         }
                     }
                 }

@@ -282,7 +282,7 @@ namespace wv2util
 
         private async void RuntimesReload_Click(object sender, RoutedEventArgs e)
         {
-            object originalContent = RuntimesReload.Content;
+            object originalContent = "🔃";
             RuntimesReload.Content = "⌚";
             RuntimesReload.IsEnabled = false;
 
@@ -294,13 +294,32 @@ namespace wv2util
 
         private async void HostAppsReload_Click(object sender, RoutedEventArgs e)
         {
-            object originalContent = HostAppsReload.Content;
+            object originalContent = "🔃";
             HostAppsReload.Content = "⌚";
             HostAppsReload.IsEnabled = false;
 
             await HostAppsListData.FromMachineAsync();
+
             HostAppsReload.Content = originalContent;
             HostAppsReload.IsEnabled = true;
+
+            if (m_hostAppsReReload)
+            {
+                m_hostAppsReReload = false;
+                ProgrammaticallyClickButton(this.HostAppsReload);
+            }
+        }
+
+        private static bool ProgrammaticallyClickButton(Button button)
+        {
+            if (button.IsEnabled)
+            {
+                ButtonAutomationPeer peer = new ButtonAutomationPeer(button);
+                IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
+                invokeProv.Invoke();
+                return true;
+            }
+            return false;
         }
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
@@ -376,14 +395,18 @@ namespace wv2util
             }
         }
 
+        private bool m_hostAppsReReload = false;
         private void HostAppsDiscoverSlowlyCheckbox_Checked(object sender, RoutedEventArgs e)
         {
             // The data binding will update the property on the HostAppList
             // This method will additionally ensure we refresh the list (by programmatically
             // clicking the refresh button) to match the new option.
-            ButtonAutomationPeer peer = new ButtonAutomationPeer(this.HostAppsReload);
-            IInvokeProvider invokeProv = peer.GetPattern(PatternInterface.Invoke) as IInvokeProvider;
-            invokeProv.Invoke();
+            if (!ProgrammaticallyClickButton(this.HostAppsReload))
+            {
+                // If we couldn't click the reload button because its already
+                // reloading, we set a bool to re-reload once its done.
+                m_hostAppsReReload = true;
+            }
         }
 
         private Timer m_watchForChangesTimer = new Timer();
