@@ -10,13 +10,30 @@ namespace wv2util
     {
         public static int GetWindowProcessId(IntPtr hwnd)
         {
-            PInvoke.User32.GetWindowThreadProcessId(hwnd, out int processId);
+            int processId = 0;
+            try
+            {
+                PInvoke.User32.GetWindowThreadProcessId(hwnd, out processId);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine("Exception related to GetWindowThreadProcessId " + e);
+            }
             return processId;
         }
 
         public static IntPtr GetChildWindow(IntPtr hwnd)
         {
-            return PInvoke.User32.GetWindow(hwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
+            IntPtr result = IntPtr.Zero;
+            try
+            {
+                result = PInvoke.User32.GetWindow(hwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine("Exception related to GetWindow " + e);
+            }
+            return result;
         }
 
         public delegate bool HwndFilterCallback(IntPtr hwnd);
@@ -66,31 +83,36 @@ namespace wv2util
         {
             HashSet<IntPtr> hwnds = new HashSet<IntPtr>();
 
-            IntPtr child = IntPtr.Zero;
-            while ((child = PInvoke.User32.FindWindowEx(parentHwnd, child, null, null)) != IntPtr.Zero)
+            try
             {
-                hwnds.Add(child);
-            }
-
-            /* // GetWindow GW_CHILD/GW_HWNDNEXT seems to find the same HWNDs as FindWindowEx
-            child = PInvoke.User32.GetWindow(parentHwnd, PInvoke.User32.GetWindowCommands.GW_CHILD);
-            if (child != IntPtr.Zero)
-            {
-                do
+                IntPtr child = IntPtr.Zero;
+                while ((child = PInvoke.User32.FindWindowEx(parentHwnd, child, null, null)) != IntPtr.Zero)
                 {
                     hwnds.Add(child);
-                } while ((child = PInvoke.User32.GetWindow(child, PInvoke.User32.GetWindowCommands.GW_HWNDNEXT)) != IntPtr.Zero);
+                }
             }
-            */
+            catch (Exception e)
+            {
+                // Ignore exceptions trying to find windows.
+                Trace.WriteLine("FindWindowEx related error: " + e);
+            }
+
             // EnumChildWindows finds HWNDs that FindWindowEx does not and vice versa.
             // So we run both and collect HWNDs from both.
-            HwndFilterCallback enumChildrenCallback = childHwnd =>
+            try
             {
-                hwnds.Add(childHwnd);
-                // Always return true to indicate to keep enumerating.
-                return true;
-            };
-            PInvoke.User32.EnumChildWindows(parentHwnd, Marshal.GetFunctionPointerForDelegate(enumChildrenCallback), IntPtr.Zero);
+                HwndFilterCallback enumChildrenCallback = childHwnd =>
+                {
+                    hwnds.Add(childHwnd);
+                    // Always return true to indicate to keep enumerating.
+                    return true;
+                };
+                PInvoke.User32.EnumChildWindows(parentHwnd, Marshal.GetFunctionPointerForDelegate(enumChildrenCallback), IntPtr.Zero);
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine("EnumChildWindows related exception " + e);
+            }
 
             IEnumerable<IntPtr> hwndsResult = hwnds;
             if (filterCallback != null)
@@ -137,12 +159,19 @@ namespace wv2util
         public static string GetClassName(IntPtr hwnd)
         {
             const int bufferSize = 256;
-            string className = null;
-            unsafe
+            string className = "";
+            try
             {
-                char* buffer = stackalloc char[bufferSize];
-                PInvoke.User32.GetClassName(hwnd, buffer, bufferSize);
-                className = new string(buffer);
+                unsafe
+                {
+                    char* buffer = stackalloc char[bufferSize];
+                    PInvoke.User32.GetClassName(hwnd, buffer, bufferSize);
+                    className = new string(buffer);
+                }
+            }
+            catch (Exception e)
+            {
+                Trace.WriteLine("Exception related to GetClassName " + e);
             }
             return className;
         }

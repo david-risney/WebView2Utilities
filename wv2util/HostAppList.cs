@@ -425,56 +425,63 @@ namespace wv2util
             {
                 bool added = false;
 
-                if (hostAppEntry.BrowserProcessPID == 0)
+                try
                 {
-                    HashSet<int> runtimePids = new HashSet<int>();
-
-                    // And find corresponding top level windows for just this PID.
-                    if (pidToTopLevelHwndsMap.TryGetValue(hostAppEntry.PID, out var topLevelHwnds))
+                    if (hostAppEntry.BrowserProcessPID == 0)
                     {
-                        // Then find all child (and child of child of...) windows that have appropriate class name
-                        foreach (var topLevelHwnd in topLevelHwnds)
+                        HashSet<int> runtimePids = new HashSet<int>();
+
+                        // And find corresponding top level windows for just this PID.
+                        if (pidToTopLevelHwndsMap.TryGetValue(hostAppEntry.PID, out var topLevelHwnds))
                         {
-                            var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
-                                topLevelHwnd,
-                                hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
-                                hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
-                            foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
+                            // Then find all child (and child of child of...) windows that have appropriate class name
+                            foreach (var topLevelHwnd in topLevelHwnds)
                             {
-                                IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
-                                if (childHwnd == IntPtr.Zero)
+                                var hostAppLeafHwnds = HwndUtil.GetDescendantWindows(
+                                    topLevelHwnd,
+                                    hwnd => !s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)),
+                                    hwnd => s_hostAppLeafHwndClassNames.Contains(HwndUtil.GetClassName(hwnd)));
+                                foreach (var hostAppLeafHwnd in hostAppLeafHwnds)
                                 {
-                                    childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
-                                }
-                                if (childHwnd != IntPtr.Zero)
-                                {
-                                    runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                                    IntPtr childHwnd = HwndUtil.GetChildWindow(hostAppLeafHwnd);
+                                    if (childHwnd == IntPtr.Zero)
+                                    {
+                                        childHwnd = PInvoke.User32.GetProp(hostAppLeafHwnd, "CrossProcessChildHWND");
+                                    }
+                                    if (childHwnd != IntPtr.Zero)
+                                    {
+                                        runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                                    }
                                 }
                             }
-                        }
 
-                        foreach (var runtimePid in runtimePids)
-                        {
-                            string userDataFolder = null;
-                            Process runtimeProcess = TryGetProcessById(runtimePid);
-                            if (runtimeProcess != null)
+                            foreach (var runtimePid in runtimePids)
                             {
-                                var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
-                                userDataFolder = userDataPathAndProcessType.Item1;
+                                string userDataFolder = null;
+                                Process runtimeProcess = TryGetProcessById(runtimePid);
+                                if (runtimeProcess != null)
+                                {
+                                    var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                                    userDataFolder = userDataPathAndProcessType.Item1;
 
-                                var runtimeEntry = new HostAppEntry(
-                                    hostAppEntry.ExecutablePath,
-                                    hostAppEntry.PID,
-                                    hostAppEntry.SdkInfo.Path,
-                                    hostAppEntry.Runtime.ExePath,
-                                    userDataFolder,
-                                    hostAppEntry.InterestingLoadedDllPaths,
-                                    runtimePid);
-                                hostAppEntriesWithRuntimePID.Add(runtimeEntry);
-                                added = true;
+                                    var runtimeEntry = new HostAppEntry(
+                                        hostAppEntry.ExecutablePath,
+                                        hostAppEntry.PID,
+                                        hostAppEntry.SdkInfo.Path,
+                                        hostAppEntry.Runtime.ExePath,
+                                        userDataFolder,
+                                        hostAppEntry.InterestingLoadedDllPaths,
+                                        runtimePid);
+                                    hostAppEntriesWithRuntimePID.Add(runtimeEntry);
+                                    added = true;
+                                }
                             }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine("Failure for hostAppEntry " + hostAppEntry + ": " + e);
                 }
 
                 if (!added)
@@ -527,31 +534,38 @@ namespace wv2util
                 {
                     bool added = false;
 
-                    if (hostAppEntry.BrowserProcessPID == 0)
+                    try
                     {
-                        if (parentPidToChildPidsMap.TryGetValue(hostAppEntry.PID, out HashSet<int> childPids))
+                        if (hostAppEntry.BrowserProcessPID == 0)
                         {
-                            foreach (int childPid in childPids)
+                            if (parentPidToChildPidsMap.TryGetValue(hostAppEntry.PID, out HashSet<int> childPids))
                             {
-                                Process runtimeProcess = TryGetProcessById(childPid);
-                                if (runtimeProcess != null)
+                                foreach (int childPid in childPids)
                                 {
-                                    var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
-                                    string userDataFolder = userDataPathAndProcessType.Item1;
+                                    Process runtimeProcess = TryGetProcessById(childPid);
+                                    if (runtimeProcess != null)
+                                    {
+                                        var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                                        string userDataFolder = userDataPathAndProcessType.Item1;
 
-                                    var runtimeEntry = new HostAppEntry(
-                                        hostAppEntry.ExecutablePath,
-                                        hostAppEntry.PID,
-                                        hostAppEntry.SdkInfo.Path,
-                                        hostAppEntry.Runtime.ExePath,
-                                        userDataFolder,
-                                        hostAppEntry.InterestingLoadedDllPaths,
-                                        childPid);
-                                    hostAppEntriesResults.Add(runtimeEntry);
-                                    added = true;
+                                        var runtimeEntry = new HostAppEntry(
+                                            hostAppEntry.ExecutablePath,
+                                            hostAppEntry.PID,
+                                            hostAppEntry.SdkInfo.Path,
+                                            hostAppEntry.Runtime.ExePath,
+                                            userDataFolder,
+                                            hostAppEntry.InterestingLoadedDllPaths,
+                                            childPid);
+                                        hostAppEntriesResults.Add(runtimeEntry);
+                                        added = true;
+                                    }
                                 }
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.WriteLine("Error in AddRuntimeProcessInfoToHostAppEntriesByAllHwndWalking on hostAppEntry " + hostAppEntry + ": " + e);
                     }
                     parentPidToChildPidsMap.Remove(hostAppEntry.PID);
 
