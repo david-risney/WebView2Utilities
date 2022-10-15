@@ -229,24 +229,24 @@ namespace wv2util
                 }
             }
         }
+
+        private List<OverlayWindow> m_openOverlayWindows = new List<OverlayWindow>();
         private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            foreach (var overlayWindow in m_openOverlayWindows)
+            {
+                overlayWindow.CloseOverlay();
+            }
+            m_openOverlayWindows.Clear();
+            
             if (HostAppListView.SelectedIndex >= 0)
             {
                 HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
-                try
+
+                foreach (var hwnd in selection.Hwnds)
                 {
-                    Clipboard.SetText(selection.ExecutableName + "\t" +
-                        selection.SdkInfo.Version + "\t" +
-                        selection.Runtime.RuntimeLocation + "\t" +
-                        selection.Runtime.Version + "\t" +
-                        selection.Runtime.Channel + "\t" +
-                        selection.UserDataPath + "\t" +
-                        selection.ExecutablePath);
-                }
-                catch (System.Runtime.InteropServices.COMException)
-                {
-                    // We might fail to open clipboard. Just ignore
+                    m_openOverlayWindows.Add(
+                        OverlayWindow.OpenOverlayForHwnd(hwnd));
                 }
             }
         }

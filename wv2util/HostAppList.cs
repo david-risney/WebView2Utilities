@@ -20,7 +20,8 @@ namespace wv2util
             string runtimePath, // Path to the WebView2 client DLL
             string userDataPath, // Path to the user data folder
             string[] interestingLoadedDllPaths, // a list of full paths of DLLs that are related to WebView2 in some way
-            int browserProcessPid) // PID of the browser process
+            int browserProcessPid,
+            IntPtr[] hwnds) // PID of the browser process
         {
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             PID = pid;
@@ -29,6 +30,7 @@ namespace wv2util
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
             InterestingLoadedDllPaths = interestingLoadedDllPaths;
             BrowserProcessPID = browserProcessPid;
+            Hwnds = hwnds == null ? new IntPtr[0] : hwnds;
         }
 
         public string ExecutablePath { get; private set; }
@@ -40,6 +42,7 @@ namespace wv2util
         public string UserDataPath { get; private set; }
         public string[] InterestingLoadedDllPaths { get; private set; }
         public int BrowserProcessPID { get; private set; } = 0;
+        public IntPtr[] Hwnds { get; private set; }
         public string IntegrityLevel
         {
             get
@@ -304,7 +307,8 @@ namespace wv2util
                                     hostAppEntry.Runtime.ExePath,
                                     userDataFolder,
                                     hostAppEntry.InterestingLoadedDllPaths,
-                                    msedgewebview2Process.Id));
+                                    msedgewebview2Process.Id,
+                                    hostAppEntry.Hwnds));
                         }
                     }
                 }
@@ -327,7 +331,8 @@ namespace wv2util
                             ClientDllPathToRuntimePath(interestingDllPaths.Item1),
                             null,
                             interestingDllPaths.Item3,
-                            0));
+                            0,
+                            null));
                 }
             }
             return results;
@@ -386,7 +391,8 @@ namespace wv2util
                             ClientDllPathToRuntimePath(clientDllPath),
                             null,
                             interestingDllPaths,
-                            0));
+                            0,
+                            null));
                     }
                 }
             };
@@ -419,6 +425,7 @@ namespace wv2util
                 if (hostAppEntry.BrowserProcessPID == 0)
                 {
                     HashSet<int> runtimePids = new HashSet<int>();
+                    Dictionary<int, HashSet<IntPtr>> runtimePidToHwndMap = new Dictionary<int, HashSet<IntPtr>>();
 
                     // And find corresponding top level windows for just this PID.
                     var topLevelHwnds = pidToTopLevelHwndsMap[hostAppEntry.PID];
@@ -439,7 +446,14 @@ namespace wv2util
                             }
                             if (childHwnd != IntPtr.Zero)
                             {
-                                runtimePids.Add(HwndUtil.GetWindowProcessId(childHwnd));
+                                int runtimePid = HwndUtil.GetWindowProcessId(childHwnd);
+                                runtimePids.Add(runtimePid);
+
+                                if (!runtimePidToHwndMap.TryGetValue(runtimePid, out HashSet<IntPtr> runtimeHwnds))
+                                {
+                                    runtimePidToHwndMap[runtimePid] = runtimeHwnds = new HashSet<IntPtr>();
+                                }
+                                runtimeHwnds.Add(childHwnd);
                             }
                         }
                     }
@@ -453,6 +467,8 @@ namespace wv2util
                             var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
                             userDataFolder = userDataPathAndProcessType.Item1;
 
+                            runtimePidToHwndMap.TryGetValue(runtimePid, out HashSet<IntPtr> runtimeHwnds);
+
                             var runtimeEntry = new HostAppEntry(
                                 hostAppEntry.ExecutablePath,
                                 hostAppEntry.PID,
@@ -460,7 +476,8 @@ namespace wv2util
                                 hostAppEntry.Runtime.ExePath,
                                 userDataFolder,
                                 hostAppEntry.InterestingLoadedDllPaths,
-                                runtimePid);
+                                runtimePid,
+                                runtimeHwnds?.ToArray());
                             hostAppEntriesWithRuntimePID.Add(runtimeEntry);
                             added = true;
                         }
@@ -484,6 +501,7 @@ namespace wv2util
                 List<HostAppEntry> hostAppEntriesResults = new List<HostAppEntry>();
                 Dictionary<int, HashSet<int>> parentPidToChildPidsMap = new Dictionary<int, HashSet<int>>();
                 var topLevelHwnds = HwndUtil.GetTopLevelHwnds(null, true);
+                Dictionary<int, HashSet<IntPtr>> childPidToHwnd = new Dictionary<int, HashSet<IntPtr>>();
 
                 // Then find all child (and child of child of...) windows that have appropriate class name
                 foreach (var topLevelHwnd in topLevelHwnds)
@@ -509,6 +527,12 @@ namespace wv2util
                                 parentPidToChildPidsMap.Add(parentPid, (childPids = new HashSet<int>()));
                             }
                             childPids.Add(childPid);
+
+                            if (!childPidToHwnd.TryGetValue(childPid, out HashSet<IntPtr> childHwnds))
+                            {
+                                childPidToHwnd[childPid] = childHwnds = new HashSet<IntPtr>();
+                            }
+                            childHwnds.Add(childHwnd);
                         }
                     }
                 }
@@ -529,6 +553,8 @@ namespace wv2util
                                     var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
                                     string userDataFolder = userDataPathAndProcessType.Item1;
 
+                                    childPidToHwnd.TryGetValue(childPid, out HashSet<IntPtr> runtimeHwnds);
+
                                     var runtimeEntry = new HostAppEntry(
                                         hostAppEntry.ExecutablePath,
                                         hostAppEntry.PID,
@@ -536,7 +562,8 @@ namespace wv2util
                                         hostAppEntry.Runtime.ExePath,
                                         userDataFolder,
                                         hostAppEntry.InterestingLoadedDllPaths,
-                                        childPid);
+                                        childPid,
+                                        runtimeHwnds?.ToArray());
                                     hostAppEntriesResults.Add(runtimeEntry);
                                     added = true;
                                 }

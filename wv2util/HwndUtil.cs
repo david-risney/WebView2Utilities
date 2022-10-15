@@ -39,6 +39,17 @@ namespace wv2util
             return results;
         }
 
+        public static System.Windows.Rect GetWindowRect(IntPtr hwnd)
+        {
+            System.Windows.Rect rectAsSWRect = new System.Windows.Rect();
+            PInvoke.User32.GetWindowRect(hwnd, out var rect);
+            rectAsSWRect.X = rect.left;
+            rectAsSWRect.Y = rect.top;
+            rectAsSWRect.Width = rect.right - rect.left;
+            rectAsSWRect.Height = rect.bottom - rect.top;
+            return rectAsSWRect;
+        }
+
         public static Dictionary<int, List<IntPtr>> CreatePidToHwndsMapFromHwnds(IEnumerable<IntPtr> hwnds)
         {
             Dictionary<int, List<IntPtr>> pidToHwndMap = new Dictionary<int, List<IntPtr>>();
