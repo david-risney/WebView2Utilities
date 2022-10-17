@@ -253,8 +253,16 @@ namespace wv2util
             /// <returns>An instance of the Process class.</returns>
             public static Process GetParentProcess(int id)
             {
-                Process process = Process.GetProcessById(id);
-                return GetParentProcess(process.Handle);
+                try
+                {
+                    Process process = Process.GetProcessById(id);
+                    return GetParentProcess(process.Handle);
+                }
+                catch (Exception)
+                {
+                    // If the process is no longer available, returns null
+                    return null;
+                }
             }
 
             /// <summary>

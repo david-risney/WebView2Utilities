@@ -92,8 +92,9 @@ namespace wv2util
             m_interestingDlls = interestingDlls;
 
             string fileName = System.IO.Path.GetFileName(Path).ToLower();
+            // We only get to see native modules so no point in checking if its a .NET DLL
             m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
-                (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
+                (fileName == "microsoft.web.webview2.core.dll");// && !ProcessUtil.IsDllDotNet(Path));
         }
         private readonly bool m_isWinRT = false;
         private readonly string[] m_interestingDlls;
@@ -286,8 +287,9 @@ namespace wv2util
             {
                 int pid = msedgewebview2Process.Id;
                 // Get parent process of pid
+                
                 var parentProcess = msedgewebview2Process.GetParentProcess();
-                if (parentProcess.ProcessName.ToLower() != "msedgewebview2")
+                if (parentProcess != null && parentProcess.ProcessName.ToLower() != "msedgewebview2")
                 {
                     int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
                     if (idx != -1)

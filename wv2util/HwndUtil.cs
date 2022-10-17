@@ -39,15 +39,77 @@ namespace wv2util
             return results;
         }
 
+        public static System.Windows.Rect ToSystemWindowsRect(this PInvoke.RECT rectAsPInvokeRect)
+        {
+            System.Windows.Rect rectAsSystemWindowsRect = new System.Windows.Rect();
+            rectAsSystemWindowsRect.X = rectAsPInvokeRect.left;
+            rectAsSystemWindowsRect.Y = rectAsPInvokeRect.top;
+            rectAsSystemWindowsRect.Width = rectAsPInvokeRect.right - rectAsPInvokeRect.left;
+            rectAsSystemWindowsRect.Height = rectAsPInvokeRect.bottom - rectAsPInvokeRect.top;
+            return rectAsSystemWindowsRect;
+        }
+
+        public static PInvoke.RECT ToPInvokeRect(this System.Windows.Rect rectAsSystemWindowsRect)
+        {
+            PInvoke.RECT rectAsPInvokeRect = new PInvoke.RECT();
+
+            rectAsPInvokeRect.left = (int)rectAsSystemWindowsRect.X;
+            rectAsPInvokeRect.top = (int)rectAsSystemWindowsRect.Y;
+            rectAsPInvokeRect.left = (int)rectAsSystemWindowsRect.Left;
+            rectAsPInvokeRect.right = (int)rectAsSystemWindowsRect.Right;
+
+            return rectAsPInvokeRect;
+        }
+
+        public static System.Windows.Point ToSystemWindowsPoint(this PInvoke.POINT pointAsPInvokePoint)
+        {
+            System.Windows.Point pointAsSystemWindowsPoint = new System.Windows.Point();
+            pointAsSystemWindowsPoint.X = pointAsPInvokePoint.x;
+            pointAsSystemWindowsPoint.Y = pointAsPInvokePoint.y;
+            return pointAsSystemWindowsPoint;
+        }
+
+        public static PInvoke.POINT ToPInvokePoint(this System.Windows.Point pointAsSystemWindowsPoint)
+        {
+            PInvoke.POINT pointAsPInvokePoint = new PInvoke.POINT();
+            pointAsPInvokePoint.x = (int)pointAsSystemWindowsPoint.X;
+            pointAsPInvokePoint.y = (int)pointAsSystemWindowsPoint.Y;
+            return pointAsPInvokePoint;
+        }
+
         public static System.Windows.Rect GetWindowRect(IntPtr hwnd)
         {
-            System.Windows.Rect rectAsSWRect = new System.Windows.Rect();
-            PInvoke.User32.GetWindowRect(hwnd, out var rect);
-            rectAsSWRect.X = rect.left;
-            rectAsSWRect.Y = rect.top;
-            rectAsSWRect.Width = rect.right - rect.left;
-            rectAsSWRect.Height = rect.bottom - rect.top;
-            return rectAsSWRect;
+            if (!PInvoke.User32.GetWindowRect(hwnd, out var rect))
+            {
+                throw new Exception("GetWindowRect failed");
+            }
+            return rect.ToSystemWindowsRect();
+        }
+
+        public static System.Windows.Rect GetClientRect(IntPtr hwnd)
+        {
+            if (!PInvoke.User32.GetClientRect(hwnd, out var rect))
+            {
+                throw new Exception("GetClientRect failed");
+            }
+            return rect.ToSystemWindowsRect();
+        }
+
+        public static System.Windows.Point ClientToScreen(IntPtr hwnd, System.Windows.Point clientPoint)
+        {
+            PInvoke.POINT pointAsPInvokePoint = clientPoint.ToPInvokePoint();
+            if (!PInvoke.User32.ClientToScreen(hwnd, ref pointAsPInvokePoint))
+            {
+                throw new Exception("ClientToScreen failed");
+            }
+            return pointAsPInvokePoint.ToSystemWindowsPoint();
+        }
+
+        public static System.Windows.Rect ClientToScreen(IntPtr hwnd, System.Windows.Rect clientRect)
+        {
+            return new System.Windows.Rect(
+                ClientToScreen(hwnd, clientRect.TopLeft),
+                ClientToScreen(hwnd, clientRect.BottomRight));
         }
 
         public static Dictionary<int, List<IntPtr>> CreatePidToHwndsMapFromHwnds(IEnumerable<IntPtr> hwnds)
@@ -153,6 +215,19 @@ namespace wv2util
             {
                 char* buffer = stackalloc char[bufferSize];
                 PInvoke.User32.GetClassName(hwnd, buffer, bufferSize);
+                className = new string(buffer);
+            }
+            return className;
+        }
+
+        public static string GetWindowText(IntPtr hwnd)
+        {
+            const int bufferSize = 256;
+            string className = null;
+            unsafe
+            {
+                char* buffer = stackalloc char[bufferSize];
+                PInvoke.User32.GetWindowText(hwnd, buffer, bufferSize);
                 className = new string(buffer);
             }
             return className;

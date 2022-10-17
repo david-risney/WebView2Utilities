@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -15,6 +16,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Timer = System.Timers.Timer;
 
 
 namespace wv2util
@@ -26,9 +28,11 @@ namespace wv2util
     {
         // The HWND of the target window over which we will render our overlay
         private IntPtr m_targetHwnd;
+        private IntPtr m_thisHwnd;
         // The timer that tracks when to check for target HWND updates
         private Timer m_checkForUpdatesTimer;
         private Rect m_previousRect;
+        private bool m_closed = false;
         
         public static OverlayWindow OpenOverlayForHwnd(IntPtr targetHwnd)
         {
@@ -45,8 +49,11 @@ namespace wv2util
             UpdateOverlayToMatchTarget();
 
             m_checkForUpdatesTimer = new Timer(1000);
-            m_checkForUpdatesTimer.Elapsed += (object o, ElapsedEventArgs e) => 
-                UpdateOverlayToMatchTarget();
+            var synchronizationContext = SynchronizationContext.Current;
+            m_checkForUpdatesTimer.Elapsed += (object o, ElapsedEventArgs e) =>
+            { 
+                synchronizationContext.Post((objectContext) => UpdateOverlayToMatchTarget(), null);
+            };
             m_checkForUpdatesTimer.Start();
         }
 
@@ -54,47 +61,62 @@ namespace wv2util
         {
             base.OnSourceInitialized(e);
 
-            IntPtr hwnd = new WindowInteropHelper(this).Handle;
+            m_thisHwnd = new WindowInteropHelper(this).Handle;
 
             // Change the extended window style to include WS_EX_TRANSPARENT
             int extendedStyle = PInvoke.User32.GetWindowLong(
-                hwnd,
+                m_thisHwnd,
                 PInvoke.User32.WindowLongIndexFlags.GWL_EXSTYLE);
             PInvoke.User32.SetWindowLong(
-                hwnd,
+                m_thisHwnd,
                 PInvoke.User32.WindowLongIndexFlags.GWL_EXSTYLE,
                 (PInvoke.User32.SetWindowLongFlags)extendedStyle | PInvoke.User32.SetWindowLongFlags.WS_EX_TRANSPARENT);
         }
 
         private void UpdateOverlayToMatchTarget()
         {
-            var targetHwndRect = HwndUtil.GetWindowRect(m_targetHwnd);
-            if (targetHwndRect != m_previousRect)
+            if (!m_closed)
             {
+                var targetHwndRect = HwndUtil.GetWindowRect(m_targetHwnd);
+                if (targetHwndRect != m_previousRect && !m_previousRect.IsEmpty)
+                {
+                    PInvoke.User32.MoveWindow(
+                        m_thisHwnd,
+                        (int)targetHwndRect.Left,
+                        (int)targetHwndRect.Top,
+                        (int)targetHwndRect.Width,
+                        (int)targetHwndRect.Height,
+                        true);
+                }
                 m_previousRect = targetHwndRect;
 
-                this.Left = targetHwndRect.Left;
-                this.Top = targetHwndRect.Top;
-                this.Width = targetHwndRect.Width;
-                this.Height = targetHwndRect.Height;
+                bool isTargetVisible = PInvoke.User32.IsWindowVisible(m_targetHwnd);
+                var targetWindowStyle = PInvoke.User32.GetWindowLong(m_targetHwnd, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE);
+                bool isTargetMinized = (targetWindowStyle & (int)PInvoke.User32.WindowStyles.WS_MINIMIZE) != 0;
+                bool isTargetIconic = PInvoke.User32.IsIconic(m_targetHwnd);
+                bool showWindow = isTargetVisible && !isTargetMinized && !isTargetIconic;
 
-                Trace.WriteLine(" overlay target moved " + m_previousRect + " -> " + targetHwndRect + " (" + this.Left + " " + this.Top  + " " + this.Width + " " + this.Height);
-            }
-
-            bool isTargetVisible = PInvoke.User32.IsWindowVisible(m_targetHwnd);
-            var targetWindowStyle = PInvoke.User32.GetWindowLong(m_targetHwnd, PInvoke.User32.WindowLongIndexFlags.GWL_STYLE);
-            bool isTargetMinized = (targetWindowStyle & (int)PInvoke.User32.WindowStyles.WS_MINIMIZE) != 0;
-            bool showWindow = isTargetVisible && !isTargetMinized;
-
-            if (this.IsVisible != showWindow)
-            {
-                if (showWindow)
+                if (this.IsVisible != showWindow)
                 {
-                    this.Show();
+                    if (showWindow)
+                    {
+                        this.Show();
+                    }
+                    else
+                    {
+                        this.Hide();
+                    }
                 }
-                else
+
+                IntPtr targetOwner = PInvoke.User32.GetAncestor(
+                    m_targetHwnd, PInvoke.User32.GetAncestorFlags.GA_ROOTOWNER);
+                IntPtr prevTargetHwnd = PInvoke.User32.GetNextWindow(
+                    targetOwner, PInvoke.User32.GetNextWindowCommands.GW_HWNDPREV);
+                if (prevTargetHwnd != null && prevTargetHwnd != m_thisHwnd)
                 {
-                    this.Hide();
+                    PInvoke.User32.SetWindowPos(m_thisHwnd, prevTargetHwnd, 0, 0, 0, 0,
+                        PInvoke.User32.SetWindowPosFlags.SWP_NOSIZE |
+                        PInvoke.User32.SetWindowPosFlags.SWP_NOMOVE);
                 }
             }
         }
@@ -108,6 +130,7 @@ namespace wv2util
         public void CloseOverlay()
         {
             // Hide and shutdown this window.
+            m_closed = true;
             this.Close();
         }
     }

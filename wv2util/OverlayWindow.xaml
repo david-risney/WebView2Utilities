@@ -5,5 +5,5 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:wv2util"
         mc:Ignorable="d"
-        Title="Overlay" Height="450" Width="800" WindowStyle="None" AllowsTransparency="True" Opacity="0.25" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True" Focusable="False" IsHitTestVisible="False" IsTabStop="False" Background="#FF84B9FF" MouseUp="Window_MouseUp">
+        Title="Overlay" Height="450" Width="800" WindowStyle="None" AllowsTransparency="True" Opacity="0.25" ResizeMode="NoResize" ShowInTaskbar="False" Topmost="False" Focusable="False" IsHitTestVisible="False" IsTabStop="False" Background="#FF84B9FF" MouseUp="Window_MouseUp">
 </Window>
