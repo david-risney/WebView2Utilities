@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace wv2util
 {
@@ -63,6 +64,15 @@ namespace wv2util
             InitializeReportFileList();
         }
 
+        private void AddPathWithEnvironmentVariableIfItExists(ObservableCollection<FileEntry> fileEntries, string pathWithEnvironmentVariable, string outputFolder)
+        {
+            string path = Environment.ExpandEnvironmentVariables(pathWithEnvironmentVariable);
+            if (File.Exists(path))
+            {
+                fileEntries.Add(new FileEntry(path, outputFolder));
+            }            
+        }
+
         public void InitializeReportFileList()
         {
             ReportFilesList.Add(new FileEntry("summary.json"));
@@ -94,6 +104,15 @@ namespace wv2util
                     }
                 }
             }
+
+
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%temp%\\msedge_installer.log", "logs\\install\\temp");
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%systemroot%\\Temp\\msedge_installer.log", "logs\\install\\systemroot");
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%localappdata%\\Temp\\msedge_installer.log", "logs\\install\\localappdata");
+
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%localappdata%\\Temp\\MicrosoftEdgeUpdate.log", "logs\\install\\localappdata"); // When run as user
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%ALLUSERSPROFILE%\\Microsoft\\EdgeUpdate\\Log\\MicrosoftEdgeUpdate.log", "logs\\install\\allusersprofile"); // When run as admin
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%ProgramData%\\Microsoft\\EdgeUpdate\\Log\\MicrosoftEdgeUpdate.log", "logs\\install\\programdata");
         }
 
         public HostAppEntry HostAppEntry { get; private set; }
