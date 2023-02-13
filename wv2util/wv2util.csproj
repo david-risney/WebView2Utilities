@@ -159,6 +159,9 @@
     </ApplicationDefinition>
     <Compile Include="AppOverride.cs" />
     <Compile Include="CommandLineUtil.cs" />
+    <Compile Include="CreateReportWindow.xaml.cs">
+      <DependentUpon>CreateReportWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HostAppList.cs" />
     <Compile Include="HwndUtil.cs" />
     <Compile Include="ProcessUtil.cs" />
@@ -168,6 +171,10 @@
     <Compile Include="SortUtil.cs" />
     <Compile Include="TextComboBox.cs" />
     <Compile Include="VersionUtil.cs" />
+    <Page Include="CreateReportWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -138,40 +138,14 @@ namespace wv2util
             AppOverrideListData.FromRegistry();
         }
 
-        private async void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
+        private void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
         {
             HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
             if (selectedHostAppEntry != null)
             {
-                string originalButtonName = (string)HostAppsCreateReport.Content;
-                HostAppsCreateReport.IsEnabled = false;
-                HostAppsCreateReport.Content = "Creating Report...";
-                // Prompt the user to pick a path to save the report zip
-                SaveFileDialog saveFileDialog = new SaveFileDialog
-                {
-                    Filter = "Zip files (*.zip)|*.zip|All files (*.*)|*.*",
-                    FileName = ReportCreator.GenerateReportFileName(selectedHostAppEntry.ExecutableName),
-                    RestoreDirectory = true
-                };
-                if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    // Open the zip file path
-                    string zipPath = saveFileDialog.FileName;
-
-                    try
-                    {
-                        await ReportCreator.CreateReportAsync(zipPath, selectedHostAppEntry, AppOverrideListData, RuntimeListData);
-                        ProcessUtil.OpenExplorerToFile(zipPath);
-                        System.Windows.MessageBox.Show("The report was created.\n\nWARNING: The report file may contain personally identifiable information. Share this file only with people you trust.", "Report Created", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                    catch (Exception error)
-                    {
-                        // Show a message box displaying the exception
-                        System.Windows.MessageBox.Show(error.ToString(), "Unable to create report", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                HostAppsCreateReport.IsEnabled = true;
-                HostAppsCreateReport.Content = originalButtonName;
+                ReportCreator creator = new ReportCreator(selectedHostAppEntry, AppOverrideListData, RuntimeListData);
+                CreateReportWindow createReportWindow = new CreateReportWindow(this, creator);
+                createReportWindow.ShowDialog();
             }
         }
 
