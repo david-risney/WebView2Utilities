@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 
@@ -14,7 +15,7 @@ namespace wv2util
         // A file to store in the report.
         public class FileEntry : IEquatable<FileEntry>
         {
-            public FileEntry(string inputPath, string outputPathFolder = "")
+            public FileEntry(string inputPath, string outputPathFolder = "", bool deleteWhenDone = false)
             {
                 InputPath = inputPath;
                 OutputPathFolder = outputPathFolder;
@@ -26,6 +27,9 @@ namespace wv2util
             
             // The folder within the report in which to store the file.
             public string OutputPathFolder { get; set; }
+
+            // After successfully writing the report or cancelling the report creation, delete the file
+            public bool TemporaryFile { get; set; }
 
             // InputPathFileName returns just the file name part of the InputPath property
             public string InputPathFileName => Path.GetFileName(InputPath);
@@ -42,9 +46,9 @@ namespace wv2util
             public override string ToString() => DestinationPath;
         }
 
-        public static string GenerateReportFileName(string hostAppExeName)
+        public static string GenerateReportFileName(string hostAppExeName, string filePart = "Report", string fileType = "zip")
         {
-            return hostAppExeName + ".WebView2Utilities.Report." + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".zip";
+            return hostAppExeName + ".WebView2Utilities." + filePart + "." + DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + "." + fileType;
         }
 
         public string GenerateReportFileName()
@@ -86,33 +90,57 @@ namespace wv2util
                 {
                     string crashpadReportFolder = Path.Combine(HostAppEntry.UserDataPath, "Crashpad", "reports");
                     // Get all the files in the crashpad report folder
-                    string[] crashpadReportFiles = Directory.GetFiles(crashpadReportFolder);
-                    foreach (string crashpadReportFile in crashpadReportFiles)
+                    if (Directory.Exists(crashpadReportFolder))
                     {
-                        // Add the file to the zip archive
-                        this.ReportFilesList.Add(new FileEntry(crashpadReportFile, "CrashpadReports"));
+                        string[] crashpadReportFiles = Directory.GetFiles(crashpadReportFolder);
+                        foreach (string crashpadReportFile in crashpadReportFiles)
+                        {
+                            // Add the file to the zip archive
+                            this.ReportFilesList.Add(new FileEntry(crashpadReportFile, "CrashpadReports"));
+                        }
                     }
                 }
 
                 // Add log files
                 {
                     string logFolder = HostAppEntry.UserDataPath;
-                    string[] logFiles = Directory.GetFiles(logFolder, "*.log");
-                    foreach (string logFile in logFiles)
+                    if (Directory.Exists(logFolder))
                     {
-                        this.ReportFilesList.Add(new FileEntry(logFile, "logs"));
+                        string[] logFiles = Directory.GetFiles(logFolder, "*.log");
+                        foreach (string logFile in logFiles)
+                        {
+                            this.ReportFilesList.Add(new FileEntry(logFile, "logs"));
+                        }
                     }
                 }
             }
-
 
             AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%temp%\\msedge_installer.log", "logs\\install\\temp");
             AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%systemroot%\\Temp\\msedge_installer.log", "logs\\install\\systemroot");
             AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%localappdata%\\Temp\\msedge_installer.log", "logs\\install\\localappdata");
 
-            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%localappdata%\\Temp\\MicrosoftEdgeUpdate.log", "logs\\install\\localappdata"); // When run as user
-            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%ALLUSERSPROFILE%\\Microsoft\\EdgeUpdate\\Log\\MicrosoftEdgeUpdate.log", "logs\\install\\allusersprofile"); // When run as admin
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%localappdata%\\Temp\\MicrosoftEdgeUpdate.log", "logs\\install\\localappdata");
+            AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%ALLUSERSPROFILE%\\Microsoft\\EdgeUpdate\\Log\\MicrosoftEdgeUpdate.log", "logs\\install\\allusersprofile");
             AddPathWithEnvironmentVariableIfItExists(this.ReportFilesList, "%ProgramData%\\Microsoft\\EdgeUpdate\\Log\\MicrosoftEdgeUpdate.log", "logs\\install\\programdata");
+        }
+
+        public void Cleanup()
+        {
+            foreach (var entry in this.ReportFilesList)
+            {
+                if (entry.TemporaryFile)
+                {
+                    try
+                    {
+                        File.Delete(entry.InputPathFileName);
+                    }
+                    catch (Exception e)
+                    {
+                        // Ignore failure for temporary file deletion. We try but if it doesn't work, we move on.
+                        Console.WriteLine("Failed to delete temporary file " + entry.InputPathFileName + ": " + e.Message);
+                    }
+                }
+            }
         }
 
         public HostAppEntry HostAppEntry { get; private set; }
@@ -121,9 +149,9 @@ namespace wv2util
         public string DestinationPath { get; set; }
         public ObservableCollection<FileEntry> ReportFilesList = new ObservableCollection<FileEntry>();        
 
-        public Task CreateReportAsync()
+        public Task CreateReportAsync(CancellationToken cancellationToken)
         {
-            return CreateReportAsync(this.ReportFilesList, this.DestinationPath, this.HostAppEntry, this.AppOverrideList, this.RuntimeList);
+            return CreateReportAsync(this.ReportFilesList, this.DestinationPath, this.HostAppEntry, this.AppOverrideList, this.RuntimeList, cancellationToken);
         }
 
         private static async Task WriteObjectToZipArchiveEntryAsync(ZipArchive destinationAsZipArchive, Object obj, string entryName)
@@ -155,12 +183,32 @@ namespace wv2util
             public string CreationDate { get; set; }
         }
 
-        private static Task CreateReportAsync(ObservableCollection<FileEntry> fileEntries, string destinationPath, HostAppEntry hostAppEntry, IEnumerable<AppOverrideEntry> appOverrideList, IEnumerable<RuntimeEntry> runtimeList)
+        private static Task CreateReportAsync(
+            ObservableCollection<FileEntry> fileEntries,
+            string destinationPath,
+            HostAppEntry hostAppEntry,
+            IEnumerable<AppOverrideEntry> appOverrideList,
+            IEnumerable<RuntimeEntry> runtimeList,
+            CancellationToken token)
         {
             return Task.Run(async () =>
             {
                 using (FileStream destinationAsFileStream = new FileStream(destinationPath, FileMode.Create))
                 {
+                    token.Register(() =>
+                    {
+                        try
+                        {
+                            destinationAsFileStream.Dispose();
+                            destinationAsFileStream.Close();
+                            File.Delete(destinationPath);
+                        }
+                        catch (Exception e)
+                        {
+                            // Clean up is best effort
+                            Console.WriteLine("Failed to close and delete report file: " + e.Message);
+                        }                        
+                    });
                     using (ZipArchive destinationAsZipArchive = new ZipArchive(destinationAsFileStream, ZipArchiveMode.Create))
                     {
                         foreach (FileEntry fileEntry in fileEntries)
@@ -195,6 +243,77 @@ namespace wv2util
                     }
                 }
             });
+        }
+
+        public async Task AddDxDiagLogAsync(CancellationToken cancellationToken)
+        {
+            string dxDiagLogPath = Environment.ExpandEnvironmentVariables("%TEMP%") + 
+                "\\" + 
+                GenerateReportFileName(this.HostAppEntry.ExecutableName, "DxDiagLog", "xml");
+            
+            await CreateDxDiagLogAsync(dxDiagLogPath, cancellationToken);
+            if (!File.Exists(dxDiagLogPath))
+            {
+                throw new FileNotFoundException("Failed to create DxDiag log file", dxDiagLogPath);
+            }
+            this.ReportFilesList.Add(new FileEntry(dxDiagLogPath, "logs", true));
+        }
+
+        private static async Task CreateDxDiagLogAsync(string outputPath, CancellationToken cancellationToken)
+        {
+            System.Diagnostics.Process dxDiagProcess = new System.Diagnostics.Process();
+            dxDiagProcess.StartInfo.FileName = "dxdiag";
+            dxDiagProcess.StartInfo.Arguments = @"/whql:off /dontskip /t /x " + outputPath;
+            dxDiagProcess.StartInfo.UseShellExecute = false;
+            dxDiagProcess.StartInfo.RedirectStandardOutput = false;
+
+            dxDiagProcess.Start();
+
+            cancellationToken.Register(() =>
+            {
+                try
+                {
+                    dxDiagProcess.Kill();
+                }
+                catch (Exception e)
+                {
+                    // Ignore failure to kill process. We try but if it doesn't work, we move on.
+                    Console.WriteLine("Failed to kill DxDiag process: " + e.Message);
+                }
+            });
+
+            await WaitForProcessAsync(dxDiagProcess, cancellationToken);
+        }
+
+        private static Task WaitForProcessAsync(
+            System.Diagnostics.Process process, 
+            CancellationToken cancellationToken, 
+            int timeoutInMilliseconds = 60000,
+            bool checkExitCode = false)
+        {
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            ThreadPool.QueueUserWorkItem((object state) =>
+            {
+                bool exited = process.WaitForExit(timeoutInMilliseconds);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    tcs.SetCanceled();
+                }
+                else if (!exited)
+                {
+                    tcs.SetException(new Exception("Process is taking too long to exit."));
+                    process.Kill();
+                }
+                else if (checkExitCode && process.ExitCode != 0)
+                {
+                    tcs.SetException(new Exception("Process exited with error code " + process.ExitCode));
+                }
+                else
+                {
+                    tcs.SetResult(true);
+                }
+            });
+            return tcs.Task;
         }
     }
 }

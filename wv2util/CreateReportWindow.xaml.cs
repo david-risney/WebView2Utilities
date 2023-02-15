@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 
@@ -18,6 +21,16 @@ namespace wv2util
 
             InitializeDestinationPathTextBox();
             InitializeFilesListBox();
+
+            this.Closing += CreateReportWindow_Closing;
+        }
+
+        private CancellationTokenSource m_CancellationTokenSource = new CancellationTokenSource();
+
+        private void CreateReportWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            m_CancellationTokenSource.Cancel();
+            m_ReportCreator.Cleanup();
         }
 
         private ReportCreator m_ReportCreator;
@@ -65,7 +78,7 @@ namespace wv2util
 
             try
             {
-                await m_ReportCreator.CreateReportAsync();
+                await m_ReportCreator.CreateReportAsync(m_CancellationTokenSource.Token);
                 if ((bool)OpenReportInExplorerCheckBox.IsChecked)
                 {
                     ProcessUtil.OpenExplorerToFile(m_ReportCreator.DestinationPath);
@@ -83,5 +96,26 @@ namespace wv2util
                 MessageBox.Show(error.ToString(), "Failed to create report", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async void AddDxDiagLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddDxDiagLogButton.IsEnabled = false;
+            AddDxDiagLogButton.Content = "Adding DxDiag Log...";
+
+            try
+            {
+                await m_ReportCreator.AddDxDiagLogAsync(m_CancellationTokenSource.Token);
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show(error.ToString(), "Failed to add DxDiag log", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                AddDxDiagLogButton.IsEnabled = true;
+                AddDxDiagLogButton.Content = "Add DxDiag Log";
+            }
+        }
+
     }
 }

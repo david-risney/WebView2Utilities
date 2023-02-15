@@ -15,9 +15,10 @@
         <Label Content="Path" HorizontalAlignment="Left" Margin="10,68,0,0" VerticalAlignment="Top" Width="42"/>
         <TextBox x:Name="DestinationPathTextBox"  IsReadOnly="True" Text="" HorizontalAlignment="Left" Margin="52,72,0,0" VerticalAlignment="Top" Width="315"/>
         <Button x:Name="DestinationPathChangeButton" Content="Change" HorizontalAlignment="Left" Margin="377,69,0,0" VerticalAlignment="Top" Width="62" Click="DestinationPathChangeButton_Click" Height="23"/>
-        <GroupBox Header="Files" Margin="10,97,20,132">
+        <GroupBox Header="Files" Margin="10,97,20,162">
             <ListBox x:Name="FilesListBox" Margin="4,4,4,4"/>
         </GroupBox>
+        <Button x:Name="AddDxDiagLogButton" Content="Add DxDiag log" HorizontalAlignment="Left" Margin="10,295,0,0" VerticalAlignment="Top" Height="30" Width="133" Click="AddDxDiagLogButton_Click"/>
         <CheckBox x:Name="OpenReportInExplorerCheckBox" Content="Open report in Explorer" HorizontalAlignment="Left" Margin="10,369,0,0" VerticalAlignment="Top" Width="214" IsChecked="True"/>
         <Button x:Name="CreateReportButton" Content="Create Report" Margin="10,389,264,0" VerticalAlignment="Top" Click="CreateReportButton_Click" Height="27"/>
         <Button x:Name="CancelButton" IsCancel="true" Content="Cancel" HorizontalAlignment="Left" Margin="229,389,0,0" VerticalAlignment="Top" Height="27" Width="210" Click="CancelButton_Click"/>
