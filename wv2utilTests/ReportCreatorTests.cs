@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.IO.Compression;
 using System.Diagnostics;
 using System.Threading;
 
@@ -17,7 +18,7 @@ namespace wv2util.Tests
         ReportCreator CreateReportCreatorForTest()
         {
             return new ReportCreator(
-                new HostAppEntry("example.exe", 1, "C:\\windows\\system32\\actxprxy.dll", "C:\\", "C:\\", new string[] { }, 2),
+                new HostAppEntry("example.exe", 1, "C:\\windows\\system32\\actxprxy.dll", "C:\\windows\\system32", "C:\\windows\\system32", new string[] { }, 2),
                 new List<AppOverrideEntry>(),
                 new List<RuntimeEntry>());
         }
@@ -46,14 +47,71 @@ namespace wv2util.Tests
             Assert.IsTrue(reportCreator.ReportFilesList.Contains(new ReportCreator.FileEntry("summary.json")));
         }
 
+        public static bool IsZipFile(string path) 
+        {
+            try
+            {
+                using (var archive = System.IO.Compression.ZipFile.OpenRead(path))
+                {
+                    return true;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool IsFileWithMoreThanOneByteInSize(string path)
+        {
+            return new FileInfo(path).Length > 1;
+        }
+
+        [TestMethod()]
+        public async Task CreatingReportWorks()
+        {
+            var reportCreator = CreateReportCreatorForTest();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            await reportCreator.CreateReportAsync(cts.Token);
+            
+            Assert.IsTrue(File.Exists(reportCreator.DestinationPath));
+            Assert.IsTrue(IsFileWithMoreThanOneByteInSize(reportCreator.DestinationPath));
+            Assert.IsTrue(IsZipFile(reportCreator.DestinationPath));
+
+            // Cleanup
+            File.Delete(reportCreator.DestinationPath);
+        }
+
         [TestMethod()]
         public async Task AddDxDiagWorksAsync()
         {
             var reportCreator = CreateReportCreatorForTest();
             CancellationTokenSource cts = new CancellationTokenSource();
             await reportCreator.AddDxDiagLogAsync(cts.Token);
-            bool hasFile = reportCreator.ReportFilesList.Any(
+            var dxdiagFileEntry = reportCreator.ReportFilesList.First(
                 fileEntry => fileEntry.InputPathFileName.ToLower().Contains("dxdiag"));
+            Assert.IsTrue(File.Exists(dxdiagFileEntry.InputPathFileName));
+            Assert.IsTrue(IsFileWithMoreThanOneByteInSize(dxdiagFileEntry.InputPathFileName));
+        }
+
+        [TestMethod()]
+        public async Task AddProcMonWorksAsync()
+        {
+            var reportCreator = CreateReportCreatorForTest();
+            CancellationTokenSource cts = new CancellationTokenSource();
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            
+            Task addLog = reportCreator.AddProcMonLogAsync(tcs.Task, cts.Token);
+
+            await Task.Delay(100); // Wait 0.1 seconds
+
+            tcs.SetResult(true);
+
+            await addLog;
+            
+            bool hasFile = reportCreator.ReportFilesList.Any(
+                fileEntry => fileEntry.InputPathFileName.ToLower().Contains("procmon"));
+            
             Assert.IsTrue(hasFile);
         }
     }

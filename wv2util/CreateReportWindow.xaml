@@ -19,6 +19,8 @@
             <ListBox x:Name="FilesListBox" Margin="4,4,4,4"/>
         </GroupBox>
         <Button x:Name="AddDxDiagLogButton" Content="Add DxDiag log" HorizontalAlignment="Left" Margin="10,295,0,0" VerticalAlignment="Top" Height="30" Width="133" Click="AddDxDiagLogButton_Click"/>
+        <Button x:Name="AddProcMonLogButton" Content="Add ProcMon log" HorizontalAlignment="Left" Margin="10,330,0,0" VerticalAlignment="Top" Height="30" Width="133" Click="AddProcMonLogButton_Click"/>
+        <Button x:Name="StopProcMonLogButton" Content="Complete ProcMon log" HorizontalAlignment="Left" Margin="148,330,0,0" VerticalAlignment="Top" Height="30" Width="133" IsEnabled="False" Click="StopProcMonLogButton_Click"/>
         <CheckBox x:Name="OpenReportInExplorerCheckBox" Content="Open report in Explorer" HorizontalAlignment="Left" Margin="10,369,0,0" VerticalAlignment="Top" Width="214" IsChecked="True"/>
         <Button x:Name="CreateReportButton" Content="Create Report" Margin="10,389,264,0" VerticalAlignment="Top" Click="CreateReportButton_Click" Height="27"/>
         <Button x:Name="CancelButton" IsCancel="true" Content="Cancel" HorizontalAlignment="Left" Margin="229,389,0,0" VerticalAlignment="Top" Height="27" Width="210" Click="CancelButton_Click"/>

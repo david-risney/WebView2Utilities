@@ -117,5 +117,37 @@ namespace wv2util
             }
         }
 
+        private TaskCompletionSource<bool> m_ProcMonLogScenarioTaskCompletionSource;
+        private async void AddProcMonLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            AddProcMonLogButton.IsEnabled = false;
+            AddProcMonLogButton.Content = "Creating ProcMon Log...";
+            StopProcMonLogButton.IsEnabled = true;
+
+            try
+            {
+                m_ProcMonLogScenarioTaskCompletionSource = new TaskCompletionSource<bool>();
+                await m_ReportCreator.AddProcMonLogAsync(m_ProcMonLogScenarioTaskCompletionSource.Task, m_CancellationTokenSource.Token);
+            }
+            catch (Exception error)
+            {
+                MessageBox.Show(error.ToString(), "Failed to add ProcMon log", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                AddProcMonLogButton.IsEnabled = true;
+                AddProcMonLogButton.Content = "Add ProcMon Log";
+                StopProcMonLogButton.IsEnabled = false;
+                StopProcMonLogButton.Content = "Complete ProcMon Log";
+            }
+        }
+
+        private void StopProcMonLogButton_Click(object sender, RoutedEventArgs e)
+        {
+            StopProcMonLogButton.IsEnabled = false;
+            StopProcMonLogButton.Content = "Completing ProcMon Log...";
+            m_ProcMonLogScenarioTaskCompletionSource?.SetResult(true);
+            m_ProcMonLogScenarioTaskCompletionSource = null;            
+        }
     }
 }

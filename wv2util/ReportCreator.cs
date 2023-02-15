@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
@@ -245,6 +246,53 @@ namespace wv2util
             });
         }
 
+        public async Task AddProcMonLogAsync(Task scenarioToLogAsync, CancellationToken cancellationToken)
+        {
+            string procMonLogPath = Environment.ExpandEnvironmentVariables("%temp%") + 
+                "\\" + 
+                GenerateReportFileName(this.HostAppEntry.ExecutableName, "ProcMon", "pml");
+
+            await CreateProcMonLogAsync(procMonLogPath, scenarioToLogAsync, cancellationToken);
+            if (!File.Exists(procMonLogPath))
+            {
+                throw new FileNotFoundException("Failed to create ProcMon log file", procMonLogPath);
+            }
+            this.ReportFilesList.Add(new FileEntry(procMonLogPath, "logs", true));
+        }
+        
+        private static async Task CreateProcMonLogAsync(string outputPath, Task scenarioToLogAsync, CancellationToken cancellationToken)
+        {
+            // Start the procmon process with arguments -accepteula -backingfile c:\temp\proc.pml -quiet
+            Process procmonStartLoggingProcess = new Process();
+            procmonStartLoggingProcess.StartInfo = new ProcessStartInfo
+            {
+                FileName = "Procmon.exe",
+                Arguments = "/accepteula /backingfile " + outputPath + " /quiet /nofilter /minimized",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            // Start the logging process
+            procmonStartLoggingProcess.Start();
+
+            // Wait for the user to perform the scenario
+            await scenarioToLogAsync;
+
+            // Stop the logging process
+            // Start a new procmon process with arguments -accepteula -terminate -quiet to end logging
+            Process procmonStopLoggingProcess = new Process();
+            procmonStopLoggingProcess.StartInfo = new ProcessStartInfo
+            {
+                FileName = "Procmon.exe",
+                Arguments = "/accepteula /terminate /quiet",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            procmonStopLoggingProcess.Start();
+
+            await WaitForProcessAsync(procmonStopLoggingProcess, cancellationToken);
+        }
+
         public async Task AddDxDiagLogAsync(CancellationToken cancellationToken)
         {
             string dxDiagLogPath = Environment.ExpandEnvironmentVariables("%TEMP%") + 
@@ -261,12 +309,14 @@ namespace wv2util
 
         private static async Task CreateDxDiagLogAsync(string outputPath, CancellationToken cancellationToken)
         {
-            System.Diagnostics.Process dxDiagProcess = new System.Diagnostics.Process();
-            dxDiagProcess.StartInfo.FileName = "dxdiag";
-            dxDiagProcess.StartInfo.Arguments = @"/whql:off /dontskip /t /x " + outputPath;
-            dxDiagProcess.StartInfo.UseShellExecute = false;
-            dxDiagProcess.StartInfo.RedirectStandardOutput = false;
-
+            Process dxDiagProcess = new Process();
+            dxDiagProcess.StartInfo = new ProcessStartInfo
+            {
+                FileName = "dxdiag",
+                Arguments = @"/whql:off /dontskip /t /x " + outputPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = false
+            };
             dxDiagProcess.Start();
 
             cancellationToken.Register(() =>
