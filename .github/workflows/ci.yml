@@ -27,8 +27,8 @@ jobs:
     env:
       SigningCertificate: wv2util\wv2util_TemporaryKey.pfx
       Solution_Path: wv2util\wv2util.sln
-      Test_Project_Path: wv2util\wv2utilTests\wv2utilTests.csproj
-      Wpf_Project_Path: wv2util\wv2util\wv2util.csproj
+      Test_Project_Path: wv2utilTests\wv2utilTests.csproj
+      Wpf_Project_Path: wv2util\wv2util.csproj
       Actions_Allow_Unsecure_Commands: true # Allows AddPath and SetEnv commands
 
     steps:
