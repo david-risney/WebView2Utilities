@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        targetplatform: [ AnyCPU ]
+        targetplatform: [x86, x64]
 
     runs-on: windows-latest
 
@@ -47,11 +47,12 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1.1
 
-    # Restore the application
+    # Restore and rebuild the application
     - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration
+      run: msbuild $env:Solution_Path /t:Restore,Rebuild /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
       env:
         Configuration: Debug
+        RuntimeIdentifier: win-${{ matrix.targetplatform }}
 
     # Test
     - name: Execute Unit Tests
