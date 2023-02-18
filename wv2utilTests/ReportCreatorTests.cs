@@ -101,7 +101,7 @@ namespace wv2util.Tests
             CancellationTokenSource cts = new CancellationTokenSource();
             TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
             
-            Task addLog = reportCreator.AddProcMonLogAsync(tcs.Task, cts.Token);
+            Task addLog = reportCreator.AddScenarioLogAsync(ReportCreator.LogKind.ProcMon, tcs.Task, cts.Token);
 
             await Task.Delay(100); // Wait 0.1 seconds
 

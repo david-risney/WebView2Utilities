@@ -127,7 +127,10 @@ namespace wv2util
             try
             {
                 m_ProcMonLogScenarioTaskCompletionSource = new TaskCompletionSource<bool>();
-                await m_ReportCreator.AddProcMonLogAsync(m_ProcMonLogScenarioTaskCompletionSource.Task, m_CancellationTokenSource.Token);
+                await m_ReportCreator.AddScenarioLogAsync(
+                    ReportCreator.LogKind.ProcMon, 
+                    m_ProcMonLogScenarioTaskCompletionSource.Task, 
+                    m_CancellationTokenSource.Token);
             }
             catch (Exception error)
             {

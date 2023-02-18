@@ -170,6 +170,9 @@
     <Compile Include="RuntimeList.cs" />
     <Compile Include="SortUtil.cs" />
     <Compile Include="TextComboBox.cs" />
+    <Compile Include="TraceWindow.xaml.cs">
+      <DependentUpon>TraceWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="VersionUtil.cs" />
     <Page Include="CreateReportWindow.xaml">
       <SubType>Designer</SubType>
@@ -186,6 +189,10 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="TraceWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
