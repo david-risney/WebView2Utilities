@@ -82,8 +82,7 @@ namespace wv2util.Tests
             File.Delete(reportCreator.DestinationPath);
         }
 
-        [TestMethod()]
-        [Ignore]
+        // [TestMethod()] // Disabled because this test depends on an executable that may not be on the system.
         public async Task AddDxDiagWorksAsync()
         {
             var reportCreator = CreateReportCreatorForTest();
@@ -95,8 +94,7 @@ namespace wv2util.Tests
             Assert.IsTrue(IsFileWithMoreThanOneByteInSize(dxdiagFileEntry.InputPathFileName));
         }
 
-        [TestMethod()]
-        [Ignore]
+        // [TestMethod()] // Disabled because this test depends on an executable that may not be on the system.
         public async Task AddProcMonWorksAsync()
         {
             var reportCreator = CreateReportCreatorForTest();
