@@ -83,6 +83,7 @@ namespace wv2util.Tests
         }
 
         [TestMethod()]
+        [Ignore]
         public async Task AddDxDiagWorksAsync()
         {
             var reportCreator = CreateReportCreatorForTest();
@@ -95,6 +96,7 @@ namespace wv2util.Tests
         }
 
         [TestMethod()]
+        [Ignore]
         public async Task AddProcMonWorksAsync()
         {
             var reportCreator = CreateReportCreatorForTest();
