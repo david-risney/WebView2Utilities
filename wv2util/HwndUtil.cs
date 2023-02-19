@@ -81,7 +81,7 @@ namespace wv2util
         {
             if (!PInvoke.User32.GetWindowRect(hwnd, out var rect))
             {
-                throw new Exception("GetWindowRect failed");
+                throw new PInvoke.Win32Exception(PInvoke.Kernel32.GetLastError());
             }
             return rect.ToSystemWindowsRect();
         }

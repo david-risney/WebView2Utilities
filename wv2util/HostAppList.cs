@@ -20,8 +20,8 @@ namespace wv2util
             string runtimePath, // Path to the WebView2 client DLL
             string userDataPath, // Path to the user data folder
             string[] interestingLoadedDllPaths, // a list of full paths of DLLs that are related to WebView2 in some way
-            int browserProcessPid,
-            IntPtr[] hwnds) // PID of the browser process
+            int browserProcessPid, // PID of the browser process
+            IntPtr[] hwnds) 
         {
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             PID = pid;

@@ -231,24 +231,32 @@ namespace wv2util
         }
 
         private List<OverlayWindow> m_openOverlayWindows = new List<OverlayWindow>();
-        private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void UpdateOverlayWindows()
         {
             foreach (var overlayWindow in m_openOverlayWindows)
             {
                 overlayWindow.CloseOverlay();
             }
             m_openOverlayWindows.Clear();
-            
-            if (HostAppListView.SelectedIndex >= 0)
-            {
-                HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
 
-                foreach (var hwnd in selection.Hwnds)
+            if (HostAppListView != null && 
+                this.HostAppsVisuallyHighlightWebView2sCheckbox.IsChecked.GetValueOrDefault(true))
+            {
+                if (HostAppListView.SelectedIndex >= 0)
                 {
-                    m_openOverlayWindows.Add(
-                        OverlayWindow.OpenOverlayForHwnd(hwnd));
+                    HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
+
+                    foreach (var hwnd in selection.Hwnds)
+                    {
+                        m_openOverlayWindows.Add(
+                            OverlayWindow.OpenOverlayForHwnd(hwnd));
+                    }
                 }
             }
+        }
+        private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateOverlayWindows();
         }
 
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
@@ -426,6 +434,11 @@ namespace wv2util
                 }
             }
             m_previousHostAppEntries = currentHostAppEntries;            
+        }
+
+        private void HostAppsVisuallyHighlightWebView2sCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateOverlayWindows();
         }
     }
 }

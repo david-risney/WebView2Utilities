@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace wv2util
 {
@@ -30,18 +32,21 @@ namespace wv2util
             }
         }
 
-        private static async Task WriteFileToZipArchiveEntryAsync(ZipArchive destinationAsZipArchive, string filePath, string destinationPathPrefix)
+        private static async Task WriteFileToZipArchiveEntryAsync(ZipArchive destinationAsZipArchive, string rawFilePath, string destinationPathPrefix, string fileNamePrefix = "")
         {
-            using (FileStream fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            string filePath = Environment.ExpandEnvironmentVariables(rawFilePath);
+            if (File.Exists(filePath))
             {
-                ZipArchiveEntry archiveEntry = destinationAsZipArchive.CreateEntry(
-                    Path.Combine(destinationPathPrefix, Path.GetFileName(filePath)));
-                using (Stream archiveStream = archiveEntry.Open())
+                using (FileStream fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 {
-                    await fileStream.CopyToAsync(archiveStream);
+                    ZipArchiveEntry archiveEntry = destinationAsZipArchive.CreateEntry(
+                        Path.Combine(destinationPathPrefix, fileNamePrefix + Path.GetFileName(filePath)));
+                    using (Stream archiveStream = archiveEntry.Open())
+                    {
+                        await fileStream.CopyToAsync(archiveStream);
+                    }
                 }
             }
-
         }
 
         public static Task CreateReportAsync(string destinationPath, HostAppEntry hostAppEntry, IEnumerable<AppOverrideEntry> appOverrideList, IEnumerable<RuntimeEntry> runtimeList)
@@ -83,6 +88,22 @@ namespace wv2util
                                 {
                                     await WriteFileToZipArchiveEntryAsync(destinationAsZipArchive, logFile, "logs");
                                 }
+                            }
+                        }
+
+                        {
+                            (string, string)[] logNames = new (string, string)[]
+                            {
+                                (@"%temp%\msedge_installer.log", "temp"),
+                                (@"%systemroot%\Temp\msedge_installer.log", "systemroot"),
+                                (@"%localappdata%\Temp\msedge_installer.log", @"localappdata_temp"),
+                                (@"%localappdata%\Temp\MicrosoftEdgeUpdate.log", @"localappdata_Temp"),
+                                (@"%ALLUSERSPROFILE%\Microsoft\EdgeUpdate\Log\MicrosoftEdgeUpdate.log", @"ALLUSERSPROFILE_Microsoft_EdgeUpdate_Log"),
+                                (@"%ProgramData%\Microsoft\EdgeUpdate\Log\MicrosoftEdgeUpdate.log", @"ProgramData_Microsoft_EdgeUpdate_Log")
+                            };
+                            foreach (var logName in logNames)
+                            {
+                                await WriteFileToZipArchiveEntryAsync(destinationAsZipArchive, logName.Item1, "logs", logName.Item2);
                             }
                         }
                     }
