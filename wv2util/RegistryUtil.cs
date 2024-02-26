@@ -8,11 +8,11 @@ namespace wv2util
     {
         public static readonly string s_webView2RegKey = @"Software\Policies\Microsoft\Edge\WebView2";
 
-        public static void EnsureRegistryPaths(string[] registryPaths, RegistryKey root = null)
+        public static void EnsureRegistryPaths(string[] registryPaths, RegistryKey root)
         {
             foreach (string registryPath in registryPaths)
             {
-                RegistryUtil.EnsureRegistryPath(root == null ? Registry.CurrentUser : root, registryPath);
+                RegistryUtil.EnsureRegistryPath(root, registryPath);
             }
         }
 

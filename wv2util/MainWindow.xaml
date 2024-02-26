@@ -9,6 +9,7 @@
         Title="WebView2Utilities"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <local:AppOverrideList x:Key="AppOverrideList" />
         <DataTemplate x:Key="AppOverrideListTemplate">
             <TextBlock Text="{Binding Path=DisplayLabel}" />
@@ -345,6 +346,7 @@
                     <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,298,0,0" Width="126"/>
                     <TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,298,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
                     <Button IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,301,21,0" Click="AppOverrideUserDataPathButton_Click"/>
+                    <CheckBox Visibility="{Binding Path=IsRegistry,Source={StaticResource AppOverrideListSelection},Converter={StaticResource BoolToVis}}" IsEnabled="{Binding Path=IsValidEntryAndCanChangeRegistry,Source={StaticResource AppOverrideListSelection}}" IsChecked="{Binding Path=IsPerUserRegistry,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverridePerUserRegistryCheckBox" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="339,370,0,0" Width="300" Content="Store per-user registry" />
                 </Grid>
             </TabItem>
 

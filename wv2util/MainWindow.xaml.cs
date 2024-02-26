@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -48,6 +49,9 @@ namespace wv2util
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInvalidSelection"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidSelection"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidAndFixedVersionSelection"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsPerUserRegistry"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsRegistry"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidEntryAndCanChangeRegistry"));
 
             if (m_Entry != null)
             {
@@ -71,6 +75,52 @@ namespace wv2util
 
         public bool IsInvalidSelection => !IsValidSelection;
         public bool IsValidSelection => ListBox != null && ListBox.SelectedIndex != -1;
+        public bool IsValidEntryAndCanChangeRegistry
+        {
+            get
+            {
+                if (IsValidSelection && IsRegistry)
+                {
+                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    return entry.HostApp != "*";
+                }
+                return false;
+            }
+        }
+            
+        public bool IsPerUserRegistry
+        {
+            get
+            {
+                if (IsValidSelection)
+                {
+                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    return entry.RegistryRoot == Registry.CurrentUser;
+                }
+                return false;
+            }
+
+            set
+            {
+                if (IsValidSelection)
+                {
+                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    entry.StorageKind = value ? StorageKind.HKCU : StorageKind.HKLM;
+                }
+            }
+        }
+        public bool IsRegistry
+        {
+            get
+            {
+                if (IsValidSelection)
+                {
+                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
+                    return entry.RegistryRoot != null;
+                }
+                return false;
+            }
+        }
         public bool IsValidAndFixedVersionSelection
         {
             get
@@ -116,7 +166,8 @@ namespace wv2util
         {
             AppOverrideEntry entry = new AppOverrideEntry
             {
-                HostApp = "New " + (++m_NewEntriesCount)
+                HostApp = "New " + (++m_NewEntriesCount),
+                StorageKind = StorageKind.HKCU,
             };
             entry.InitializationComplete();
             AppOverrideListData.Add(entry);
@@ -172,7 +223,8 @@ namespace wv2util
                     // Add an Override to the end for this host app
                     AppOverrideEntry entry = new AppOverrideEntry
                     {
-                        HostApp = selectedHostAppEntry.ExecutableName
+                        HostApp = selectedHostAppEntry.ExecutableName,
+                        StorageKind = StorageKind.HKCU,
                     };
                     entry.InitializationComplete();
                     AppOverrideListData.Add(entry);
