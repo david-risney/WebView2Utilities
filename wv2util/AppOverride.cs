@@ -46,10 +46,10 @@ namespace wv2util
 
         public AppOverrideList()
         {
-            FromRegistry();
+            FromSystem();
         }
 
-        public void FromRegistry()
+        public void FromSystem()
         {
             IgnoreUpdatesToRegistry = true;
             UpdateCollectionFromEnvVar(this, StorageKind.EVCU);
@@ -67,9 +67,36 @@ namespace wv2util
             IgnoreUpdatesToRegistry = false;
         }
 
-        public void ToRegistry()
+        public void ToSystem()
         {
-            ApplyToRegistry(this);
+            ApplyToRegistry(this, StorageKind.HKCU);
+            ApplyToRegistry(this, StorageKind.HKLM);
+            ApplyToEnvVar(this, StorageKind.EVCU);
+            ApplyToEnvVar(this, StorageKind.EVLM);
+        }
+
+        private void ApplyToEnvVar(IEnumerable<AppOverrideEntry> newEntries, StorageKind storageKind)
+        {
+            var filteredNewEntries = newEntries.Where(e => e.StorageKind == storageKind);
+            int filteredNewEntriesCount = filteredNewEntries.Count();
+            var currentEntries = new ObservableCollection<AppOverrideEntry>();
+            UpdateCollectionFromEnvVar(currentEntries, storageKind);
+            int currentEntriesCount = currentEntries.Count();
+
+            if (filteredNewEntriesCount > 0)
+            {
+                foreach (var entry in filteredNewEntries)
+                {
+                    ApplyEntryToEnvVar(entry);
+                }
+            }
+            else if (currentEntriesCount > 0)
+            {
+                foreach (var entry in currentEntries)
+                {
+                    RemoveEntryFromEnvVar(entry);
+                }
+            }
         }
 
         protected void WatchEntries(IEnumerable<AppOverrideEntry> entries)
@@ -87,7 +114,7 @@ namespace wv2util
         {
             if (e.PropertyName == "HostApp")
             {
-                ToRegistry();
+                ToSystem();
             }
         }
 
@@ -108,7 +135,7 @@ namespace wv2util
             UnwatchEntries(e.OldItems?.Cast<AppOverrideEntry>());
 
             base.OnCollectionChanged(e);
-            ToRegistry();
+            ToSystem();
         }
 
         public static readonly string s_registryPathBrowserExecutableFolder = RegistryUtil.s_webView2RegKey + @"\BrowserExecutableFolder";
@@ -213,9 +240,15 @@ namespace wv2util
             }
 
             // Move all wildcard entries to the top
-            for (int idx = 1; idx < collection.Count; ++idx)
+            int firstNonWildcardIdx = 0;
+            
+            for (int idx = 0; idx < collection.Count; ++idx)
             {
-                if (collection[idx].HostApp == "*")
+                if (collection[idx].HostApp != "*" && firstNonWildcardIdx == 0)
+                {
+                    firstNonWildcardIdx = idx;
+                }
+                if (collection[idx].HostApp == "*" && firstNonWildcardIdx != 0)
                 {
                     collection.Move(idx, 0);
                 }
@@ -232,7 +265,7 @@ namespace wv2util
             }
         }
 
-        public static ObservableCollection<AppOverrideEntry> CreateCollectionFromRegistry()
+        public static ObservableCollection<AppOverrideEntry> CreateCollectionFromSystem()
         {
             ObservableCollection<AppOverrideEntry> collection = new ObservableCollection<AppOverrideEntry>();
             UpdateCollectionFromEnvVar(collection, StorageKind.EVCU);
@@ -252,7 +285,8 @@ namespace wv2util
 
         private static void UpdateCollectionFromEnvVar(ObservableCollection<AppOverrideEntry> collection, StorageKind storageKind)
         {
-            EnvironmentVariableTarget target = storageKind == StorageKind.EVCU ? EnvironmentVariableTarget.User : EnvironmentVariableTarget.Machine;
+            EnvironmentVariableTarget target = storageKind == StorageKind.EVLM ? 
+                EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.User;
             var envVars = Environment.GetEnvironmentVariables(target);
             string browserExecutableFolder = (string)envVars["WEBVIEW2_BROWSER_EXECUTABLE_FOLDER"];
             string userDataFolder = (string)envVars["WEBVIEW2_USER_DATA_FOLDER"];
@@ -299,16 +333,17 @@ namespace wv2util
 
         }
 
-        public static void ApplyToRegistry(IEnumerable<AppOverrideEntry> newEntries)
+        public static void ApplyToRegistry(IEnumerable<AppOverrideEntry> newEntries, StorageKind storageKind)
         {
             if (!IgnoreUpdatesToRegistry)
             {
-                ObservableCollection<AppOverrideEntry> registryEntries = CreateCollectionFromRegistry();
-                foreach (AppOverrideEntry entry in registryEntries.Except(newEntries, new AppOverrideEntryHostAppEquality()))
+                var registryEntries = CreateCollectionFromSystem().Where(e => e.StorageKind == storageKind);
+                var filteredNewEntries = newEntries.Where(e => e.StorageKind == storageKind);
+                foreach (AppOverrideEntry entry in registryEntries.Except(filteredNewEntries, new AppOverrideEntryHostAppEquality()))
                 {
                     RemoveEntryFromRegistry(entry);
                 }
-                foreach (AppOverrideEntry entry in newEntries)
+                foreach (AppOverrideEntry entry in filteredNewEntries)
                 {
                     ApplyEntryToRegistry(entry);
                 }
@@ -331,7 +366,7 @@ namespace wv2util
         private static void RemoveEntryFromEnvVar(AppOverrideEntry entry)
         {
             EnvironmentVariableTarget target = entry.StorageKind == StorageKind.EVLM ? 
-                EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.Process;
+                EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.User;
             Environment.SetEnvironmentVariable("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", null, target);
             Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", null, target);
             Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", null, target);
@@ -371,7 +406,7 @@ namespace wv2util
         public static void ApplyEntryToEnvVar(AppOverrideEntry entry)
         {
             EnvironmentVariableTarget target = entry.StorageKind == StorageKind.EVLM ?
-                EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.Process;
+                EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.User;
             Environment.SetEnvironmentVariable("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", StringEmptyToNull(entry.RuntimePath), target);
             Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", StringEmptyToNull(entry.UserDataPath), target);
             Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
@@ -549,7 +584,8 @@ namespace wv2util
             }
         }
 
-        public bool Mutable => HostApp != "*";
+        public bool CanRemove => !(HostApp == "*" && StorageKind == StorageKind.HKCU);
+        public bool CanChangeHostApp => HostApp != "*";
 
         public string HostApp
         {

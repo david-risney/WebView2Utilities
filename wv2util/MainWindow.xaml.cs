@@ -186,7 +186,7 @@ namespace wv2util
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
-            AppOverrideListData.FromRegistry();
+            AppOverrideListData.FromSystem();
         }
 
         private void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
@@ -205,7 +205,7 @@ namespace wv2util
             HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
             if (selectedHostAppEntry != null)
             {
-                AppOverrideListData.FromRegistry();
+                AppOverrideListData.FromSystem();
 
                 int foundOverrideIdx = -1;
                 for (int appOverrideIdx = 0; appOverrideIdx < AppOverrideListData.Count; ++appOverrideIdx)
@@ -404,20 +404,23 @@ namespace wv2util
         private void AppOverrideListBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             int selectedIndex = AppOverrideListBox.SelectedIndex;
-            bool mutable = false;
+            bool canRemove = false;
+            bool canChangeHostApp = false;
+
             if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
             {
                 AppOverrideEntry selectedEntry = AppOverrideListData[selectedIndex];
-                mutable = selectedEntry.Mutable;
+                canRemove = selectedEntry.CanRemove;
+                canChangeHostApp = selectedEntry.CanChangeHostApp;
             }
 
             if (RemoveButton != null)
             {
-                RemoveButton.IsEnabled = mutable;
+                RemoveButton.IsEnabled = canRemove;
             }
             if (AppOverrideHostAppComboBox != null)
             {
-                AppOverrideHostAppComboBox.IsEnabled = mutable;
+                AppOverrideHostAppComboBox.IsEnabled = canChangeHostApp;
             }
         }
 
