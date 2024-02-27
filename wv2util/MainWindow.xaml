@@ -10,12 +10,15 @@
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
-        <local:AppOverrideList x:Key="AppOverrideList" />
+
+        <ObjectDataProvider x:Key="AppOverrideList" ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
+        <ObjectDataProvider x:Key="RuntimeList" ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
+        <ObjectDataProvider x:Key="HostAppList" ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
+
         <DataTemplate x:Key="AppOverrideListTemplate">
             <TextBlock Text="{Binding Path=DisplayLabel}" />
         </DataTemplate>
-        <local:RuntimeList x:Key="RuntimeList" />
-        <local:HostAppList x:Key="HostAppList" />
+
         <local:ValidListBoxSelection x:Key="AppOverrideListSelection"/>
 
         <Style x:Key="heading" TargetType="Label">

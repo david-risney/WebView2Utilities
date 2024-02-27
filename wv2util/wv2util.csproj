@@ -108,6 +108,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AppOverride.cs" />
+    <Compile Include="AppState.cs" />
     <Compile Include="CommandLineUtil.cs" />
     <Compile Include="CreateReportWindow.xaml.cs">
       <DependentUpon>CreateReportWindow.xaml</DependentUpon>

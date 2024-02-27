@@ -178,11 +178,11 @@ namespace wv2util
             RegistryUtil.LaunchRegEdit();
         }
 
-        protected AppOverrideList AppOverrideListData => (AppOverrideList)AppOverrideListBox?.ItemsSource;
+        protected AppOverrideList AppOverrideListData => AppState.GetAppOverrideList();
         private uint m_NewEntriesCount = 0;
-
-        protected RuntimeList RuntimeListData => (RuntimeList)RuntimeList?.ItemsSource;
-        protected HostAppList HostAppsListData => Resources["HostAppList"] as HostAppList;
+        
+        protected RuntimeList RuntimeListData => AppState.GetRuntimeList();
+        protected HostAppList HostAppsListData => AppState.GetHostAppList();
 
         private void Reload_Click(object sender, RoutedEventArgs e)
         {
