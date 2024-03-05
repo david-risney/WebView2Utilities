@@ -191,7 +191,7 @@ namespace wv2util
 
         private void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            HostAppEntry selectedHostAppEntry = null; // (HostAppEntry)HostAppListView.SelectedValue;
             if (selectedHostAppEntry != null)
             {
                 ReportCreator creator = new ReportCreator(selectedHostAppEntry, AppOverrideListData, RuntimeListData);
@@ -202,7 +202,7 @@ namespace wv2util
 
         private void HostAppsGoToOverride_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            HostAppEntry selectedHostAppEntry = null; // (HostAppEntry)HostAppListView.SelectedValue;
             if (selectedHostAppEntry != null)
             {
                 AppOverrideListData.FromSystem();
@@ -257,6 +257,7 @@ namespace wv2util
         }
         private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            /*
             if (HostAppListView.SelectedIndex >= 0)
             {
                 HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
@@ -275,6 +276,7 @@ namespace wv2util
                     // We might fail to open clipboard. Just ignore
                 }
             }
+            */
         }
 
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)

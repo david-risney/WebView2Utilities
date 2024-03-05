@@ -16,5 +16,8 @@ namespace wv2util
 
         private static HostAppList s_HostAppList = new HostAppList();
         public static HostAppList GetHostAppList() => s_HostAppList;
+
+        private static ITreeItem s_HostAppTree = new HostAppRootTreeItem(s_HostAppList);
+        public static ITreeItem GetHostAppTree() => s_HostAppTree;
     }
 }
