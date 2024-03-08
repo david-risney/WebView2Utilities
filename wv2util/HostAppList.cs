@@ -77,6 +77,8 @@ namespace wv2util
         {
             return this.CompareTo(other) == 0;
         }
+
+        public override String ToString() => ExecutableName;
     }
 
     public class SdkFileInfo

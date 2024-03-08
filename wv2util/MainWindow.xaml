@@ -1,12 +1,18 @@
-﻿<Window x:Class="wv2util.MainWindow"
+﻿<ui:FluentWindow
+        x:Class="wv2util.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" 
         xmlns:local="clr-namespace:wv2util"
         mc:Ignorable="d"
         Icon="logo.ico"
         Title="WebView2Utilities"
+        ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+        ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -30,360 +36,66 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <TabControl x:Name="TabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-
-            <!-- Host App list -->
-            <TabItem DataContext="{Binding Source={StaticResource HostAppList}}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Host Apps "/>
-                        <Button x:Name="HostAppsReload" Content="&#x1F503;" Click="HostAppsReload_Click"/>
-                    </StackPanel>
-                </TabItem.Header>
+        <ui:TitleBar
+            x:Name="TitleBar"
+            Title="WebView2Utilities"
+            Grid.Row="0" Grid.Column="0"
+            CloseWindowByDoubleClickOnIcon="True">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/logo.ico" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+        <ui:NavigationView
+            x:Name="NavigationView"
+            Padding="42,0,42,0"
+            BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
+            EnableDebugMessages="True"            
+            FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems, Mode=OneWay}"
+            FrameMargin="0"
+            IsBackButtonVisible="Visible"
+            IsPaneToggleVisible="True"
+            MenuItemsSource="{Binding ViewModel.MenuItems, Mode=OneWay}"
+            OpenPaneLength="150"
+            PaneDisplayMode="Left"
+            IsPaneOpen="False"
+            SelectionChanged="OnNavigationSelectionChanged"
+            TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}"
+            Transition="FadeInWithSlide">
+            <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem
+                        Content="Home"
+                        x:Name="HomeNavigationViewItem"
+                        Icon="{ui:SymbolIcon Home24}"
+                        TargetPageType="{x:Type local:HomePage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Host Apps"
+                        Icon="{ui:SymbolIcon Apps24}"
+                        TargetPageType="{x:Type local:HostAppsPage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Runtimes"
+                        Icon="{ui:SymbolIcon Library24}"
+                        TargetPageType="{x:Type local:RuntimesPage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Overrides"
+                        Icon="{ui:SymbolIcon WindowEdit20}"
+                        TargetPageType="{x:Type local:OverridesPage}"                    
+                        />
+            </ui:NavigationView.MenuItems>
+            <ui:NavigationView.Header>
+                <StackPanel Margin="42,32,42,20">
+                    <ui:BreadcrumbBar x:Name="BreadcrumbBar" />
+                </StackPanel>
+            </ui:NavigationView.Header>
+            <ui:NavigationView.ContentOverlay>
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="300px"/>
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <CheckBox Grid.Row="0" Grid.Column="0" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverSlowlyCheckbox_Checked"/>
-                    <CheckBox Grid.Row="0" Grid.Column="1" Margin="5 5 5 5" Content="Watch for changes" IsChecked="True" x:Name="HostAppsWatchForChangesCheckbox" Checked="HostAppsWatchForChangesCheckbox_Checked" Unchecked="HostAppsWatchForChangesCheckbox_Checked"/>
-                    <ListView
-              x:Name="HostAppListView"
-              Grid.Row="1"
-              Grid.Column="0"
-              Grid.RowSpan="20"
-              ItemsSource="{Binding}"
-              HorizontalAlignment="Stretch"
-              VerticalAlignment="Stretch"
-              SelectionChanged="HostAppListViewSelectionChanged"
-              IsSynchronizedWithCurrentItem="True"
-              >
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
-                                    <GridViewColumnHeader HorizontalAlignment="Stretch"  Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding PID}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">App PID</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_BrowserPID_Click">Browser PID</GridViewColumnHeader>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-
-                    <GroupBox Grid.Row="1" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
-                        <GroupBox.Header>
-                            <Label>Host app details</Label>
-                        </GroupBox.Header>
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition />
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The full path of the host application executable." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
-                <Hyperlink NavigateUri="{Binding Path=/ExecutablePathDirectory, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
-                  <TextBlock Text="{Binding Path=/ExecutablePath, Mode=OneWay}"/>
-                </Hyperlink>
-              </TextBlock>
-
-                            <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="2" Grid.Column="0" Content="Package full name" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The package identity of the host app process or blank if it has none." Text="{Binding Path=/PackageFullName, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="3" Grid.Column="0" Content="IL" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The integrity level of the host app process." Text="{Binding Path=/IntegrityLevel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                        </Grid>
-                    </GroupBox>
-
-                    <GroupBox Grid.Row="2" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
-                        <GroupBox.Header>
-                            <Label>SDK details</Label>
-                        </GroupBox.Header>
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-                            <Label   Grid.Row="0" Grid.Column="0" Content="SDK DLL path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The path to the SDK DLL loaded in the host application." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
-                <Hyperlink x:Name="Hyperlink" NavigateUri="{Binding Path=/SdkInfo.PathDirectory, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
-                  <TextBlock Text="{Binding Path=/SdkInfo.Path, Mode=OneWay}"/>
-                </Hyperlink>
-              </TextBlock>
-
-                            <Label   Grid.Row="1" Grid.Column="0" Content="SDK version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the SDK used by the host application." Text="{Binding Path=/SdkInfo.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="2" Grid.Column="0" Content="Probable API kind" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The kind of WebView2 API (.NET, WinRT, Win32) the host application is using." Text="{Binding Path=/SdkInfo.ApiKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="3" Grid.Column="0" Content="Probable UI framework" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The UI framework used to display the WebView2 (WinForms, WPF, WinUI2, WinUI3)." Text="{Binding Path=/SdkInfo.UIFrameworkKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                        </Grid>
-                    </GroupBox>
-
-                    <GroupBox Grid.Row="3" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
-                        <GroupBox.Header>
-                            <Label>WebView2 Instance details</Label>
-                        </GroupBox.Header>
-
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition />
-                            </Grid.ColumnDefinitions>
-
-                            <Label   Grid.Row="0" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The path of the WebView2 Runtime used by this WebView2 instance." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
-                <Hyperlink NavigateUri="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
-                  <TextBlock Text="{Binding Path=/Runtime.RuntimeLocation, Mode=OneWay}"/>
-                </Hyperlink>
-              </TextBlock>
-                            <Label   Grid.Row="1" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="2" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The channel of the WebView2 Runtime used by the host application." Text="{Binding Path=/Runtime.Channel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-
-                            <Label   Grid.Row="3" Grid.Column="0" Content="User data folder" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The user data folder used by this WebView2 instance." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
-                <Hyperlink NavigateUri="{Binding Path=/UserDataPath, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
-                  <TextBlock Text="{Binding Path=/UserDataPath, Mode=OneWay}"/>
-                </Hyperlink>
-              </TextBlock>
-
-                            <Label   Grid.Row="4" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding Path=/BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                        </Grid>
-                    </GroupBox>
-                    <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                    <Button Grid.Row="5" Grid.Column="1" x:Name="HostAppsCreateReport" Content="Create Report" Click="HostAppsCreateReport_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+                    <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
                 </Grid>
-            </TabItem>
+            </ui:NavigationView.ContentOverlay>
+        </ui:NavigationView>
 
-            <!-- Runtime list -->
-            <TabItem DataContext="{Binding Source={StaticResource RuntimeList}}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Runtimes "/>
-                        <Button x:Name="RuntimesReload" Content="&#x1F503;" Click="RuntimesReload_Click"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding RuntimeLocation}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Path_Click">Path</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Version}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Version_Click">Version</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Channel}">
-                                    <GridViewColumnHeader Click="GridViewColumnHeader_Runtime_Channel_Click">Channel</GridViewColumnHeader>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                    <Expander Grid.Row="1">
-                        <Expander.Header>
-                            <Label Content="Find more WebView2 Runtimes" />
-                        </Expander.Header>
-                        <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,0,0,10">
-              <TextBlock>
-                <Hyperlink NavigateUri="https://docs.microsoft.com/en-us/deployedge/microsoft-edge-release-schedule" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge release schedule</Hyperlink>
-              </TextBlock>
-              <LineBreak/>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://developer.microsoft.com/en-us/microsoft-edge/webview2/#:~:text=Evergreen%20Standalone%20Installer" RequestNavigate="Hyperlink_RequestNavigate">WebView2 Runtime</Hyperlink> (<Hyperlink NavigateUri="https://docs.microsoft.com/en-us/deployedge/microsoft-edge-relnote-stable-channel" RequestNavigate="Hyperlink_RequestNavigate">browser release notes</Hyperlink>, <Hyperlink NavigateUri="https://docs.microsoft.com/en-us/microsoft-edge/webview2/release-notes" RequestNavigate="Hyperlink_RequestNavigate">SDK release notes</Hyperlink>)
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/beta" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Beta Channel</Hyperlink> (<Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/beta" RequestNavigate="Hyperlink_RequestNavigate">release notes</Hyperlink>)
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/dev" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Dev Channel</Hyperlink>
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/canary" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Canary Channel</Hyperlink>
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://developer.microsoft.com/en-us/microsoft-edge/webview2/#:~:text=ARM64-,Fixed%20Version,-Select%20and%20package" RequestNavigate="Hyperlink_RequestNavigate">WebView2 Runtime Fixed Version</Hyperlink>
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoft.com/en-us/edge/business/download#:~:text=Need%20to%20download%20older%20builds%20and%20versions%3F" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge older versions</Hyperlink>
-              </TextBlock>
-            </TextBlock>
-                    </Expander>
-                </Grid>
-            </TabItem>
-
-            <!-- App Override List -->
-            <TabItem DataContext="{Binding Source={StaticResource AppOverrideList}}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Overrides "/>
-                        <Button x:Name="OverridesReload" Content="&#x1F503;" Click="Reload_Click"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <ListBox
-                        x:Name="AppOverrideListBox"
-                        ItemsSource="{Binding}"
-                        ItemTemplate="{StaticResource AppOverrideListTemplate}"
-                        SelectionChanged="AppOverrideListBoxSelectionChanged"
-                        IsSynchronizedWithCurrentItem="True"
-                        HorizontalAlignment="Left" Width="322" Margin="10,10,0,30"/>
-                    <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="10,0,0,5" Click="AddNewButton_Click"/>
-                    <Button x:Name="RemoveButton" IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="257,0,0,5" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
-
-                    <Button x:Name="RegEditButton" Content="Launch RegEdit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,10,5" Click="RegEditButton_Click"/>
-
-                    <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
-                    <local:TextComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,68,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26"/>
-
-                    <GroupBox Height="120" VerticalAlignment="Top" Margin="339,48,10,0">
-                        <GroupBox.Header>
-                            <Label>Runtime</Label>
-                        </GroupBox.Header>
-                        <Grid>
-                            <RadioButton Name="RuntimeScenarioEvergreen" IsChecked="{Binding Path=/IsRuntimeEvergreen, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen" ToolTip="Use the installed WebView2 Runtime or if not available the first of Beta, Dev, or Canary Edge browser install." GroupName="RuntimeScenario" Margin="10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
-                            <RadioButton Name="RuntimeScenarioEvergreenPreview" IsChecked="{Binding Path=/IsRuntimeEvergreenPreview, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen with preview build" ToolTip="Use the first of Canary, Dev, or Beta Edge browser install or if none of those then the WebView2 Runtime." GroupName="RuntimeScenario" Margin="10,26,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
-                            <RadioButton Name="RuntimeScenarioFixedVersion" IsChecked="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Content="Fixed Version" ToolTip="Use the WebView2 Runtime at the specified path" GroupName="RuntimeScenario" Margin="10,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
-                        </Grid>
-                    </GroupBox>
-                    <local:TextComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,129,68,0" VerticalContentAlignment="Center"/>
-                    <Button IsEnabled="{Binding Path=IsValidAndFixedVersionSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,131,21,0" Click="AppOverrideRuntimePathButton_Click"/>
-
-                    <GroupBox Height="120" VerticalAlignment="Top" Margin="339,167,10,0">
-                        <GroupBox.Header>
-                            <Label Content="Browser arguments"/>
-                        </GroupBox.Header>
-                    </GroupBox>
-                    <Label Content="Arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="354,191,0,0" Width="109" />
-                    <TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}"  ToolTip="Additional arguments to include on the command line for msedgewebview2.exe." x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,191,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
-                    <Button IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideBrowserArgumentsButton" Content="?" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,194,21,0" Click="AppOverrideBrowserArgumentsButton_Click"/>
-                    <CheckBox x:Name="AppOverrideArgumentsAutoOpenDevTools" Content="Auto open DevTools" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,233,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledAutoOpenDevTools}"/>
-                    <CheckBox x:Name="AppOverrideArgumentsLogging" Content="Logging" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,255,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledLogging}"/>
-
-                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,298,0,0" Width="126"/>
-                    <TextBox IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" IsReadOnly="{Binding Path=IsInvalidSelection,Source={StaticResource AppOverrideListSelection}}" ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,298,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
-                    <Button IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,301,21,0" Click="AppOverrideUserDataPathButton_Click"/>
-                    <CheckBox Visibility="{Binding Path=IsRegistry,Source={StaticResource AppOverrideListSelection},Converter={StaticResource BoolToVis}}" IsEnabled="{Binding Path=IsValidEntryAndCanChangeRegistry,Source={StaticResource AppOverrideListSelection}}" IsChecked="{Binding Path=IsPerUserRegistry,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverridePerUserRegistryCheckBox" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="339,370,0,0" Width="300" Content="Store per-user registry" />
-                </Grid>
-            </TabItem>
-
-            <!-- About tab -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="About"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <TextBlock HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20" >
-          <Image Source="logo.ico" Height="128" Width="128" Margin="0,0,20,0"/>
-          <TextBlock>
-            <Label Style="{StaticResource heading}" Content="WebView2Utilities" Margin="0,0,0,0" HorizontalAlignment="Left"/>
-            <LineBreak/>
-            <TextBlock FontWeight="Bold" x:Name="VersionInfo">vN.N.N.N</TextBlock>
-            <LineBreak/>
-            <TextBlock>This is WebView2Utilities. It helps with developing and debugging Microsoft Edge WebView2 usage.</TextBlock>
-            <LineBreak/>
-            <Hyperlink NavigateUri="https://github.com/david-risney/WebView2Utilities" RequestNavigate="Hyperlink_RequestNavigate">
-              WebView2 Tools GitHub
-            </Hyperlink>
-            <LineBreak/>
-            <Hyperlink NavigateUri="https://docs.microsoft.com/en-us/microsoft-edge/webview2/" RequestNavigate="Hyperlink_RequestNavigate">
-              WebView2 Documentation
-            </Hyperlink>
-            <LineBreak/>
-            <Hyperlink NavigateUri="https://thenounproject.com/search/?q=wrench&amp;i=3775455" RequestNavigate="Hyperlink_RequestNavigate">
-              Wrench by Gicon studio from the Noun Project
-            </Hyperlink>
-            <LineBreak/>
-          </TextBlock>
-        </TextBlock>
-      </TabItem>
-        </TabControl>
+        <ContentPresenter x:Name="RootContentDialog" Grid.Row="0" />
     </Grid>
-</Window>
+</ui:FluentWindow>

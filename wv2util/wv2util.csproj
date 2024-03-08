@@ -110,22 +110,42 @@
     <Compile Include="AppOverride.cs" />
     <Compile Include="AppState.cs" />
     <Compile Include="CommandLineUtil.cs" />
-    <Compile Include="CreateReportWindow.xaml.cs">
+    <Compile Include="UI\CreateReportWindow.xaml.cs">
       <DependentUpon>CreateReportWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UI\HomePage.xaml.cs">
+      <DependentUpon>HomePage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HostAppList.cs" />
+    <Compile Include="UI\HostAppsPage.xaml.cs">
+      <DependentUpon>HostAppsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HwndUtil.cs" />
+    <Compile Include="UI\OverridesPage.xaml.cs">
+      <DependentUpon>OverridesPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProcessUtil.cs" />
     <Compile Include="RegistryUtil.cs" />
     <Compile Include="ReportCreator.cs" />
     <Compile Include="RuntimeList.cs" />
+    <Compile Include="UI\RuntimesPage.xaml.cs">
+      <DependentUpon>RuntimesPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SortUtil.cs" />
-    <Compile Include="TextComboBox.cs" />
-    <Compile Include="TraceWindow.xaml.cs">
+    <Compile Include="UI\TextComboBox.cs" />
+    <Compile Include="UI\TraceWindow.xaml.cs">
       <DependentUpon>TraceWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="VersionUtil.cs" />
-    <Page Include="CreateReportWindow.xaml">
+    <Page Include="UI\CreateReportWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\HomePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\HostAppsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -140,7 +160,15 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Page Include="TraceWindow.xaml">
+    <Page Include="UI\OverridesPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\RuntimesPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UI\TraceWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -200,6 +228,9 @@
     </PackageReference>
     <PackageReference Include="System.Text.Json">
       <Version>7.0.0-rc.1.22426.10</Version>
+    </PackageReference>
+    <PackageReference Include="WPF-UI">
+      <Version>3.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -140,20 +140,35 @@ namespace wv2util
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         public MainWindow()
         {
             InitializeComponent();
+            /*
             ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
             AppOverrideListBoxSelectionChanged(null, null);
-            VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
-            
+
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
             m_watchForChangesTimer.Enabled = HostAppsWatchForChangesCheckbox.IsChecked.Value;
+            */
         }
 
+        private void OnNavigationSelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is Wpf.Ui.Controls.NavigationView navigationView))
+            {
+                return;
+            }
+
+            NavigationView.HeaderVisibility =
+                navigationView.SelectedItem?.TargetPageType != typeof(HomePage)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+        }
+
+        /*
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
         {
             int selectedIndex = AppOverrideListBox.SelectedIndex;
@@ -348,14 +363,6 @@ namespace wv2util
             return false;
         }
 
-        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
-        {
-            // for .NET Core you need to add UseShellExecute = true
-            // see https://docs.microsoft.com/dotnet/api/system.diagnostics.processstartinfo.useshellexecute#property-value
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
-            e.Handled = true;
-        }
-
         private readonly SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
         private void GridViewColumnHeader_Runtime_Path_Click(object sender, RoutedEventArgs e)
         {
@@ -479,5 +486,6 @@ namespace wv2util
             }
             m_previousHostAppEntries = currentHostAppEntries;            
         }
+        */
     }
 }
