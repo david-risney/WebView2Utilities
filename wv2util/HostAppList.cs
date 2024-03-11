@@ -88,9 +88,12 @@ namespace wv2util
             Path = sdkPath;
             m_interestingDlls = interestingDlls;
 
-            string fileName = System.IO.Path.GetFileName(Path).ToLower();
-            m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
-                (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
+            if (Path != null)
+            {
+                string fileName = System.IO.Path.GetFileName(Path).ToLower();
+                m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
+                    (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
+            }
         }
         private readonly bool m_isWinRT = false;
         private readonly string[] m_interestingDlls;

@@ -27,6 +27,10 @@ namespace wv2util
             "webview2loader.dll",
         };
 
+        // Returns a tuple where the items are:
+        // 1. EmbeddedBrowserWebView.dll full path.
+        // 2. Microsoft.Web.WebView2.Core.dll or webview2loader.dll full path.
+        // 3. All interesting DLLs found including the above two.
         public static Tuple<string, string, string[]> GetInterestingDllsUsedByPid(int pid)
         {
             string[] interestingDllPaths = GetInterestingDllsUsedByPidViaCreateToolhelp32Snapshot(pid);
