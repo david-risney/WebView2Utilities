@@ -460,23 +460,26 @@ namespace wv2util
 
                             foreach (var runtimePid in runtimePids)
                             {
-                                string userDataFolder = null;
-                                Process runtimeProcess = TryGetProcessById(runtimePid);
-                                if (runtimeProcess != null)
+                                if (runtimePid != hostAppEntry.PID)
                                 {
-                                    var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
-                                    userDataFolder = userDataPathAndProcessType.Item1;
+                                    string userDataFolder = null;
+                                    Process runtimeProcess = TryGetProcessById(runtimePid);
+                                    if (runtimeProcess != null)
+                                    {
+                                        var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(runtimeProcess);
+                                        userDataFolder = userDataPathAndProcessType.Item1;
 
-                                    var runtimeEntry = new HostAppEntry(
-                                        hostAppEntry.ExecutablePath,
-                                        hostAppEntry.PID,
-                                        hostAppEntry.SdkInfo.Path,
-                                        hostAppEntry.Runtime.ExePath,
-                                        userDataFolder,
-                                        hostAppEntry.InterestingLoadedDllPaths,
-                                        runtimePid);
-                                    hostAppEntriesWithRuntimePID.Add(runtimeEntry);
-                                    added = true;
+                                        var runtimeEntry = new HostAppEntry(
+                                            hostAppEntry.ExecutablePath,
+                                            hostAppEntry.PID,
+                                            hostAppEntry.SdkInfo.Path,
+                                            hostAppEntry.Runtime.ExePath,
+                                            userDataFolder,
+                                            hostAppEntry.InterestingLoadedDllPaths,
+                                            runtimePid);
+                                        hostAppEntriesWithRuntimePID.Add(runtimeEntry);
+                                        added = true;
+                                    }
                                 }
                             }
                         }
