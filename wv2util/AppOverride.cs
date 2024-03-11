@@ -407,10 +407,21 @@ namespace wv2util
         {
             EnvironmentVariableTarget target = entry.StorageKind == StorageKind.EVLM ?
                 EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.User;
-            Environment.SetEnvironmentVariable("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", StringEmptyToNull(entry.RuntimePath), target);
-            Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", StringEmptyToNull(entry.UserDataPath), target);
-            Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
-            Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", entry.ReverseSearchOrder ? "1" : null, target);
+            SetEnvironmentVariableIfChanged("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", StringEmptyToNull(entry.RuntimePath), target);
+            SetEnvironmentVariableIfChanged("WEBVIEW2_USER_DATA_FOLDER", StringEmptyToNull(entry.UserDataPath), target);
+            SetEnvironmentVariableIfChanged("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
+            SetEnvironmentVariableIfChanged("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", entry.ReverseSearchOrder ? "1" : null, target);
+        }
+
+        private static void SetEnvironmentVariableIfChanged(string name, string value, EnvironmentVariableTarget target)
+        {
+            if (Environment.GetEnvironmentVariable(name, target) != value)
+            {
+                // Changing the user or machine environment variables sends (not posts!) a window message to all processes
+                // so they can respond to the env var change. This can take a while so its cheaper to first check for
+                // the current env var before setting.
+                Environment.SetEnvironmentVariable(name, value, target);
+            }
         }
 
         private static void ApplyEntryToRegistry(AppOverrideEntry entry)
