@@ -512,6 +512,30 @@ namespace wv2util
             }
         }
         private StorageKind m_StorageKind = StorageKind.HKCU;
+        public string StorageKindDescription
+        {
+            get
+            {
+                string description = "Stored in ";
+                switch (StorageKind)
+                {
+                    case StorageKind.HKCU:
+                        description += "registry (HKCU)";
+                        break;
+                    case StorageKind.HKLM:
+                        description += "registry (HKLM)";
+                        break;
+                    case StorageKind.EVCU:
+                        description += "environment variables (User)";
+                        break;
+                    case StorageKind.EVLM:
+                        description += "environment variables (Machine)";
+                        break;
+                }
+                return description;
+            }
+        }
+        
         public RegistryKey RegistryRoot
         {
             get
