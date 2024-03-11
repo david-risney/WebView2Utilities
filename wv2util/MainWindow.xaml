@@ -1,4 +1,4 @@
-﻿<Window x:Class="wv2util.MainWindow"
+<Window x:Class="wv2util.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -273,15 +273,7 @@
               </TextBlock>
               <LineBreak/>
               <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/beta" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Beta Channel</Hyperlink> (<Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/beta" RequestNavigate="Hyperlink_RequestNavigate">release notes</Hyperlink>)
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/dev" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Dev Channel</Hyperlink>
-              </TextBlock>
-              <LineBreak/>
-              <TextBlock>
-                <Hyperlink NavigateUri="https://www.microsoftedgeinsider.com/en-us/download/canary" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Edge Canary Channel</Hyperlink>
+                <Hyperlink NavigateUri="https://www.microsoft.com/en-us/edge/download/insider?form=MA13FJ" RequestNavigate="Hyperlink_RequestNavigate">Microsoft Canary, Dev and Beta Channel</Hyperlink> (<Hyperlink NavigateUri="https://learn.microsoft.com/en-us/deployedge/microsoft-edge-relnote-beta-channel" RequestNavigate="Hyperlink_RequestNavigate">beta release notes</Hyperlink>)
               </TextBlock>
               <LineBreak/>
               <TextBlock>
