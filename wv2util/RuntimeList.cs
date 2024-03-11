@@ -26,25 +26,26 @@ namespace wv2util
         {
             get
             {
+                string exePathLower = this.ExePath.ToLower();
                 if (ExePath != "" && ExePath != null)
                 {
-                    if (ExePath.ToLower().Contains("\\edge sxs\\"))
+                    if (exePathLower.Contains("\\edge sxs\\"))
                     {
                         return "Canary";
                     }
-                    else if (ExePath.ToLower().Contains("\\edge beta\\"))
+                    else if (exePathLower.Contains("\\edge beta\\"))
                     {
                         return "Beta";
                     }
-                    else if (ExePath.ToLower().Contains("\\edge dev\\"))
+                    else if (exePathLower.Contains("\\edge dev\\"))
                     {
                         return "Dev";
                     }
-                    else if (ExePath.ToLower().Contains("\\edge\\"))
+                    else if (exePathLower.Contains("\\edge\\"))
                     {
                         return "Stable";
                     }
-                    else if (ExePath.ToLower().Contains("\\edgewebview\\"))
+                    else if (exePathLower.Contains("\\edgewebview\\"))
                     {
                         return "Stable WebView2 Runtime";
                     }
