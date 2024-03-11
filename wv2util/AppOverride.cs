@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -239,6 +240,17 @@ namespace wv2util
                 collection.Remove(entry);
             }
 
+            // If we didn't have an HKCU wildcard entry, add it to the end
+            if (collection.FirstOrDefault(e => e.HostApp == "*" && e.StorageKind == StorageKind.HKCU) == null)
+            {
+                AppOverrideEntry entry = new AppOverrideEntry
+                {
+                    HostApp = "*",
+                    StorageKind = StorageKind.HKCU,
+                };
+                collection.Add(entry);
+            }
+
             // Move all wildcard entries to the top
             int firstNonWildcardIdx = 0;
             
@@ -252,16 +264,6 @@ namespace wv2util
                 {
                     collection.Move(idx, 0);
                 }
-            }
-            // If we didn't have a wildcard entry, add it at the start
-            if (collection.FirstOrDefault(e => e.HostApp == "*" && e.StorageKind == StorageKind.HKCU) == null)
-            {
-                AppOverrideEntry entry = new AppOverrideEntry
-                {
-                    HostApp = "*",
-                    StorageKind = StorageKind.HKCU,
-                };
-                collection.Insert(0, entry);
             }
         }
 
@@ -487,14 +489,36 @@ namespace wv2util
 
     public enum StorageKind
     {
-        HKCU = 0,
-        HKLM = 1,
-        EVCU = 2,
-        EVLM = 3,
+        EVCU = 0,
+        EVLM = 1,
+        HKLM = 2,
+        HKCU = 3,
     };
 
     public class AppOverrideEntry : INotifyPropertyChanged
     {
+        public string PrecedenceCategory
+        {
+            get
+            {
+                // Precedence is EVCU, EVLM, HKLM, and HKCU.
+                // Within HKLM and HKCU it should be sorted
+                // with explicit HostApps first and '*' after.
+                // We want to return a string with an integer
+                // such that the AppOverrideEntry objects are
+                // sorted by their precedence when sorting
+                // alphabetically on the string of this property.
+                // This exists as a string in order to work with the
+                // ListBox.Items.SortDescriptions. There's probably a
+                // better way to ensure this is sorted properly.
+                int precedence = (int)StorageKind * 2;
+                if (HostApp == "*")
+                {
+                    ++precedence;
+                }
+                return precedence.ToString("D4");
+            }
+        }
         public event PropertyChangedEventHandler PropertyChanged;
         private bool m_InitializationComplete = false;
         public StorageKind StorageKind

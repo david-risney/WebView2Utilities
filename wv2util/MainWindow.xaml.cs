@@ -20,123 +20,6 @@ using Timer = System.Timers.Timer;
 
 namespace wv2util
 {
-    public class ValidListBoxSelection : INotifyPropertyChanged
-    {
-        public System.Windows.Controls.ListBox ListBox
-        {
-            get => m_ListBox;
-
-            set
-            {
-                if (m_ListBox != value)
-                {
-                    if (m_ListBox != null)
-                    {
-                        m_ListBox.SelectionChanged -= OnSelectionChanged;
-                    }
-                    if (value != null)
-                    {
-                        m_ListBox = value;
-                        m_ListBox.SelectionChanged += OnSelectionChanged;
-                        OnSelectionChanged(null, null);
-                    }
-                }
-            }
-        }
-
-        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsInvalidSelection"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidSelection"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidAndFixedVersionSelection"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsPerUserRegistry"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsRegistry"));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidEntryAndCanChangeRegistry"));
-
-            if (m_Entry != null)
-            {
-                m_Entry.PropertyChanged -= Entry_PropertyChanged;
-            }
-            m_Entry = null;
-            if (IsValidSelection)
-            {
-                m_Entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                m_Entry.PropertyChanged += Entry_PropertyChanged;
-            }
-        }
-
-        private void Entry_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsValidAndFixedVersionSelection"));
-        }
-
-        private System.Windows.Controls.ListBox m_ListBox = null;
-        private AppOverrideEntry m_Entry = null;
-
-        public bool IsInvalidSelection => !IsValidSelection;
-        public bool IsValidSelection => ListBox != null && ListBox.SelectedIndex != -1;
-        public bool IsValidEntryAndCanChangeRegistry
-        {
-            get
-            {
-                if (IsValidSelection && IsRegistry)
-                {
-                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                    return entry.HostApp != "*";
-                }
-                return false;
-            }
-        }
-            
-        public bool IsPerUserRegistry
-        {
-            get
-            {
-                if (IsValidSelection)
-                {
-                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                    return entry.RegistryRoot == Registry.CurrentUser;
-                }
-                return false;
-            }
-
-            set
-            {
-                if (IsValidSelection)
-                {
-                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                    entry.StorageKind = value ? StorageKind.HKCU : StorageKind.HKLM;
-                }
-            }
-        }
-        public bool IsRegistry
-        {
-            get
-            {
-                if (IsValidSelection)
-                {
-                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                    return entry.RegistryRoot != null;
-                }
-                return false;
-            }
-        }
-        public bool IsValidAndFixedVersionSelection
-        {
-            get
-            {
-                if (IsValidSelection)
-                {
-                    AppOverrideEntry entry = (AppOverrideEntry)ListBox.Items[ListBox.SelectedIndex];
-                    return entry.IsRuntimeFixedVersion;
-                }
-                return false;
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-    }
-
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
@@ -145,8 +28,6 @@ namespace wv2util
         public MainWindow()
         {
             InitializeComponent();
-            ((ValidListBoxSelection)Resources["AppOverrideListSelection"]).ListBox = AppOverrideListBox;
-            AppOverrideListBoxSelectionChanged(null, null);
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
             
             m_watchForChangesTimer.Interval = 3000;
@@ -156,12 +37,17 @@ namespace wv2util
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
         {
-            int selectedIndex = AppOverrideListBox.SelectedIndex;
-            if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
+            // We use SelectedItems to remove it by value rather than by
+            // selected index, because the index is relative to the sorted
+            // view, and we need to remove from the unsorted list.
+            var selectedItems = AppOverrideListBox.SelectedItems;
+            if (selectedItems.Count == 1)
             {
-                AppOverrideListData.RemoveAt(AppOverrideListBox.SelectedIndex);
+                var selectedItem = selectedItems[0];
+                AppOverrideListData.Remove((AppOverrideEntry)selectedItem);
             }
         }
+        
         private void AddNewButton_Click(object sender, RoutedEventArgs e)
         {
             AppOverrideEntry entry = new AppOverrideEntry
@@ -212,33 +98,24 @@ namespace wv2util
             {
                 AppOverrideListData.FromSystem();
 
-                int foundOverrideIdx = -1;
-                for (int appOverrideIdx = 0; appOverrideIdx < AppOverrideListData.Count; ++appOverrideIdx)
-                {
-                    var appOverride = AppOverrideListData[appOverrideIdx];
-                    if (appOverride.HostApp.ToLower() == selectedHostAppEntry.ExecutableName.ToLower())
-                    {
-                        foundOverrideIdx = appOverrideIdx;
-                        break;
-                    }
-                }
+                // Find the first override entry that explicitly matches the host app.
+                // If none exist, then create and add it.
+                // Then select that entry and show that tab.
+                AppOverrideEntry selectedAppOverrideEntry = AppOverrideListData.FirstOrDefault(
+                    entry => entry.HostApp.ToLower() == selectedHostAppEntry.ExecutableName.ToLower());
 
-                if (foundOverrideIdx == -1)
+                if (selectedAppOverrideEntry == null)
                 {
-                    // Add an Override to the end for this host app
-                    AppOverrideEntry entry = new AppOverrideEntry
+                    selectedAppOverrideEntry = new AppOverrideEntry
                     {
                         HostApp = selectedHostAppEntry.ExecutableName,
                         StorageKind = StorageKind.HKCU,
                     };
-                    entry.InitializationComplete();
-                    AppOverrideListData.Add(entry);
-
-                    // And set foundOverrideIdx to the new value's index
-                    foundOverrideIdx = AppOverrideListData.Count - 1;
+                    selectedAppOverrideEntry.InitializationComplete();
+                    AppOverrideListData.Add(selectedAppOverrideEntry);
                 }
 
-                AppOverrideListBox.SelectedIndex = foundOverrideIdx;
+                AppOverrideListBox.SelectedItem = selectedAppOverrideEntry;
                 TabControl.SelectedIndex = 2;
             }
         }
@@ -404,29 +281,6 @@ namespace wv2util
             m_hostAppSortColumn.SelectColumn(2);
             HostAppsListData.Sort<HostAppEntry>((left, right) =>
                 m_hostAppSortColumn.SortDirection * (left.BrowserProcessPID - right.BrowserProcessPID));
-        }
-
-        private void AppOverrideListBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            int selectedIndex = AppOverrideListBox.SelectedIndex;
-            bool canRemove = false;
-            bool canChangeHostApp = false;
-
-            if (selectedIndex >= 0 && selectedIndex < AppOverrideListData.Count)
-            {
-                AppOverrideEntry selectedEntry = AppOverrideListData[selectedIndex];
-                canRemove = selectedEntry.CanRemove;
-                canChangeHostApp = selectedEntry.CanChangeHostApp;
-            }
-
-            if (RemoveButton != null)
-            {
-                RemoveButton.IsEnabled = canRemove;
-            }
-            if (AppOverrideHostAppComboBox != null)
-            {
-                AppOverrideHostAppComboBox.IsEnabled = canChangeHostApp;
-            }
         }
 
         private bool m_hostAppsReReload = false;
