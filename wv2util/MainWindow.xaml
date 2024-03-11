@@ -317,6 +317,7 @@
                     <Button x:Name="AddNew" Content="Add New" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="10,0,0,5" Click="AddNewButton_Click"/>
                     <Button x:Name="RemoveButton" IsEnabled="{Binding Path=IsValidSelection,Source={StaticResource AppOverrideListSelection}}" Content="Remove" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="75" Margin="257,0,0,5" RenderTransformOrigin="0.597,-3.701" Click="RemoveButton_Click"/>
 
+                    <Button x:Name="EnvVarButton" Content="Edit Env Var" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,120,5" Click="EnvVarButton_Click"/>
                     <Button x:Name="RegEditButton" Content="Launch RegEdit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,10,5" Click="RegEditButton_Click"/>
 
                     <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />

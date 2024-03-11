@@ -178,6 +178,11 @@ namespace wv2util
             RegistryUtil.LaunchRegEdit();
         }
 
+        private void EnvVarButton_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("rundll32.exe", "sysdm.cpl,EditEnvironmentVariables");
+        }
+
         protected AppOverrideList AppOverrideListData => AppState.GetAppOverrideList();
         private uint m_NewEntriesCount = 0;
         
