@@ -141,6 +141,8 @@ namespace wv2util
 
         public static readonly string s_registryPathBrowserExecutableFolder = RegistryUtil.s_webView2RegKey + @"\BrowserExecutableFolder";
         public static readonly string s_registryPathReleaseChannelPreference = RegistryUtil.s_webView2RegKey + @"\ReleaseChannelPreference";
+        public static readonly string s_registryPathChannelSearchKind = RegistryUtil.s_webView2RegKey + @"\ChannelSearchKind";
+        public static readonly string s_registryPathReleaseChannels = RegistryUtil.s_webView2RegKey + @"\ReleaseChannels";
         public static readonly string s_registryPathAdditionalBrowserArguments = RegistryUtil.s_webView2RegKey + @"\AdditionalBrowserArguments";
         public static readonly string s_registryPathUserDataFolder = RegistryUtil.s_webView2RegKey + @"\UserDataFolder";
         private static readonly string[] s_registryPaths =
@@ -148,6 +150,8 @@ namespace wv2util
             s_registryPathAdditionalBrowserArguments,
             s_registryPathBrowserExecutableFolder,
             s_registryPathReleaseChannelPreference,
+            s_registryPathChannelSearchKind,
+            s_registryPathReleaseChannels,
             s_registryPathUserDataFolder
         };
 
@@ -215,6 +219,33 @@ namespace wv2util
                     Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
                 }
                 entriesToRemove.Remove(entry);
+            }
+
+            regKey = RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, false);
+            valueNames = regKey.GetValueNames();
+            foreach (string valueName in valueNames)
+            {
+              AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
+              try
+              {
+                var value = regKey.GetValue(valueName);
+                int valueAsInt = (int)value;
+                entry.ReverseSearchOrder = 1 == valueAsInt;
+              }
+              catch (InvalidCastException)
+              {
+                Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
+              }
+              entriesToRemove.Remove(entry);
+            }
+
+            regKey = RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, false);
+            valueNames = regKey.GetValueNames();
+            foreach (string valueName in valueNames)
+            {
+              AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
+              entry.ReleaseChannels = (string)regKey.GetValue(valueName);
+              entriesToRemove.Remove(entry);
             }
 
             regKey = RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathAdditionalBrowserArguments, false);
@@ -294,7 +325,9 @@ namespace wv2util
             string userDataFolder = (string)envVars["WEBVIEW2_USER_DATA_FOLDER"];
             string additionalBrowserArguments = (string)envVars["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"];
             string releaseChannelPreferenceAsString = (string)envVars["WEBVIEW2_RELEASE_CHANNEL_PREFERENCE"];
-            bool reverseChannelSearch = releaseChannelPreferenceAsString == "1";
+            string channelSearchKind = (string)envVars["WEBVIEW2_CHANNEL_SEARCH_KIND"];
+            string releaseChannels = (string)envVars["WEBVIEW2_RELEASE_CHANNELS"];
+            bool reverseChannelSearch = (releaseChannelPreferenceAsString == "1") || (channelSearchKind == "1");
 
             bool foundInCollection = true;
             AppOverrideEntry entry = collection.FirstOrDefault(existingEntry => existingEntry.StorageKind == storageKind);
@@ -307,7 +340,9 @@ namespace wv2util
             if (!String.IsNullOrEmpty(browserExecutableFolder) ||
                 !String.IsNullOrEmpty(userDataFolder) ||
                 !String.IsNullOrEmpty(additionalBrowserArguments) ||
-                !String.IsNullOrEmpty(releaseChannelPreferenceAsString))
+                !String.IsNullOrEmpty(releaseChannelPreferenceAsString) ||
+                !String.IsNullOrEmpty(channelSearchKind) ||
+                !String.IsNullOrEmpty(releaseChannels))
             {
                 entry.HostApp = "*";
                 entry.StorageKind = storageKind;
@@ -315,6 +350,7 @@ namespace wv2util
                 entry.RuntimePath = browserExecutableFolder;
                 entry.BrowserArguments = additionalBrowserArguments;
                 entry.ReverseSearchOrder = reverseChannelSearch;
+                entry.ReleaseChannels = releaseChannels;
 
                 // If found in the env vars then we either need to update the
                 // existing entry or add the entry to the collection.
@@ -373,6 +409,8 @@ namespace wv2util
             Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", null, target);
             Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", null, target);
             Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", null, target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_CHANNEL_SEARCH_KIND", null, target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNELS", null, target);
         }
 
         public static void RemoveEntryFromRegistry(AppOverrideEntry entry, RegistryKey removeRoot = null)
@@ -384,6 +422,8 @@ namespace wv2util
                 RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
                 RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true), entry.HostApp);
                 RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathUserDataFolder, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true), entry.HostApp);
+                RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true), entry.HostApp);
             }
         }
         
@@ -409,6 +449,7 @@ namespace wv2util
         {
             EnvironmentVariableTarget target = entry.StorageKind == StorageKind.EVLM ?
                 EnvironmentVariableTarget.Machine : EnvironmentVariableTarget.User;
+<<<<<<< HEAD
             SetEnvironmentVariableIfChanged("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", StringEmptyToNull(entry.RuntimePath), target);
             SetEnvironmentVariableIfChanged("WEBVIEW2_USER_DATA_FOLDER", StringEmptyToNull(entry.UserDataPath), target);
             SetEnvironmentVariableIfChanged("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
@@ -424,6 +465,14 @@ namespace wv2util
                 // the current env var before setting.
                 Environment.SetEnvironmentVariable(name, value, target);
             }
+=======
+            Environment.SetEnvironmentVariable("WEBVIEW2_BROWSER_EXECUTABLE_FOLDER", StringEmptyToNull(entry.RuntimePath), target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", StringEmptyToNull(entry.UserDataPath), target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", entry.ReverseSearchOrder ? "1" : null, target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_CHANNEL_SEARCH_KIND", entry.ReverseSearchOrder ? "1" : null, target);
+            Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNELS", StringEmptyToNull(entry.ReleaseChannels), target);
+>>>>>>> 37b79b2 (add channelsearchkind and releasechannels)
         }
 
         private static void ApplyEntryToRegistry(AppOverrideEntry entry)
@@ -455,7 +504,7 @@ namespace wv2util
                     }
                     if (entry.ReverseSearchOrder)
                     {
-                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
+                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
                     }
                     else
                     {
@@ -468,6 +517,14 @@ namespace wv2util
                     else
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathUserDataFolder, true), entry.HostApp);
+                    }
+                    if (entry.ReleaseChannels != null && entry.ReleaseChannels != "")
+                    {
+                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true)?.SetValue(entry.HostApp, entry.ReleaseChannels, RegistryValueKind.String);
+                    }
+                    else
+                    {
+                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true), entry.HostApp);
                     }
                 }
             }
@@ -703,6 +760,20 @@ namespace wv2util
         }
         private string m_BrowserArguments = "";
 
+        public string ReleaseChannels
+        {
+            get => m_ReleaseChannels;
+            set
+            {
+                if (m_ReleaseChannels != value)
+                {
+                    m_ReleaseChannels = NullToEmpty(value);
+                    OnPropertyChanged("m_ReleaseChannels");
+                }
+            }
+        }
+        private string m_ReleaseChannels = "";
+
         public bool IsCommonBrowserArgumentEnabledLogging
         {
             get
@@ -764,21 +835,54 @@ namespace wv2util
                 OnPropertyChanged("IsRuntimeEvergreen");
             }
         }
-        public bool IsRuntimeEvergreenPreview
+
+        public bool IsRuntimeBeta
         {
             get => ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    ReverseSearchOrder = true;
-                    RuntimePath = null;
+                  ReverseSearchOrder = true;
+                  ReleaseChannels = "1,0";
+                  RuntimePath = null;
                 }
-                OnPropertyChanged("IsRuntimeEvergreenPreview");
+                OnPropertyChanged("IsRuntimeBeta");
             }
         }
-        public bool IsRuntimeFixedVersion
+
+        public bool IsRuntimeDev
         {
+            get => ReverseSearchOrder && RuntimePath == "";
+            set
+            {
+                if (value)
+                {
+                  ReverseSearchOrder = true;
+                  ReleaseChannels = "2,0";
+                  RuntimePath = null;
+                }
+                OnPropertyChanged("IsRuntimeDev");
+            }
+        }
+
+        public bool IsRuntimeCanary
+        {
+            get => ReverseSearchOrder && RuntimePath == "";
+            set
+            {
+                if (value)
+                {
+                  ReverseSearchOrder = true;
+                  ReleaseChannels = "3,0";
+                  RuntimePath = null;
+                }
+                OnPropertyChanged("IsRuntimeCanary");
+            }
+        }
+
+    public bool IsRuntimeFixedVersion
+            {
             get => !ReverseSearchOrder && RuntimePath != "";
             set
             {

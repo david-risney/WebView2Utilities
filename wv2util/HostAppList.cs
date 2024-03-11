@@ -127,12 +127,18 @@ namespace wv2util
             Path = sdkPath;
             m_interestingDlls = interestingDlls;
 
+<<<<<<< HEAD
             if (Path != null)
             {
                 string fileName = System.IO.Path.GetFileName(Path).ToLower();
                 m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
                     (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
             }
+=======
+            string fileName = System.IO.Path.GetFileName(Path)?.ToLower();
+            m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
+                (fileName == "microsoft.web.webview2.core.dll" && !ProcessUtil.IsDllDotNet(Path));
+>>>>>>> 37b79b2 (add channelsearchkind and releasechannels)
         }
         private readonly bool m_isWinRT = false;
         private readonly string[] m_interestingDlls;
