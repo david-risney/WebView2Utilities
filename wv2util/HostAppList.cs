@@ -68,7 +68,8 @@ namespace wv2util
             Running,
         };
         public HostAppStatus Status { get; set; } = HostAppStatus.Running;
-        public string StatusDescription => this.Status == HostAppStatus.Running ? "Running" : "Terminated";        
+        public string StatusDescription => this.Status == HostAppStatus.Running ? "Running" : "Terminated";
+        public string StatusColor => this.Status == HostAppStatus.Running ? "Black" : "Gray";
 
         public int CompareTo(HostAppEntry other)
         {

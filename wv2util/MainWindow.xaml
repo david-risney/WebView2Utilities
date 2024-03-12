@@ -73,17 +73,37 @@
               >
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding ExecutableName}">
+                                <GridViewColumn>
                                     <GridViewColumnHeader HorizontalAlignment="Stretch"  Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path=ExecutableName}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding PID}">
+                                <GridViewColumn>
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">App PID</GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path=PID}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
+                                <GridViewColumn>
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_BrowserPID_Click">Browser PID</GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path=BrowserProcessPID}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding StatusDescription}">
+                                <GridViewColumn>
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_StatusDescription_Click">Status</GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Path=StatusDescription}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
                             </GridView>
                         </ListView.View>
