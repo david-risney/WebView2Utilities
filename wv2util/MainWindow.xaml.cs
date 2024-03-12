@@ -32,7 +32,7 @@ namespace wv2util
             
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
-            m_watchForChangesTimer.Enabled = HostAppsWatchForChangesCheckbox.IsChecked.Value;
+            m_watchForChangesTimer.Enabled = true;
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -299,11 +299,6 @@ namespace wv2util
 
         private Timer m_watchForChangesTimer = new Timer();
         private IEnumerable<HostAppEntry> m_previousHostAppEntries = null;
-        private void HostAppsWatchForChangesCheckbox_Checked(object sender, RoutedEventArgs e)
-        {
-            CheckBox checkbox = (CheckBox)sender;
-            m_watchForChangesTimer.Enabled = checkbox.IsChecked.Value;
-        }
 
         private void WatchForChangesTimer_Elapsed(object sender, ElapsedEventArgs e)
         {

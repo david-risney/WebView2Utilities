@@ -60,7 +60,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <CheckBox Grid.Row="0" Grid.Column="0" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverSlowlyCheckbox_Checked"/>
-                    <CheckBox Grid.Row="0" Grid.Column="1" Margin="5 5 5 5" Content="Watch for changes" IsChecked="True" x:Name="HostAppsWatchForChangesCheckbox" Checked="HostAppsWatchForChangesCheckbox_Checked" Unchecked="HostAppsWatchForChangesCheckbox_Checked"/>
                     <ListView
               x:Name="HostAppListView"
               Grid.Row="1"
