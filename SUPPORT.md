@@ -10,4 +10,4 @@ For help and questions about using this project, please create a GitHub issue an
 
 ## Microsoft Support Policy  
 
-Support for this **PROJECT or PRODUCT** is limited to the resources listed above.
+Support for **WebView2Utilities** is limited to the resources listed above.
