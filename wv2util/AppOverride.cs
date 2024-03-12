@@ -829,16 +829,51 @@ namespace wv2util
             }
         }
 
-        public bool IsRuntimeBeta
+        public bool IsRuntimeEvergreenPreview
         {
             get => ReverseSearchOrder && RuntimePath == "";
             set
             {
                 if (value)
                 {
+                    ReverseSearchOrder = true;
+                    RuntimePath = null;
+                }
+                OnPropertyChanged("IsRuntimeEvergreenPreview");
+            }
+        }
+
+        public bool IsRuntimeStable
+        {
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("0");
+            set
+            {
+                if (value)
+                {
                   ReverseSearchOrder = true;
-                  ReleaseChannels = "1,0";
+                  if (!ReleaseChannels.Contains("0"))
+                  {
+                    ReleaseChannels += ",0";
+                  }
                   RuntimePath = null;
+                }
+                OnPropertyChanged("IsRuntimeStable");
+            }
+        }
+
+        public bool IsRuntimeBeta
+        {
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("1");
+            set
+            {
+                if (value)
+                {
+                    ReverseSearchOrder = true;
+                    if (!ReleaseChannels.Contains("1"))
+                    {
+                      ReleaseChannels += ",1";
+                    }
+                    RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeBeta");
             }
@@ -846,13 +881,16 @@ namespace wv2util
 
         public bool IsRuntimeDev
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("2");
             set
             {
                 if (value)
                 {
                   ReverseSearchOrder = true;
-                  ReleaseChannels = "2,0";
+                  if (!ReleaseChannels.Contains("2"))
+                  {
+                    ReleaseChannels += ",2";
+                  }
                   RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeDev");
@@ -861,13 +899,16 @@ namespace wv2util
 
         public bool IsRuntimeCanary
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("3");
             set
             {
                 if (value)
                 {
                   ReverseSearchOrder = true;
-                  ReleaseChannels = "3,0";
+                  if (!ReleaseChannels.Contains("3"))
+                  {
+                    ReleaseChannels += ",3";
+                  }
                   RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeCanary");
@@ -882,7 +923,6 @@ namespace wv2util
                 if (value)
                 {
                     ReverseSearchOrder = false;
-                    ReleaseChannels = null;
                     RuntimePath = ".";
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
