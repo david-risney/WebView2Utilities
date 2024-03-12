@@ -352,24 +352,24 @@
                         </Grid>
                     </GroupBox>
                     <local:TextComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,180,68,0" VerticalContentAlignment="Center"/>
-                        <Button IsEnabled="{Binding Path=/IsRuntimeFixedVersion}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,183,21,0" Click="AppOverrideRuntimePathButton_Click"/>
+                    <Button IsEnabled="{Binding Path=IsValidAndFixedVersionSelection,Source={StaticResource AppOverrideListSelection}}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,183,21,0" Click="AppOverrideRuntimePathButton_Click"/>
 
                     <GroupBox Height="120" VerticalAlignment="Top" Margin="339,227,10,0">
                         <GroupBox.Header>
                             <Label Content="Browser arguments"/>
                         </GroupBox.Header>
                     </GroupBox>
-                    <Label Content="Arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="354,251,0,0" Width="109" />
+                    <Label Content="Arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="354,191,0,0" Width="109" />
                     <TextBox ToolTip="Additional arguments to include on the command line for msedgewebview2.exe." x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,251,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
                     <Button x:Name="AppOverrideBrowserArgumentsButton" Content="?" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,254,21,0" Click="AppOverrideBrowserArgumentsButton_Click"/>
                     <CheckBox x:Name="AppOverrideArgumentsAutoOpenDevTools" Content="Auto open DevTools" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,293,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledAutoOpenDevTools}"/>
-                    <CheckBox x:Name="AppOverrideArgumentsLogging" Content="Logging" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,315,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledLogging}"/>
+                    <CheckBox x:Name="AppOverrideArgumentsLogging" Content="Logging" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,305,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledLogging}"/>
 
                     <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,358,0,0" Width="126"/>
                     <TextBox ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,358,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
                     <Button x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,361,21,0" Click="AppOverrideUserDataPathButton_Click"/>
 
-                    <Label Content="{Binding Path=/StorageKindDescription,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,399,0,0" Width="747"/>
+                    <Label Content="{Binding Path=/StorageKindDescription,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,389,0,0" Width="747"/>
 
                     <Button x:Name="EnvVarButton" Content="Edit Env Var" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,120,5" Click="EnvVarButton_Click"/>
                     <Button x:Name="RegEditButton" Content="Launch RegEdit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,10,5" Click="RegEditButton_Click"/>
