@@ -439,6 +439,10 @@
             <LineBreak/>
             <LineBreak/>
           </TextBlock>
+          <LineBreak/>
+          <TextBlock x:Name="NewsJson">
+              Text
+          </TextBlock>
         </TextBlock>
       </TabItem>
         </TabControl>

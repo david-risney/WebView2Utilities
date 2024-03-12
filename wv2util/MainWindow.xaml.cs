@@ -1,8 +1,13 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
@@ -21,14 +26,38 @@ namespace wv2util
     /// </summary>
     public partial class MainWindow : Window
     {
+        private string newsJson;
+        private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
+
         public MainWindow()
         {
             InitializeComponent();
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
-            
+
+            GetNewsJson().GetAwaiter().GetResult();
+            NewsJson.Text = newsJson;
+
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
             m_watchForChangesTimer.Enabled = true;
+        }
+
+        private async Task GetNewsJson()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
+            client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
+
+            var response = client.GetAsync(newsLink).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                newsJson = await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                newsJson = $"Error: {response.StatusCode}";
+            }
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
