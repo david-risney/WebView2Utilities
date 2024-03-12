@@ -35,6 +35,10 @@ namespace wv2util
         public string ExecutableName => Path.GetFileName(ExecutablePath);
         public string ExecutablePathDirectory => Path.GetDirectoryName(ExecutablePath);
         public int PID { get; private set; } = 0;
+        public string PIDAndStatus => 
+            "" + PID + 
+            (this.Status != HostAppStatus.Running ? " " + this.StatusDescription : "");
+
         public SdkFileInfo SdkInfo { get; private set; }
         public RuntimeEntry Runtime { get; private set; }
         public string UserDataPath { get; private set; }
@@ -58,6 +62,13 @@ namespace wv2util
             }
         }
         public string PackageFullName { get => ProcessUtil.GetPackageFullName(PID); }
+        public enum HostAppStatus
+        {
+            Terminated,
+            Running,
+        };
+        public HostAppStatus Status { get; set; } = HostAppStatus.Running;
+        public string StatusDescription => this.Status == HostAppStatus.Running ? "Running" : "Terminated";        
 
         public int CompareTo(HostAppEntry other)
         {
@@ -217,20 +228,46 @@ namespace wv2util
             }
         }
         public bool ShouldDiscoverSlowly { get; set; } = false;
+        private bool m_previousFromMachineDiscoveredSlowly = false;
         protected Task m_fromMachineInProgress = null;
         protected async Task FromMachineInnerAsync()
         {
-            IEnumerable<HostAppEntry> newEntries = null;
+            bool nextDiscoveredSlowly = ShouldDiscoverSlowly;
+            List<HostAppEntry> nextEntries = null;
+            // Cache old entries. After we get the new entries,
+            // remove old entries replaced by new entries,
+            // update the remaining Status to Terminated, and add them back in.
+            List<HostAppEntry> previousEntries = this.ToList();
+            bool previousDiscoveredSlowly = m_previousFromMachineDiscoveredSlowly;
 
             await Task.Factory.StartNew(() =>
             {
-                newEntries = GetHostAppEntriesFromMachine(ShouldDiscoverSlowly).ToList<HostAppEntry>();
+                nextEntries = GetHostAppEntriesFromMachine(nextDiscoveredSlowly).ToList<HostAppEntry>();
             });
+            
+
+            // Update remaining oldEntries to note they are terminated (since we didn't find them in the list)
+            // But only do this if we're at the same level of discovery.
+            // If we change how we discover we might not find something the previous did and its still running
+            if (nextDiscoveredSlowly == previousDiscoveredSlowly)
+            {
+                // Remove entries from oldEntries that are also in newEntries
+                foreach (var nextEntry in nextEntries)
+                {
+                    previousEntries.Remove(nextEntry);
+                }
+                foreach (var previousEntry in previousEntries)
+                {
+                    previousEntry.Status = HostAppEntry.HostAppStatus.Terminated;
+                    nextEntries.Add(previousEntry);
+                }
+            }
 
             // Only update the entries on the caller thread to ensure the
             // caller isn't trying to enumerate the entries while
             // we're updating them.
-            SetEntries(newEntries);
+            m_previousFromMachineDiscoveredSlowly = nextDiscoveredSlowly;
+            SetEntries(nextEntries);
         }
 
         private void SetEntries(IEnumerable<HostAppEntry> newEntries)

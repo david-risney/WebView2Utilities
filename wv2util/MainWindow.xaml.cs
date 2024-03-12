@@ -283,6 +283,13 @@ namespace wv2util
                 m_hostAppSortColumn.SortDirection * (left.BrowserProcessPID - right.BrowserProcessPID));
         }
 
+        private void GridViewColumnHeader_HostApps_StatusDescription_Click(object sender, RoutedEventArgs e)
+        {
+            m_hostAppSortColumn.SelectColumn(3);
+            HostAppsListData.Sort<HostAppEntry>((left, right) =>
+                m_hostAppSortColumn.SortDirection * (left.Status - right.Status));
+        }
+
         private bool m_hostAppsReReload = false;
         private void HostAppsDiscoverSlowlyCheckbox_Checked(object sender, RoutedEventArgs e)
         {

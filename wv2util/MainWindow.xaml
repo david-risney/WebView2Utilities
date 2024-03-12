@@ -82,6 +82,9 @@
                                 <GridViewColumn DisplayMemberBinding="{Binding BrowserProcessPID}">
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_BrowserPID_Click">Browser PID</GridViewColumnHeader>
                                 </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding StatusDescription}">
+                                    <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_StatusDescription_Click">Status</GridViewColumnHeader>
+                                </GridViewColumn>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -123,7 +126,7 @@
               </TextBlock>
 
                             <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
-                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PIDAndStatus, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
 
                             <Label   Grid.Row="2" Grid.Column="0" Content="Package full name" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
                             <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The package identity of the host app process or blank if it has none." Text="{Binding Path=/PackageFullName, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
