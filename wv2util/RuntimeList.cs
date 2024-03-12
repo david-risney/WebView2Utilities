@@ -26,9 +26,9 @@ namespace wv2util
         {
             get
             {
-                string exePathLower = this.ExePath.ToLower();
-                if (ExePath != "" && ExePath != null)
+                if (!String.IsNullOrEmpty(ExePath))
                 {
+                    string exePathLower = this.ExePath.ToLower();
                     if (exePathLower.Contains("\\edge sxs\\"))
                     {
                         return "Canary";
