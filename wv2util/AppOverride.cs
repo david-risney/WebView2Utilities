@@ -508,7 +508,7 @@ namespace wv2util
                     }
                     else
                     {
-                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true), entry.HostApp);
+                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true), entry.HostApp);
                     }
                     if (entry.UserDataPath != null && entry.UserDataPath != "")
                     {
@@ -830,6 +830,7 @@ namespace wv2util
                 if (value)
                 {
                     ReverseSearchOrder = false;
+                    ReleaseChannels = null;
                     RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreen");
@@ -838,7 +839,7 @@ namespace wv2util
 
         public bool IsRuntimeBeta
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels == "1,0";
             set
             {
                 if (value)
@@ -853,7 +854,7 @@ namespace wv2util
 
         public bool IsRuntimeDev
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels == "2,0";
             set
             {
                 if (value)
@@ -868,7 +869,7 @@ namespace wv2util
 
         public bool IsRuntimeCanary
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels == "3,0";
             set
             {
                 if (value)
@@ -881,7 +882,7 @@ namespace wv2util
             }
         }
 
-    public bool IsRuntimeFixedVersion
+        public bool IsRuntimeFixedVersion
             {
             get => !ReverseSearchOrder && RuntimePath != "";
             set
@@ -889,6 +890,7 @@ namespace wv2util
                 if (value)
                 {
                     ReverseSearchOrder = false;
+                    ReleaseChannels = null;
                     RuntimePath = ".";
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
