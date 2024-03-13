@@ -29,7 +29,10 @@ namespace wv2util
 
         private void CreateReportWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            m_CancellationTokenSource.Cancel();
+            if (m_CancellationTokenSource != null)
+            {
+                m_CancellationTokenSource.Cancel();
+            }
             m_ReportCreator.Cleanup();
         }
 
@@ -79,6 +82,9 @@ namespace wv2util
             try
             {
                 await m_ReportCreator.CreateReportAsync(m_CancellationTokenSource.Token);
+                // Once we've succeeded in creating the file, we no longer need to worry about cleaning it up.
+                m_CancellationTokenSource = null;
+
                 if ((bool)OpenReportInExplorerCheckBox.IsChecked)
                 {
                     ProcessUtil.OpenExplorerToFile(m_ReportCreator.DestinationPath);
