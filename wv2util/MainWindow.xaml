@@ -247,7 +247,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0" Grid.ColumnSpan="2">
+                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn DisplayMemberBinding="{Binding RuntimeLocation}">
