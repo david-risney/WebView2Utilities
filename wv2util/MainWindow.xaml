@@ -364,8 +364,18 @@
                                 <GridViewColumn DisplayMemberBinding="{Binding Name}">
                                     <GridViewColumnHeader>Name</GridViewColumnHeader>
                                 </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding IsEnabled}">
-                                    <GridViewColumnHeader>IsEnabled</GridViewColumnHeader>
+                                <GridViewColumn>
+                                    <GridViewColumnHeader>Enabled</GridViewColumnHeader>
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Width="{Binding ElementName=CheckBoxColumn, Path=Width}">
+                                                <CheckBox HorizontalAlignment="Center" IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding Description}">
+                                    <GridViewColumnHeader>Description</GridViewColumnHeader>
                                 </GridViewColumn>
                             </GridView>
                         </ListView.View>
