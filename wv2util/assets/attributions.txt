@@ -1,0 +1,4 @@
+The wrench and toolbox icons are from the Fluent UI Icons project: https://developer.microsoft.com/en-us/fluentui#/styles/web/icons
+The wrench icon is called "Repair" and the toolbox icon is called "Toolbox"
+
+They can also be obtained from https://github.com/microsoft/fluentui-system-icons/blob/main/icons_regular.md
