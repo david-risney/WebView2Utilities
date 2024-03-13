@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
 
 namespace wv2util
 {
@@ -8,40 +10,36 @@ namespace wv2util
     {
         public string Name { get; set; }
         
-        public bool isEnabled;
+        private bool m_IsEnabled;
 
         public bool IsEnabled
         {
-            get { return isEnabled; }
+            get { return m_IsEnabled; }
             set
             {
                 if (value)
                 {
-                    turnOn();
+                    m_IsEnabled = m_turnOn();
+                    return;
                 }
                 else
                 {
-                    turnOff();
+                    m_turnOff();
                 }
-                isEnabled = value;
+                m_IsEnabled = value;
             }
         }
 
         public string Description { get; set; }
 
-        private Action turnOn, turnOff;
+        private Func<bool> m_turnOn;
+        private Action m_turnOff;
 
-        public ExperimentalFeature(Action turnOn, Action turnOff, Func<bool> isOn)
+        public ExperimentalFeature(Func<bool> turnOn, Action turnOff, Func<bool> isOn)
         {
-            this.turnOn = turnOn;
-            this.turnOff = turnOff;
-            isEnabled = isOn();
-        }
-
-        static public bool IsEnabledForApp(string commandLine, string envVars)
-        {
-            // TODO implement
-            return false;
+            this.m_turnOn = turnOn;
+            this.m_turnOff = turnOff;
+            m_IsEnabled = isOn();
         }
 
         public int CompareTo(ExperimentalFeature other)
@@ -62,11 +60,13 @@ namespace wv2util
             {
                 // Turn on:
                 Environment.SetEnvironmentVariable(envVar, onVal, EnvironmentVariableTarget.User);
+                return true;
             },
             () =>
             {
                 // Turn off:
                 Environment.SetEnvironmentVariable(envVar, offVal, EnvironmentVariableTarget.User);
+                Environment.SetEnvironmentVariable(envVar, offVal, EnvironmentVariableTarget.Machine);
             },
             () =>
             {
@@ -83,27 +83,59 @@ namespace wv2util
 
         public ExperimentalFeatureList()
         {
+            // Canary self-hosting
+            Items.Add(new ExperimentalFeature(
+                () =>
+                {
+                    var runtimes = AppState.GetRuntimeList();
+
+                    // Only if Canary is installed turn self-hosting on
+                    if (runtimes.Any(runtime => runtime.Channel == "Canary"))
+                    {
+                        Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", "1", EnvironmentVariableTarget.User);
+                        return true;
+                    }
+
+                    const string canaryLink = "https://go.microsoft.com/fwlink/?linkid=2084649&Channel=Canary&language=en";
+                    if (MessageBox.Show(
+                        $"Before turning on this feature you need to have Canary installed from {canaryLink}. Do you want to install it now?",
+                        "Canary missing", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(canaryLink);
+                    }
+
+                    return false;
+                },
+                () =>
+                {
+                    var list = AppState.GetRuntimeList();
+
+                    // Turn off:
+                    Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", null, EnvironmentVariableTarget.User);
+                },
+                () =>
+                {
+                    var list = AppState.GetRuntimeList();
+                    string val = Environment.GetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", EnvironmentVariableTarget.User);
+                    return val != null && val == "1";
+                }
+                )
+            {
+                Name = "Canary self-hosting",
+                Description = "Host apps use canary WebView2 runtime if installed instead of stable."
+            });
+
             // Visual Hosting
             Items.Add(new EnvVarExperimentalFeature(
                 "COREWEBVIEW2_FORCED_HOSTING_MODE",
                 "COREWEBVIEW2_HOSTING_MODE_WINDOW_TO_VISUAL",
-                "COREWEBVIEW2_HOSTING_MODE_WINDOW_TO_WINDOW")
-            {
-                Name = "Visual hosting",
-                Description = "When on apps will be running in Visual Hosting instead of regular Window hosting"
-            });
-
-            // Canary self-hosting
-            Items.Add(new EnvVarExperimentalFeature(
-                "WEBVIEW2_RELEASE_CHANNEL_PREFERENCE",
-                "1",
                 null)
             {
-                Name = "Canary self-hosting",
-                Description = "When on apps will use canary WebView2 runtime if installed instead of stable"
+                Name = "Visual hosting",
+                Description = "Host apps use visual hosting instead of regular window hosting."
             });
 
-            // To add more experimental features to the list either:
+            // To add more experimental features to the runtimes either:
             // add EnvVarExperimentalFeature if the feature is controlled by an enviroment variable
             // OR
             // add ExperimentalFeature with on, off and check delegates if the feature requires more specific operations

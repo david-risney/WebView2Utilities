@@ -120,11 +120,6 @@ namespace wv2util
             }
         }
 
-        private void ExperimentalFeatureListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //todo
-        }
-
         private void RuntimeListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (RuntimeList.SelectedIndex >= 0)

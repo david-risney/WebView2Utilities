@@ -262,7 +262,7 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Expander Grid.ColumnSpan="2" Margin="0,622,0,0" Grid.RowSpan="2">
+                    <Expander Grid.Row="1">
                         <Expander.Header>
                             <Label Content="Find more WebView2 Runtimes" />
                         </Expander.Header>
@@ -382,9 +382,6 @@
                     </ListView>
                 </Grid>
             </TabItem>
-
-            <!--ItemTemplate="{StaticResource AppOverrideListTemplate}"
-                        SelectionChanged="AppOverrideListBoxSelectionChanged"-->
 
             <!-- About tab -->
             <TabItem>
