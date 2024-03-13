@@ -19,6 +19,8 @@
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
 
+        <local:HostAppEntryStatusToBrushConverter x:Key="HostAppEntryStatusToBrushConverter"/>
+
         <DataTemplate x:Key="AppOverrideListTemplate">
             <TextBlock Text="{Binding Path=DisplayLabel}" />
         </DataTemplate>
@@ -77,7 +79,7 @@
                                     <GridViewColumnHeader HorizontalAlignment="Stretch"  Click="GridViewColumnHeader_HostApps_Executable_Click">Executable</GridViewColumnHeader>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Path=ExecutableName}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                            <TextBlock Text="{Binding Path=ExecutableName}" Foreground="{Binding Path=Status,Converter={StaticResource HostAppEntryStatusToBrushConverter}}"/>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -85,7 +87,7 @@
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_PID_Click">App PID</GridViewColumnHeader>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Path=PID}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                            <TextBlock Text="{Binding Path=PID}" Foreground="{Binding Path=Status,Converter={StaticResource HostAppEntryStatusToBrushConverter}}"/>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -93,7 +95,7 @@
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_BrowserPID_Click">Browser PID</GridViewColumnHeader>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Path=BrowserProcessPID}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                            <TextBlock Text="{Binding Path=BrowserProcessPID}" Foreground="{Binding Path=Status,Converter={StaticResource HostAppEntryStatusToBrushConverter}}"/>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
@@ -101,7 +103,7 @@
                                     <GridViewColumnHeader Click="GridViewColumnHeader_HostApps_StatusDescription_Click">Status</GridViewColumnHeader>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <TextBlock Text="{Binding Path=StatusDescription}" Foreground="{Binding Path=StatusColor}"></TextBlock>
+                                            <TextBlock Text="{Binding Path=StatusDescription}" Foreground="{Binding Path=Status,Converter={StaticResource HostAppEntryStatusToBrushConverter}}"/>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>

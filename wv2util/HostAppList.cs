@@ -8,9 +8,37 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Media;
 
 namespace wv2util
 {
+    public class HostAppEntryStatusToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is HostAppEntry.HostAppStatus)
+            {
+                switch ((HostAppEntry.HostAppStatus)value)
+                {
+                    case HostAppEntry.HostAppStatus.Running:
+                    default:
+                        return new SolidColorBrush(SystemColors.ControlTextColor);
+
+                    case HostAppEntry.HostAppStatus.Terminated:
+                        return new SolidColorBrush(SystemColors.GrayTextColor);
+                }
+            }
+            return Brushes.Transparent;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class HostAppEntry : IEquatable<HostAppEntry>, IComparable<HostAppEntry>
     {
         public HostAppEntry(
@@ -69,7 +97,6 @@ namespace wv2util
         };
         public HostAppStatus Status { get; set; } = HostAppStatus.Running;
         public string StatusDescription => this.Status == HostAppStatus.Running ? "Running" : "Terminated";
-        public string StatusColor => this.Status == HostAppStatus.Running ? "Black" : "Gray";
 
         public int CompareTo(HostAppEntry other)
         {
