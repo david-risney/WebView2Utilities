@@ -565,11 +565,14 @@ namespace wv2util
                             int parentPid = HwndUtil.GetWindowProcessId(hostAppLeafHwnd);
                             int childPid = HwndUtil.GetWindowProcessId(childHwnd);
 
-                            if (!parentPidToChildPidsMap.TryGetValue(parentPid, out HashSet<int> childPids))
+                            if (parentPid != childPid)
                             {
-                                parentPidToChildPidsMap.Add(parentPid, (childPids = new HashSet<int>()));
+                                if (!parentPidToChildPidsMap.TryGetValue(parentPid, out HashSet<int> childPids))
+                                {
+                                    parentPidToChildPidsMap.Add(parentPid, (childPids = new HashSet<int>()));
+                                }
+                                childPids.Add(childPid);
                             }
-                            childPids.Add(childPid);
                         }
                     }
                 }
