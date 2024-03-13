@@ -9,9 +9,10 @@
         Title="WebView2Utilities"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
-        <ObjectDataProvider x:Key="AppOverrideList" ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
-        <ObjectDataProvider x:Key="RuntimeList" ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
-        <ObjectDataProvider x:Key="HostAppList" ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
+        <ObjectDataProvider x:Key="AppOverrideList"         ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
+        <ObjectDataProvider x:Key="ExperimentalFeatureList" ObjectType="{x:Type local:AppState}" MethodName="GetExperimentalFeatureList"/>
+        <ObjectDataProvider x:Key="RuntimeList"             ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
+        <ObjectDataProvider x:Key="HostAppList"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
 
         <CollectionViewSource Source="{StaticResource AppOverrideList}" x:Key="AppOverrideSortedList">
             <CollectionViewSource.SortDescriptions>
@@ -246,7 +247,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0">
+                    <ListView x:Name="RuntimeList" ItemsSource="{Binding}" SelectionChanged="RuntimeListViewSelectionChanged" Grid.Row="0" Grid.ColumnSpan="2">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn DisplayMemberBinding="{Binding RuntimeLocation}">
@@ -261,7 +262,7 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <Expander Grid.Row="1">
+                    <Expander Grid.ColumnSpan="2" Margin="0,622,0,0" Grid.RowSpan="2">
                         <Expander.Header>
                             <Label Content="Find more WebView2 Runtimes" />
                         </Expander.Header>
@@ -348,6 +349,32 @@
                     <Button x:Name="RegEditButton" Content="Launch RegEdit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,10,5" Click="RegEditButton_Click"/>
                 </Grid>
             </TabItem>
+
+            <!-- App Experimental Features List -->
+            <TabItem DataContext="{Binding Source={StaticResource ExperimentalFeatureList}}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Experimental "/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <ListView x:Name="ExperimentalFeatureList" ItemsSource="{Binding}" Grid.Row="0" Grid.ColumnSpan="2">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                                    <GridViewColumnHeader>Name</GridViewColumnHeader>
+                                </GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding IsEnabled}">
+                                    <GridViewColumnHeader>IsEnabled</GridViewColumnHeader>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </TabItem>
+
+            <!--ItemTemplate="{StaticResource AppOverrideListTemplate}"
+                        SelectionChanged="AppOverrideListBoxSelectionChanged"-->
 
             <!-- About tab -->
             <TabItem>
