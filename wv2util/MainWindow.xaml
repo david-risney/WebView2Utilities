@@ -396,9 +396,6 @@
               WebView2 Documentation
             </Hyperlink>
             <LineBreak/>
-            <Hyperlink NavigateUri="https://thenounproject.com/search/?q=wrench&amp;i=3775455" RequestNavigate="Hyperlink_RequestNavigate">
-              Wrench by Gicon studio from the Noun Project
-            </Hyperlink>
             <LineBreak/>
           </TextBlock>
         </TextBlock>
