@@ -113,7 +113,6 @@ namespace wv2util
                 },
                 () =>
                 {
-                    var list = AppState.GetRuntimeList();
                     string val = Environment.GetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", EnvironmentVariableTarget.User);
                     return val != null && val == "1";
                 }
@@ -134,7 +133,7 @@ namespace wv2util
             });
 
             // To add more experimental features to the runtimes either:
-            // add EnvVarExperimentalFeature if the feature is controlled by an enviroment variable
+            // add EnvVarExperimentalFeature if the feature is controlled only by an enviroment variable
             // OR
             // add ExperimentalFeature with on, off and check delegates if the feature requires more specific operations
         }
