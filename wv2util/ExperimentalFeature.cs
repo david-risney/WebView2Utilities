@@ -108,8 +108,6 @@ namespace wv2util
                 },
                 () =>
                 {
-                    var list = AppState.GetRuntimeList();
-
                     // Turn off:
                     Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", null, EnvironmentVariableTarget.User);
                 },
