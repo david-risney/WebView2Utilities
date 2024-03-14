@@ -79,8 +79,6 @@ namespace wv2util
 
     public class ExperimentalFeatureList : ObservableCollection<ExperimentalFeature>
     {
-        private List<ExperimentalFeature> m_List = new List<ExperimentalFeature>();
-
         public ExperimentalFeatureList()
         {
             // Canary self-hosting
@@ -93,6 +91,7 @@ namespace wv2util
                     if (runtimes.Any(runtime => runtime.Channel == "Canary"))
                     {
                         Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", "1", EnvironmentVariableTarget.User);
+                        AppState.GetAppOverrideList().FromSystem();
                         return true;
                     }
 
@@ -110,6 +109,7 @@ namespace wv2util
                 {
                     // Turn off:
                     Environment.SetEnvironmentVariable("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", null, EnvironmentVariableTarget.User);
+                    AppState.GetAppOverrideList().FromSystem();
                 },
                 () =>
                 {

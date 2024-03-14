@@ -297,7 +297,7 @@
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Overrides "/>
-                        <Button x:Name="OverridesReload" Content="&#x1F503;" Click="Reload_Click"/>
+                        <Button x:Name="OverridesReload" Content="&#x1F503;" Click="OverridesReload_Click"/>
                     </StackPanel>
                 </TabItem.Header>
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
