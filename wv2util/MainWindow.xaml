@@ -440,9 +440,11 @@
             <LineBreak/>
           </TextBlock>
           <LineBreak/>
-          <TextBlock x:Name="NewsJson">
-              Text
-          </TextBlock>
+          <InlineUIContainer>
+          <StackPanel x:Name="NewsPanel">
+             
+          </StackPanel>
+          </InlineUIContainer>
         </TextBlock>
       </TabItem>
         </TabControl>

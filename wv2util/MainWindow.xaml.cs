@@ -1,17 +1,18 @@
 ﻿using Microsoft.Win32;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using Clipboard = System.Windows.Clipboard;
@@ -26,7 +27,6 @@ namespace wv2util
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string newsJson;
         private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
 
         public MainWindow()
@@ -34,15 +34,14 @@ namespace wv2util
             InitializeComponent();
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
 
-            GetNewsJson().GetAwaiter().GetResult();
-            NewsJson.Text = newsJson;
+            GenerateNews();
 
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
             m_watchForChangesTimer.Enabled = true;
         }
 
-        private async Task GetNewsJson()
+        private async Task<string> GetNewsData()
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
@@ -52,12 +51,56 @@ namespace wv2util
             var response = client.GetAsync(newsLink).Result;
             if (response.IsSuccessStatusCode)
             {
-                newsJson = await response.Content.ReadAsStringAsync();
+                return await response.Content.ReadAsStringAsync();
             }
             else
             {
-                newsJson = $"Error: {response.StatusCode}";
+                return $"{{ \"error\": \"{response.StatusCode}\" }}";
             }
+        }
+
+        private void GenerateNews()
+        {
+            string newsData = GetNewsData().GetAwaiter().GetResult();
+            var newsJson = JsonSerializer.Deserialize<JsonElement>(newsData);
+            int newsDisplayed = 3;
+
+            if (newsJson.ValueKind != JsonValueKind.Null && 
+                newsJson.ValueKind == JsonValueKind.Array &&
+                newsJson.EnumerateArray().Any()) 
+            {
+                for (int i = 0; i < newsDisplayed && i < newsJson.GetArrayLength(); i++)
+                {
+                    if (newsJson[i].ValueKind != JsonValueKind.Object ||
+                        !newsJson[i].TryGetProperty("title", out var title) ||
+                        !newsJson[i].TryGetProperty("body", out var body)) {
+                        continue;
+                    }
+                    TextBlock newsBlock = new TextBlock
+                    {
+                        Text = title.GetString(),
+                        FontSize = 14,
+                        Margin = new Thickness(0, 10, 0, 0)
+                    };
+                    TextBlock bodyBlock = new TextBlock()
+                    {
+                        Text = body.GetString(),
+                        FontSize = 12,
+                        Margin = new Thickness(0, 10, 0, 0)
+                    };
+                    newsBlock.Inlines.Add(new LineBreak());
+                    newsBlock.Inlines.Add(bodyBlock);
+                    NewsPanel.Children.Add(newsBlock);
+                }
+            }
+
+            TextBlock lastBlock = new TextBlock
+            {
+                Text = "More news ...",
+                FontSize = 16,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            NewsPanel.Children.Add(lastBlock);
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
