@@ -118,7 +118,7 @@ namespace wv2util
                 }
                 )
             {
-                Name = "Canary self-hosting",
+                Name = "Preview WebView2 Runtime",
                 Description = "Host apps use canary WebView2 runtime if installed instead of stable."
             });
 
