@@ -35,8 +35,6 @@ Before reporting a new issue, try to find an existing issue if one already exist
 
 ### Submitting Code Changes
 
-#### Submitting a pull request
-
 1. Create a new branch from the `main` branch.
   - `git checkout -b my-branch-name`
   - Push your code to a user branch
