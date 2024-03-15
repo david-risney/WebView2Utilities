@@ -297,26 +297,29 @@ namespace wv2util
 
         private static Channels ReleaseChannelsFromString(string channelString)
         {
-            Channels channels = 0;
-            var channelNumbers = channelString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var channelNumber in channelNumbers)
+            Channels channels = allChannels;
+            if (!String.IsNullOrEmpty(channelString))
             {
-                if (int.TryParse(channelNumber.Trim(), out int number))
+                var channelNumbers = channelString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var channelNumber in channelNumbers)
                 {
-                    switch (number)
+                    if (int.TryParse(channelNumber.Trim(), out int number))
                     {
-                        case 0:
-                            channels |= Channels.Stable;
-                            break;
-                        case 1:
-                            channels |= Channels.Beta;
-                            break;
-                        case 2:
-                            channels |= Channels.Dev;
-                            break;
-                        case 3:
-                            channels |= Channels.Canary;
-                            break;
+                        switch (number)
+                        {
+                            case 0:
+                                channels |= Channels.Stable;
+                                break;
+                            case 1:
+                                channels |= Channels.Beta;
+                                break;
+                            case 2:
+                                channels |= Channels.Dev;
+                                break;
+                            case 3:
+                                channels |= Channels.Canary;
+                                break;
+                        }
                     }
                 }
             }
@@ -325,24 +328,31 @@ namespace wv2util
 
         private static string ReleaseChannelsToString(Channels channels)
         {
-            List<string> channelStrings = new List<string>();
-            if ((channels & Channels.Stable) != 0)
+            if (channels == allChannels)
             {
-                channelStrings.Add("0");
+                return "";
             }
-            if ((channels & Channels.Beta) != 0)
+            else
             {
-                channelStrings.Add("1");
+                List<string> channelStrings = new List<string>();
+                if ((channels & Channels.Stable) != 0)
+                {
+                    channelStrings.Add("0");
+                }
+                if ((channels & Channels.Beta) != 0)
+                {
+                    channelStrings.Add("1");
+                }
+                if ((channels & Channels.Dev) != 0)
+                {
+                    channelStrings.Add("2");
+                }
+                if ((channels & Channels.Canary) != 0)
+                {
+                    channelStrings.Add("3");
+                }
+                return string.Join(",", channelStrings);
             }
-            if ((channels & Channels.Dev) != 0)
-            {
-                channelStrings.Add("2");
-            }
-            if ((channels & Channels.Canary) != 0)
-            {
-                channelStrings.Add("3");
-            }
-            return string.Join(",", channelStrings);
         }
 
         public static ObservableCollection<AppOverrideEntry> CreateCollectionFromSystem()
