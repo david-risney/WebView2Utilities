@@ -85,7 +85,7 @@ namespace wv2util
 
         private void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppTreeView.SelectedItem;
             if (selectedHostAppEntry != null)
             {
                 ReportCreator creator = new ReportCreator(selectedHostAppEntry, AppOverrideListData, RuntimeListData);
@@ -96,7 +96,7 @@ namespace wv2util
 
         private void HostAppsGoToOverride_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppListView.SelectedValue;
+            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppTreeView.SelectedValue;
             if (selectedHostAppEntry != null)
             {
                 AppOverrideListData.FromSystem();
@@ -140,28 +140,7 @@ namespace wv2util
                 }
             }
         }
-        private void HostAppListViewSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (HostAppListView.SelectedIndex >= 0)
-            {
-                HostAppEntry selection = (HostAppEntry)HostAppListView.SelectedItem;
-                try
-                {
-                    Clipboard.SetText(selection.ExecutableName + "\t" +
-                        selection.SdkInfo.Version + "\t" +
-                        selection.Runtime.RuntimeLocation + "\t" +
-                        selection.Runtime.Version + "\t" +
-                        selection.Runtime.Channel + "\t" +
-                        selection.UserDataPath + "\t" +
-                        selection.ExecutablePath);
-                }
-                catch (System.Runtime.InteropServices.COMException)
-                {
-                    // We might fail to open clipboard. Just ignore
-                }
-            }
-        }
-
+        
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
@@ -235,9 +214,14 @@ namespace wv2util
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            // for .NET Core you need to add UseShellExecute = true
-            // see https://docs.microsoft.com/dotnet/api/system.diagnostics.processstartinfo.useshellexecute#property-value
-            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            if (e.Uri.IsFile)
+            {
+                ProcessUtil.OpenExplorerToFile(e.Uri.LocalPath);
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+            }
             e.Handled = true;
         }
 

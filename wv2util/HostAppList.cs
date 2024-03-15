@@ -39,6 +39,37 @@ namespace wv2util
         }
     }
 
+    public class ProcessEntry : IEquatable<ProcessEntry>, IComparable<ProcessEntry>
+    {
+        public ProcessEntry(
+            int parentPid,
+            string executablePath,
+            int pid,
+            string userDataPath)
+        {
+            this.ParentPID = parentPid;
+            this.ExecutablePath = executablePath;
+            this.PID = pid;
+            this.UserDataPath = userDataPath;
+        }
+
+        public int ParentPID { get; private set; }
+        public string ExecutablePath { get; private set; }
+        public int PID { get; private set; }
+        public string UserDataPath { get; private set; }
+        public List<ProcessEntry> Children { get; } = new List<ProcessEntry>();
+
+        public int CompareTo(ProcessEntry other)
+        {
+            return this.PID - other.PID;
+        }
+
+        public bool Equals(ProcessEntry other)
+        {
+            return this.CompareTo(other) == 0;
+        }
+    }
+
     public class HostAppEntry : IEquatable<HostAppEntry>, IComparable<HostAppEntry>
     {
         public HostAppEntry(
@@ -116,6 +147,8 @@ namespace wv2util
         {
             return this.CompareTo(other) == 0;
         }
+
+        public List<ProcessEntry> Children { get; } = new List<ProcessEntry>();
     }
 
     public class SdkFileInfo
@@ -346,6 +379,8 @@ namespace wv2util
         {
             // Put in a list so we can replace entries or not as we go.
             List<HostAppEntry> hostAppEntriesResult = hostAppEntriesOriginal.ToList();
+            Dictionary<int, ProcessEntry> pidToProcessEntry = new Dictionary<int, ProcessEntry>();
+
             var msedgewebview2Processes = Process.GetProcessesByName("msedgewebview2");
             foreach (var msedgewebview2Process in msedgewebview2Processes)
             {
@@ -354,28 +389,40 @@ namespace wv2util
                     int pid = msedgewebview2Process.Id;
                     // Get parent process of pid
                     var parentProcess = msedgewebview2Process.GetParentProcess();
-                    if (parentProcess != null &&
-                        parentProcess.ProcessName.ToLower() != "msedgewebview2")
-                    {
-                        int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
-                        if (idx != -1)
-                        {
-                            var hostAppEntry = hostAppEntriesResult[idx];
-                            if (hostAppEntry.BrowserProcessPID == 0)
-                            {
-                                hostAppEntriesResult.RemoveAt(idx);
+                    var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
 
-                                var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
-                                string userDataFolder = userDataPathAndProcessType.Item1;
-                                hostAppEntriesResult.Add(
-                                    new HostAppEntry(
+                    ProcessEntry currentProcessEntry = new ProcessEntry(
+                        parentProcess.Id,
+                        msedgewebview2Process.MainModule.FileName,
+                        msedgewebview2Process.Id,
+                        userDataPathAndProcessType.Item1);
+
+                    if (parentProcess != null)
+                    {
+                        pidToProcessEntry[pid] = currentProcessEntry;
+                        if (parentProcess.ProcessName.ToLower() != "msedgewebview2")
+                        {
+                            int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
+                            if (idx != -1)
+                            {
+                                var hostAppEntry = hostAppEntriesResult[idx];
+                                if (hostAppEntry.BrowserProcessPID == 0)
+                                {
+                                    hostAppEntriesResult.RemoveAt(idx);
+
+                                    string userDataFolder = userDataPathAndProcessType.Item1;
+                                    HostAppEntry newHostAppEntry = new HostAppEntry(
                                         hostAppEntry.ExecutablePath,
                                         hostAppEntry.PID,
                                         hostAppEntry.SdkInfo.Path,
                                         hostAppEntry.Runtime.ExePath,
                                         userDataFolder,
                                         hostAppEntry.InterestingLoadedDllPaths,
-                                        msedgewebview2Process.Id));
+                                        msedgewebview2Process.Id);
+                                    newHostAppEntry.Children.Add(currentProcessEntry);
+
+                                    hostAppEntriesResult.Add(newHostAppEntry);
+                                }
                             }
                         }
                     }
@@ -384,6 +431,14 @@ namespace wv2util
                 {
                     // Exceptions from interacting with a process that's already terminated
                     // Just to be safe, catch those and skip the entry.
+                }
+            }
+            foreach (var childProcessEntry in pidToProcessEntry.Values)
+            {
+                ProcessEntry parentProcessEntry = null;
+                if (pidToProcessEntry.TryGetValue(childProcessEntry.ParentPID, out parentProcessEntry))
+                {
+                    parentProcessEntry.Children.Add(childProcessEntry);
                 }
             }
             return hostAppEntriesResult;
@@ -542,6 +597,12 @@ namespace wv2util
                                             userDataFolder,
                                             hostAppEntry.InterestingLoadedDllPaths,
                                             runtimePid);
+                                        runtimeEntry.Children.AddRange(hostAppEntry.Children);
+                                        runtimeEntry.Children.Add(new ProcessEntry(
+                                            hostAppEntry.PID,
+                                            runtimeProcess.MainModule.FileName,
+                                            runtimeProcess.Id,
+                                            userDataFolder));
                                         hostAppEntriesWithRuntimePID.Add(runtimeEntry);
                                         added = true;
                                     }
@@ -630,6 +691,12 @@ namespace wv2util
                                             userDataFolder,
                                             hostAppEntry.InterestingLoadedDllPaths,
                                             childPid);
+                                        runtimeEntry.Children.Add(new ProcessEntry(
+                                            hostAppEntry.PID,
+                                            runtimeProcess.MainModule.FileName,
+                                            runtimeProcess.Id,
+                                            userDataFolder));
+                                        runtimeEntry.Children.AddRange(hostAppEntry.Children);
                                         hostAppEntriesResults.Add(runtimeEntry);
                                         added = true;
                                     }

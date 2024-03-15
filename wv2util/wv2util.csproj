@@ -83,6 +83,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Management" />
@@ -116,6 +117,8 @@
     <Compile Include="ExperimentalFeature.cs" />
     <Compile Include="HostAppList.cs" />
     <Compile Include="HwndUtil.cs" />
+    <Compile Include="NullToBooleanConverter.cs" />
+    <Compile Include="ObservableCollectionProjection.cs" />
     <Compile Include="ProcessUtil.cs" />
     <Compile Include="RegistryUtil.cs" />
     <Compile Include="ReportCreator.cs" />
@@ -125,6 +128,7 @@
     <Compile Include="TraceWindow.xaml.cs">
       <DependentUpon>TraceWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="TreeItem.cs" />
     <Compile Include="VersionUtil.cs" />
     <Page Include="CreateReportWindow.xaml">
       <SubType>Designer</SubType>

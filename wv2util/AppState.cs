@@ -1,4 +1,6 @@
-﻿namespace wv2util
+﻿using System.Collections.ObjectModel;
+
+namespace wv2util
 {
     public class AppState
     {
@@ -13,5 +15,10 @@
 
         private static HostAppList s_HostAppList = new HostAppList();
         public static HostAppList GetHostAppList() => s_HostAppList;
+
+        private static ObservableCollection<ITreeItem> s_hostAppTreeItems = new ObservableCollectionProjection<HostAppEntry, ITreeItem>(
+                        GetHostAppList(),
+                        i => new HostAppEntryTreeItem(GetHostAppList(), i));
+        public static ObservableCollection<ITreeItem> GetHostAppTree() => s_hostAppTreeItems;
     }
 }

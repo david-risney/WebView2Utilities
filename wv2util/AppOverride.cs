@@ -12,36 +12,6 @@ using static wv2util.AppOverrideEntry;
 
 namespace wv2util
 {
-    public class AggregateObservableCollections<T> : ObservableCollection<T>
-    {
-        public AggregateObservableCollections(List<ObservableCollection<T>> collections)
-        {
-            collections_ = collections;
-            foreach (var collection in collections)
-            {
-                collection.CollectionChanged += Collection_CollectionChanged;
-            }
-        }
-
-        private void Collection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs innerEventArgs)
-        {
-            var senderCollectionIdx = collections_.IndexOf((ObservableCollection<T>)sender);
-            int valueIdx = 0;
-            for (int collectionIdx = 0; collectionIdx < senderCollectionIdx; ++collectionIdx)
-            {
-                valueIdx += collections_[collectionIdx].Count;
-            }
-
-            NotifyCollectionChangedEventArgs outerEventArgs = null;
-
-            if (innerEventArgs.NewItems != null)
-
-            OnCollectionChanged(outerEventArgs);
-        }
-
-        private List<ObservableCollection<T>> collections_;
-    }
-
     public class AppOverrideList : ObservableCollection<AppOverrideEntry>
     {
         public static bool IgnoreUpdatesToRegistry = true;
