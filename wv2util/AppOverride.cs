@@ -415,7 +415,8 @@ namespace wv2util
             }
 
             if (!String.IsNullOrEmpty(channelSearchKind) ||
-                !String.IsNullOrEmpty(releaseChannels))
+                !String.IsNullOrEmpty(releaseChannels) ||
+                !String.IsNullOrEmpty(releaseChannelPreferenceAsString))
             {
                 entry.IsEvergreenPreview = true;
             }
