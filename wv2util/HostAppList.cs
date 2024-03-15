@@ -39,67 +39,23 @@ namespace wv2util
         }
     }
 
-    public class ProcessEntry : IEquatable<ProcessEntry>, IComparable<ProcessEntry>
-    {
-        public ProcessEntry(
-            int parentPid,
-            Process process)
-        {
-            var userDataFolderAndType = HostAppList.GetUserDataPathAndProcessTypeFromProcessViaCommandLine(process);
-            this.ParentPID = parentPid;
-            this.ExecutablePath = process.MainModule.FileName;
-            this.PID = process.Id;
-            this.UserDataPath = userDataFolderAndType.Item1;
-            this.EdgeProcessKind = userDataFolderAndType.Item2?.ToLower();
-        }
-
-        public ProcessEntry(
-            int parentPid,
-            string executablePath,
-            int pid,
-            string userDataPath,
-            string edgeProcessKind)
-        {
-            this.ParentPID = parentPid;
-            this.ExecutablePath = executablePath;
-            this.PID = pid;
-            this.UserDataPath = userDataPath;
-            this.EdgeProcessKind = edgeProcessKind;
-        }
-
-        public int ParentPID { get; private set; }
-        public string ExecutablePath { get; private set; }
-        public string ExecutableName => Path.GetFileName(ExecutablePath);
-
-        public int PID { get; private set; }
-        public string UserDataPath { get; private set; }
-        public string EdgeProcessKind { get; private set; }
-        public List<ProcessEntry> Children { get; } = new List<ProcessEntry>();
-
-        public int CompareTo(ProcessEntry other)
-        {
-            return this.PID - other.PID;
-        }
-
-        public bool Equals(ProcessEntry other)
-        {
-            return this.CompareTo(other) == 0;
-        }
-    }
-
     public class HostAppEntry : IEquatable<HostAppEntry>, IComparable<HostAppEntry>
     {
         public HostAppEntry(
+            string kind, // 'host', or the Edge browser kind 'browser', 'renderer', and so on.
             string exePath, // Path to the host app executable
             int pid, // PID of the host app process
+            int parentPid, // PID of the parent process
             string sdkPath, // Path to a WebView2 SDK DLL
             string runtimePath, // Path to the WebView2 client DLL
             string userDataPath, // Path to the user data folder
             string[] interestingLoadedDllPaths, // a list of full paths of DLLs that are related to WebView2 in some way
             int browserProcessPid) // PID of the browser process
         {
+            Kind = kind;
             ExecutablePath = exePath == null ? "Unknown" : exePath;
             PID = pid;
+            ParentPID = parentPid;
             SdkInfo = new SdkFileInfo(sdkPath, interestingLoadedDllPaths);
             Runtime = new RuntimeEntry(runtimePath);
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
@@ -107,10 +63,32 @@ namespace wv2util
             BrowserProcessPID = browserProcessPid;
         }
 
+        public string DisplayLabel
+        {
+            get
+            {
+                string displayLabel = "";
+                switch (Kind)
+                {
+                    case "host":
+                        displayLabel = ExecutableName + " " + PIDAndStatus;
+                        break;
+
+                    default:
+                        displayLabel = Kind + " " + PIDAndStatus;
+                        break;
+                }
+
+                return displayLabel;
+            }
+        }
+
+        public string Kind { get; private set; }
         public string ExecutablePath { get; private set; }
         public string ExecutableName => Path.GetFileName(ExecutablePath);
         public string ExecutablePathDirectory => Path.GetDirectoryName(ExecutablePath);
         public int PID { get; private set; } = 0;
+        public int ParentPID { get; private set; } = 0;
         public string PIDAndStatus => 
             "" + PID + 
             (this.Status != HostAppStatus.Running ? " " + this.StatusDescription : "");
@@ -165,7 +143,7 @@ namespace wv2util
             return this.CompareTo(other) == 0;
         }
 
-        public List<ProcessEntry> Children { get; } = new List<ProcessEntry>();
+        public List<HostAppEntry> Children { get; } = new List<HostAppEntry>();
     }
 
     public class SdkFileInfo
@@ -174,10 +152,10 @@ namespace wv2util
         // such as the full path to Microsoft.Web.WebView2.Core.dll or WebView2Loader.dll.
         public SdkFileInfo(string sdkPath, string[] interestingDlls)
         {
-            Path = sdkPath;
-            m_interestingDlls = interestingDlls;
+            Path = sdkPath ?? "";
+            m_interestingDlls = interestingDlls ?? new string[] { };
 
-            if (Path != null)
+            if (!String.IsNullOrEmpty(Path))
             {
                 string fileName = System.IO.Path.GetFileName(Path).ToLower();
                 m_isWinRT = fileName == "microsoft.web.webview2.core.winmd" ||
@@ -188,8 +166,8 @@ namespace wv2util
         private readonly string[] m_interestingDlls;
 
         public string Path { get; private set; }
-        public string PathDirectory => System.IO.Path.GetDirectoryName(Path);
-        public string Version => VersionUtil.GetVersionStringFromFilePath(Path);
+        public string PathDirectory => !String.IsNullOrEmpty(Path) ? System.IO.Path.GetDirectoryName(Path) : "";
+        public string Version => !String.IsNullOrEmpty(Path) ? VersionUtil.GetVersionStringFromFilePath(Path) : "";
 
         public string ApiKind
         {
@@ -396,7 +374,10 @@ namespace wv2util
         {
             // Put in a list so we can replace entries or not as we go.
             List<HostAppEntry> hostAppEntriesResult = hostAppEntriesOriginal.ToList();
-            Dictionary<int, ProcessEntry> pidToProcessEntry = new Dictionary<int, ProcessEntry>();
+            var allEntriesOriginal = hostAppEntriesOriginal.SelectMany(entry => entry.Children).ToList();
+
+            Dictionary<int, HostAppEntry> pidToRuntimeHostAppEntry = new Dictionary<int, HostAppEntry>();
+            allEntriesOriginal.ForEach(entry => pidToRuntimeHostAppEntry[entry.PID] = entry);
 
             var msedgewebview2Processes = Process.GetProcessesByName("msedgewebview2");
             foreach (var msedgewebview2Process in msedgewebview2Processes)
@@ -408,13 +389,20 @@ namespace wv2util
                     var parentProcess = msedgewebview2Process.GetParentProcess();
                     var userDataPathAndProcessType = GetUserDataPathAndProcessTypeFromProcessViaCommandLine(msedgewebview2Process);
 
-                    ProcessEntry currentProcessEntry = new ProcessEntry(
-                        parentProcess.Id,
-                        msedgewebview2Process.MainModule.FileName,
-                        msedgewebview2Process.Id,
-                        userDataPathAndProcessType.Item1,
-                        userDataPathAndProcessType.Item2);
-                    pidToProcessEntry[pid] = currentProcessEntry;
+                    HostAppEntry currentProcessEntry = null;
+                    if (!pidToRuntimeHostAppEntry.TryGetValue(pid, out currentProcessEntry))
+                    {
+                        pidToRuntimeHostAppEntry[pid] = currentProcessEntry = new HostAppEntry(
+                            userDataPathAndProcessType.Item2,
+                            msedgewebview2Process.MainModule.FileName,
+                            msedgewebview2Process.Id,
+                            parentProcess.Id,
+                            null,
+                            msedgewebview2Process.MainModule.FileName,
+                            userDataPathAndProcessType.Item1,
+                            null,
+                            0);
+                    }
 
                     if (parentProcess != null)
                     {
@@ -430,13 +418,16 @@ namespace wv2util
 
                                     string userDataFolder = userDataPathAndProcessType.Item1;
                                     HostAppEntry newHostAppEntry = new HostAppEntry(
+                                        "host",
                                         hostAppEntry.ExecutablePath,
                                         hostAppEntry.PID,
+                                        0,
                                         hostAppEntry.SdkInfo.Path,
                                         hostAppEntry.Runtime.ExePath,
                                         userDataFolder,
                                         hostAppEntry.InterestingLoadedDllPaths,
                                         msedgewebview2Process.Id);
+                                    newHostAppEntry.Children.AddRange(hostAppEntry.Children);
                                     newHostAppEntry.Children.Add(currentProcessEntry);
 
                                     hostAppEntriesResult.Add(newHostAppEntry);
@@ -451,10 +442,10 @@ namespace wv2util
                     // Just to be safe, catch those and skip the entry.
                 }
             }
-            foreach (var childProcessEntry in pidToProcessEntry.Values)
+            foreach (var childProcessEntry in pidToRuntimeHostAppEntry.Values)
             {
-                ProcessEntry parentProcessEntry = null;
-                if (pidToProcessEntry.TryGetValue(childProcessEntry.ParentPID, out parentProcessEntry))
+                HostAppEntry parentProcessEntry = null;
+                if (pidToRuntimeHostAppEntry.TryGetValue(childProcessEntry.ParentPID, out parentProcessEntry))
                 {
                     parentProcessEntry.Children.Add(childProcessEntry);
                 }
@@ -471,8 +462,10 @@ namespace wv2util
                 if (interestingDllPaths.Item1 != null || interestingDllPaths.Item2 != null)
                 {
                     results.Add(new HostAppEntry(
+                            "host",
                             process.MainModule.FileName,
                             process.Id,
+                            0,
                             interestingDllPaths.Item2,
                             ClientDllPathToRuntimePath(interestingDllPaths.Item1),
                             null,
@@ -530,8 +523,10 @@ namespace wv2util
                     if (clientDllPath != null || sdkDllPath != null)
                     {
                         hostAppEntries.Add(new HostAppEntry(
+                            "host",
                             process.MainModule.FileName,
                             process.Id,
+                            0,
                             sdkDllPath,
                             ClientDllPathToRuntimePath(clientDllPath),
                             null,
@@ -608,20 +603,26 @@ namespace wv2util
                                         userDataFolder = userDataPathAndProcessType.Item1;
 
                                         var runtimeEntry = new HostAppEntry(
+                                            "host",
                                             hostAppEntry.ExecutablePath,
                                             hostAppEntry.PID,
+                                            0,
                                             hostAppEntry.SdkInfo.Path,
                                             hostAppEntry.Runtime.ExePath,
                                             userDataFolder,
                                             hostAppEntry.InterestingLoadedDllPaths,
                                             runtimePid);
                                         runtimeEntry.Children.AddRange(hostAppEntry.Children);
-                                        runtimeEntry.Children.Add(new ProcessEntry(
-                                            hostAppEntry.PID,
+                                        runtimeEntry.Children.Add(new HostAppEntry(
+                                            userDataPathAndProcessType.Item2,
                                             runtimeProcess.MainModule.FileName,
                                             runtimeProcess.Id,
+                                            runtimeEntry.PID,
+                                            null,
+                                            runtimeProcess.MainModule.FileName,
                                             userDataFolder,
-                                            userDataPathAndProcessType.Item2));
+                                            null,
+                                            0));
                                         hostAppEntriesWithRuntimePID.Add(runtimeEntry);
                                         added = true;
                                     }
@@ -703,19 +704,25 @@ namespace wv2util
                                         string userDataFolder = userDataPathAndProcessType.Item1;
 
                                         var runtimeEntry = new HostAppEntry(
+                                            "host",
                                             hostAppEntry.ExecutablePath,
                                             hostAppEntry.PID,
+                                            0,
                                             hostAppEntry.SdkInfo.Path,
                                             hostAppEntry.Runtime.ExePath,
                                             userDataFolder,
                                             hostAppEntry.InterestingLoadedDllPaths,
                                             childPid);
-                                        runtimeEntry.Children.Add(new ProcessEntry(
-                                            hostAppEntry.PID,
+                                        runtimeEntry.Children.Add(new HostAppEntry(
+                                            userDataPathAndProcessType.Item2,
                                             runtimeProcess.MainModule.FileName,
                                             runtimeProcess.Id,
+                                            runtimeEntry.PID,
+                                            null,
+                                            runtimeProcess.MainModule.FileName,
                                             userDataFolder,
-                                            userDataPathAndProcessType.Item2));
+                                            null,
+                                            0));
                                         runtimeEntry.Children.AddRange(hostAppEntry.Children);
                                         hostAppEntriesResults.Add(runtimeEntry);
                                         added = true;
@@ -781,6 +788,11 @@ namespace wv2util
             if (processType == "")
             {
                 processType = null;
+            }
+            
+            if (processType == null)
+            {
+                processType = "browser";
             }
 
             return new Tuple<string, string>(userDataPath, processType);

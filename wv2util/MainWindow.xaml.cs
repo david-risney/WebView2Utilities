@@ -83,9 +83,12 @@ namespace wv2util
             AppOverrideListData.FromSystem();
         }
 
+        private HostAppEntry HostAppTreeViewSelectedItem => 
+            (HostAppEntry)(((HostAppEntryTreeItem)HostAppTreeView?.SelectedItem)?.Model);
+
         private void HostAppsCreateReport_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppTreeView.SelectedItem;
+            HostAppEntry selectedHostAppEntry = HostAppTreeViewSelectedItem;
             if (selectedHostAppEntry != null)
             {
                 ReportCreator creator = new ReportCreator(selectedHostAppEntry, AppOverrideListData, RuntimeListData);
@@ -96,7 +99,7 @@ namespace wv2util
 
         private void HostAppsGoToOverride_Click(object sender, RoutedEventArgs e)
         {
-            HostAppEntry selectedHostAppEntry = (HostAppEntry)HostAppTreeView.SelectedValue;
+            HostAppEntry selectedHostAppEntry = HostAppTreeViewSelectedItem;
             if (selectedHostAppEntry != null)
             {
                 AppOverrideListData.FromSystem();

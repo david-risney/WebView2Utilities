@@ -98,7 +98,7 @@ namespace wv2util
             OnPropertyChanged("Children");
         }
 
-        public override string Name => m_hostAppEntry.ExecutableName + " " + m_hostAppEntry.PIDAndStatus;
+        public override string Name => m_hostAppEntry.DisplayLabel;
 
         public override BitmapSource IconAsBitmapSource => GetExecutableIcon(m_hostAppEntry);
 
@@ -168,107 +168,11 @@ namespace wv2util
             get
             {
                 return new ObservableCollection<ITreeItem>(
-                    m_hostAppEntry.Children.Select(processEntry => new ProcessEntryTreeItem(m_hostAppList, processEntry)));
+                    m_hostAppEntry.Children.Select(processEntry => new HostAppEntryTreeItem(m_hostAppList, processEntry)));
             }
         }
 
         public override Object Model => m_hostAppEntry;
 
-    }
-
-    public class ProcessEntryTreeItem : TreeItemBase
-    {
-        private HostAppList m_hostAppList;
-        private ProcessEntry m_processEntry;
-        public ProcessEntryTreeItem(HostAppList hostAppList, ProcessEntry processEntry)
-        {
-            m_hostAppList = hostAppList;
-            m_processEntry = processEntry;
-
-            m_hostAppList.CollectionChanged += HostAppListCollectionChanged;
-        }
-
-        private void HostAppListCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged("Name");
-            OnPropertyChanged("IconAsBitmapSource");
-            OnPropertyChanged("Children");
-        }
-
-        public override string Name => m_processEntry.ExecutableName + " " + m_processEntry.EdgeProcessKind + " " + m_processEntry.PID;
-
-        public override BitmapSource IconAsBitmapSource => GetExecutableIcon(m_processEntry.ExecutablePath);
-
-        private static BitmapSource GetExecutableIcon(HostAppEntry hostAppEntry)
-        {
-            BitmapSource result = null;
-
-            try
-            {
-                result = GetExecutableIcon(hostAppEntry.ExecutablePath);
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
-
-            if (result == null)
-            {
-                try
-                {
-                    // Load a generic system icon (e.g., application icon)
-                    Icon systemIcon = SystemIcons.Application;
-                    Bitmap systemBitmap = systemIcon.ToBitmap();
-                    MemoryStream systemStream = new MemoryStream();
-                    systemBitmap.Save(systemStream, ImageFormat.Png);
-                    systemStream.Seek(0, SeekOrigin.Begin);
-
-                    BitmapImage systemBitmapImage = new BitmapImage();
-                    systemBitmapImage.BeginInit();
-                    systemBitmapImage.StreamSource = systemStream;
-                    systemBitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    systemBitmapImage.EndInit();
-
-                    result = systemBitmapImage;
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                }
-            }
-
-            return result;
-        }
-
-        private static BitmapSource GetExecutableIcon(string executablePath)
-        {
-            // Get the icon associated with the specified executable
-            Icon appIcon = Icon.ExtractAssociatedIcon(executablePath);
-
-            // Convert the Icon to a BitmapSource
-            Bitmap bitmap = appIcon.ToBitmap();
-            MemoryStream stream = new MemoryStream();
-            bitmap.Save(stream, ImageFormat.Png);
-            stream.Seek(0, SeekOrigin.Begin);
-
-            BitmapImage bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            bitmapImage.StreamSource = stream;
-            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-            bitmapImage.EndInit();
-
-            return bitmapImage;
-        }
-
-        public override ObservableCollection<ITreeItem> Children
-        {
-            get
-            {
-                return new ObservableCollection<ITreeItem>(
-                    m_processEntry.Children.Select(processEntry => new ProcessEntryTreeItem(m_hostAppList, processEntry)));
-            }
-        }
-
-        public override Object Model => m_processEntry;
     }
 }
