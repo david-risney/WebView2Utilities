@@ -219,6 +219,7 @@ namespace wv2util
                     var value = regKey.GetValue(valueName);
                     int valueAsInt = (int)value;
                     entry.ReverseSearchOrder = 1 == valueAsInt;
+                    entry.IsEvergreenPreview = true;
                 }
                 catch (InvalidCastException)
                 {
@@ -238,12 +239,14 @@ namespace wv2util
                     if (value is int)
                     {
                         entry.ReverseSearchOrder = ((int)value) == 1;
+                        entry.IsEvergreenPreview = true;
                     }
                     else if (value is string)
                     {
                         if (int.TryParse((string)value, out int valueAsInt))
                         {
                             entry.ReverseSearchOrder = valueAsInt == 1;
+                            entry.IsEvergreenPreview = true;
                         }
                         else
                         {
@@ -268,6 +271,7 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
                 entry.ReleaseChannels = ReleaseChannelsFromString((string)regKey.GetValue(valueName));
+                entry.IsEvergreenPreview = true;
                 entriesToRemove.Remove(entry);
             }
 
@@ -408,6 +412,12 @@ namespace wv2util
             {
                 entry = new AppOverrideEntry();
                 foundInCollection = false;
+            }
+
+            if (!String.IsNullOrEmpty(channelSearchKind) ||
+                !String.IsNullOrEmpty(releaseChannels))
+            {
+                entry.IsEvergreenPreview = true;
             }
 
             if (!String.IsNullOrEmpty(browserExecutableFolder) ||
