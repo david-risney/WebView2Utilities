@@ -79,36 +79,6 @@ namespace wv2util
         }
     }
 
-    public class HostAppRootTreeItem : TreeItemBase
-    {
-        private HostAppList m_hostAppList;
-        public HostAppRootTreeItem(HostAppList hostAppList)
-        {
-            m_hostAppList = hostAppList;
-        }
-
-        public override string Name => "Host Apps";
-
-        public override BitmapSource IconAsBitmapSource => null;
-
-        private ObservableCollection<ITreeItem> m_children = null;
-        public override ObservableCollection<ITreeItem> Children
-        {
-            get
-            {
-                if (m_children == null)
-                {
-                    m_children = new ObservableCollectionProjection<HostAppEntry, ITreeItem>(
-                        m_hostAppList,
-                        i => new HostAppEntryTreeItem(m_hostAppList, i));
-                }
-                return m_children;
-            }
-        }
-
-        public override Object Model => m_hostAppList;
-    }
-
     public class HostAppEntryTreeItem : TreeItemBase
     {
         private HostAppList m_hostAppList;
@@ -225,7 +195,7 @@ namespace wv2util
             OnPropertyChanged("Children");
         }
 
-        public override string Name => m_processEntry.ExecutablePath + " " + m_processEntry.PID;
+        public override string Name => m_processEntry.ExecutableName + " " + m_processEntry.EdgeProcessKind + " " + m_processEntry.PID;
 
         public override BitmapSource IconAsBitmapSource => GetExecutableIcon(m_processEntry.ExecutablePath);
 
@@ -299,8 +269,6 @@ namespace wv2util
             }
         }
 
-
         public override Object Model => m_processEntry;
-
     }
 }

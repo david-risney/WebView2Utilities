@@ -43,20 +43,37 @@ namespace wv2util
     {
         public ProcessEntry(
             int parentPid,
+            Process process)
+        {
+            var userDataFolderAndType = HostAppList.GetUserDataPathAndProcessTypeFromProcessViaCommandLine(process);
+            this.ParentPID = parentPid;
+            this.ExecutablePath = process.MainModule.FileName;
+            this.PID = process.Id;
+            this.UserDataPath = userDataFolderAndType.Item1;
+            this.EdgeProcessKind = userDataFolderAndType.Item2?.ToLower();
+        }
+
+        public ProcessEntry(
+            int parentPid,
             string executablePath,
             int pid,
-            string userDataPath)
+            string userDataPath,
+            string edgeProcessKind)
         {
             this.ParentPID = parentPid;
             this.ExecutablePath = executablePath;
             this.PID = pid;
             this.UserDataPath = userDataPath;
+            this.EdgeProcessKind = edgeProcessKind;
         }
 
         public int ParentPID { get; private set; }
         public string ExecutablePath { get; private set; }
+        public string ExecutableName => Path.GetFileName(ExecutablePath);
+
         public int PID { get; private set; }
         public string UserDataPath { get; private set; }
+        public string EdgeProcessKind { get; private set; }
         public List<ProcessEntry> Children { get; } = new List<ProcessEntry>();
 
         public int CompareTo(ProcessEntry other)
@@ -395,11 +412,12 @@ namespace wv2util
                         parentProcess.Id,
                         msedgewebview2Process.MainModule.FileName,
                         msedgewebview2Process.Id,
-                        userDataPathAndProcessType.Item1);
+                        userDataPathAndProcessType.Item1,
+                        userDataPathAndProcessType.Item2);
+                    pidToProcessEntry[pid] = currentProcessEntry;
 
                     if (parentProcess != null)
                     {
-                        pidToProcessEntry[pid] = currentProcessEntry;
                         if (parentProcess.ProcessName.ToLower() != "msedgewebview2")
                         {
                             int idx = hostAppEntriesResult.FindIndex(hostAppEntry => hostAppEntry.PID == parentProcess.Id);
@@ -602,7 +620,8 @@ namespace wv2util
                                             hostAppEntry.PID,
                                             runtimeProcess.MainModule.FileName,
                                             runtimeProcess.Id,
-                                            userDataFolder));
+                                            userDataFolder,
+                                            userDataPathAndProcessType.Item2));
                                         hostAppEntriesWithRuntimePID.Add(runtimeEntry);
                                         added = true;
                                     }
@@ -695,7 +714,8 @@ namespace wv2util
                                             hostAppEntry.PID,
                                             runtimeProcess.MainModule.FileName,
                                             runtimeProcess.Id,
-                                            userDataFolder));
+                                            userDataFolder,
+                                            userDataPathAndProcessType.Item2));
                                         runtimeEntry.Children.AddRange(hostAppEntry.Children);
                                         hostAppEntriesResults.Add(runtimeEntry);
                                         added = true;
@@ -748,7 +768,7 @@ namespace wv2util
             return null;
         }
 
-        private static Tuple<string, string> GetUserDataPathAndProcessTypeFromProcessViaCommandLine(Process process)
+        public static Tuple<string, string> GetUserDataPathAndProcessTypeFromProcessViaCommandLine(Process process)
         {
             CommandLineUtil.CommandLine commandLine = new CommandLineUtil.CommandLine(process.GetCommandLine());
             string processType = commandLine.GetKeyValue("--type");
