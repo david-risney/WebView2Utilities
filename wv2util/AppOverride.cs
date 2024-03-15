@@ -700,6 +700,7 @@ namespace wv2util
 
         public void InitializationComplete()
         {
+            LoadPersistedSettings();
             m_InitializationComplete = true;
         }
         protected void OnPropertyChanged(string name)
@@ -745,12 +746,20 @@ namespace wv2util
             {
                 if (m_IsEvergreenPreview != value)
                 {
-                  m_IsEvergreenPreview = value;
-                  OnPropertyChanged("IsEvergreenPreview");
+                    m_IsEvergreenPreview = value;
+                    Properties.Settings.Default.IsEvergreenPreview = value;
+                    Properties.Settings.Default.Save();
+                    OnPropertyChanged("IsEvergreenPreview");
                 }
             }
         }
         private bool m_IsEvergreenPreview = false;
+
+        public void LoadPersistedSettings()
+        {
+          m_IsEvergreenPreview = Properties.Settings.Default.IsEvergreenPreview;
+          OnPropertyChanged("IsEvergreenPreview");
+        }
 
         public string DisplayLabel
         {
