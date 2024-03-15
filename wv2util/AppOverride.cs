@@ -737,12 +737,8 @@ namespace wv2util
             {
                 if (m_ReverseSearchOrder != value)
                 {
-                  m_ReverseSearchOrder = value;
-                  OnPropertyChanged("ReverseSearchOrder");
-                }
-                else
-                {
-
+                    m_ReverseSearchOrder = value;
+                    OnPropertyChanged("ReverseSearchOrder");
                 }
             }
         }
