@@ -190,8 +190,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Markdown.Wpf.Editor">
-      <Version>1.0.0.38003</Version>
+    <PackageReference Include="Markdig.Wpf">
+      <Version>0.5.0.1</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.2</Version>

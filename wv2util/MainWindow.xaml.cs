@@ -1,17 +1,8 @@
-﻿//using Microsoft.Toolkit.Parsers.Markdown; // losing markdown
-using Microsoft.Win32;
-//using ModernWpf.Toolkit.UI.Controls;
-//using ModernWpf.Toolkit.UI.Controls.Markdown; // transparent text
-//using Markdown.Wpf.Editor; // less downloads
-using Markdig;
-using Markdig.Wpf; // link won't work
-// using MdXaml; // link won't work, losing markdown
-// using MarkdownViewer; // provides MarkdownBox, link won't work, able to change the content
+﻿using Markdig.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
@@ -21,7 +12,6 @@ using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using Clipboard = System.Windows.Clipboard;
@@ -37,131 +27,15 @@ namespace wv2util
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
-        private Dictionary<TextBlock, UIElement> containerMap = new Dictionary<TextBlock, UIElement>();
-
         public MainWindow()
         {
             InitializeComponent();
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
-
-            GenerateNews();
+            GenerateNewsBlocks();
 
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
             m_watchForChangesTimer.Enabled = true;
-        }
-
-        private async Task<string> GetNewsData()
-        {
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-            client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
-
-            var response = client.GetAsync(newsLink).Result;
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                return $"{{ \"error\": \"{response.StatusCode}\" }}";
-            }
-        }
-
-        private void GenerateNews()
-        {
-            string newsData = GetNewsData().GetAwaiter().GetResult();
-            var newsJson = JsonSerializer.Deserialize<JsonElement>(newsData);
-            int newsDisplayed = 3;
-
-            if (newsJson.ValueKind != JsonValueKind.Null && 
-                newsJson.ValueKind == JsonValueKind.Array &&
-                newsJson.EnumerateArray().Any()) 
-            {
-                for (int i = 0; i < newsDisplayed && i < newsJson.GetArrayLength(); i++)
-                {
-                    if (newsJson[i].ValueKind != JsonValueKind.Object ||
-                        !newsJson[i].TryGetProperty("title", out var title) ||
-                        !newsJson[i].TryGetProperty("body", out var body)) {
-                        continue;
-                    }
-                    TextBlock newsBlock = new TextBlock
-                    {
-                        Text = title.GetString(),
-                        FontSize = 16,
-                        Margin = new Thickness(0, 10, 0, 0),
-                        Cursor = Cursors.Hand
-                    };
-                    newsBlock.MouseDown += ToggleTextBlock_MouseDown;
-
-                    MarkdownViewer bodyBlock = new MarkdownViewer
-                    {
-                        Markdown = body.GetString(),
-                        FontSize = 12,
-                    };
-                    foreach (Block block in bodyBlock.Document.Blocks) 
-                    {
-                        if (block.FontSize > 12) 
-                        {
-                            block.FontSize = 12;
-                        }
-                    }
-                    bodyBlock.CommandBindings.Add(new CommandBinding(Commands.Hyperlink, Hyperlink_ExecutedRouted));
-
-                    Grid container = new Grid();
-                    container.Children.Add(bodyBlock);
-                    container.Width = 500; // Set the desired width
-                    // container.Height = 300; // Set the desired height
-                    container.Visibility = Visibility.Collapsed;
-
-
-                    containerMap[newsBlock] = container;
-
-
-                    newsBlock.Inlines.Add(new LineBreak());
-                    newsBlock.Inlines.Add(container);
-                    NewsPanel.Children.Add(newsBlock);
-                }
-            }
-
-            TextBlock lastBlock = new TextBlock
-            {
-                Text = "More news ...",
-                FontSize = 16,
-                Margin = new Thickness(0, 10, 0, 0)
-            };
-            NewsPanel.Children.Add(lastBlock);
-        }
-
-        private void Hyperlink_ExecutedRouted(object sender, ExecutedRoutedEventArgs e)
-        {
-            /*if (Hyperlink != null)
-            {
-                Hyperlink.Execute(e.Parameter.ToString());
-                return;
-            }*/
-
-            try
-            {
-                Process.Start(e.Parameter.ToString());
-            }
-            catch
-            {
-            }
-        }
-
-        private void ToggleTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is TextBlock clickedTextBlock && containerMap.ContainsKey(clickedTextBlock))
-            {
-                UIElement targetContainer = containerMap[clickedTextBlock];
-                targetContainer.Visibility = targetContainer.Visibility == Visibility.Visible
-                    ? Visibility.Collapsed
-                    : Visibility.Visible;
-
-            }
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
@@ -367,6 +241,18 @@ namespace wv2util
             e.Handled = true;
         }
 
+        private void Hyperlink_ExecutedRouted(object sender, ExecutedRoutedEventArgs e)
+        {
+            try
+            {
+                Process.Start(e.Parameter.ToString());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
         private readonly SortUtil.SortColumnContext m_runtimeSortColumn = new SortUtil.SortColumnContext();
         private void GridViewColumnHeader_Runtime_Path_Click(object sender, RoutedEventArgs e)
         {
@@ -468,6 +354,91 @@ namespace wv2util
                 }
             }
             m_previousHostAppEntries = currentHostAppEntries;            
+        }
+
+        private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
+        private async Task<string> GetNewsData()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
+            client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
+
+            var response = client.GetAsync(newsLink).Result;
+            if (response.IsSuccessStatusCode)
+                return await response.Content.ReadAsStringAsync();
+            else
+                return $"{{ \"error\": \"{response.StatusCode}\" }}";
+        }
+
+        private Dictionary<TextBlock, UIElement> newsBodyCollapsControllerMap = new Dictionary<TextBlock, UIElement>();
+        private void GenerateNewsBlocks()
+        {
+            string newsData = GetNewsData().GetAwaiter().GetResult();
+            var newsJson = JsonSerializer.Deserialize<JsonElement>(newsData);
+            int newsDisplayed = 3;
+            int bodyFontSize = 12;
+
+            if (newsJson.ValueKind != JsonValueKind.Null &&
+                newsJson.ValueKind == JsonValueKind.Array &&
+                newsJson.EnumerateArray().Any())
+            {
+                for (int i = 0; i < newsDisplayed && i < newsJson.GetArrayLength(); i++)
+                {
+                    // Skip a newsBlock when the data is invalid.
+                    if (newsJson[i].ValueKind != JsonValueKind.Object ||
+                        !newsJson[i].TryGetProperty("title", out var title) ||
+                        !newsJson[i].TryGetProperty("body", out var body))
+                    {
+                        continue;
+                    }
+
+                    // Add the title to the block.
+                    TextBlock newsBlock = new TextBlock
+                    {
+                        Text = title.GetString(),
+                        FontSize = bodyFontSize + 2,
+                        Margin = new Thickness(10, 10, 0, 0),
+                        Cursor = Cursors.Hand
+                    };
+
+                    // Add body content to the block.
+                    MarkdownViewer bodyBlock = new MarkdownViewer
+                    {
+                        Markdown = body.GetString(),
+                        FontSize = bodyFontSize,
+                    };
+                    foreach (Block block in bodyBlock.Document.Blocks)
+                        if (block.FontSize > bodyFontSize)
+                            block.FontSize = bodyFontSize;
+                    bodyBlock.CommandBindings.Add(new CommandBinding(Commands.Hyperlink, Hyperlink_ExecutedRouted));
+                    Grid bodyGrid = new Grid
+                    {
+                        Children = { bodyBlock },
+                        Width = 500,
+                    };
+
+                    // Enable click to collapse function.
+                    newsBlock.MouseDown += NewsBlock_Click;
+                    newsBodyCollapsControllerMap[newsBlock] = bodyGrid;
+                    bodyGrid.Visibility = Visibility.Collapsed;
+
+                    newsBlock.Inlines.Add(new LineBreak());
+                    newsBlock.Inlines.Add(bodyGrid);
+                    NewsPanel.Children.Add(newsBlock);
+                }
+            }
+        }
+
+        private void NewsBlock_Click(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock clickedTextBlock && newsBodyCollapsControllerMap.ContainsKey(clickedTextBlock))
+            {
+                UIElement targetContainer = newsBodyCollapsControllerMap[clickedTextBlock];
+                targetContainer.Visibility = targetContainer.Visibility == Visibility.Visible
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+            }
         }
     }
 }
