@@ -636,7 +636,7 @@ namespace wv2util
                 int precedence = (int)StorageKind * 2;
                 if (HostApp == "*")
                 {
-                  ++precedence;
+                    ++precedence;
                 }
                 return precedence.ToString("D4");
             }
@@ -650,10 +650,10 @@ namespace wv2util
             {
                 if (m_StorageKind != value)
                 {
-                  m_StorageKind = value;
-                  OnPropertyChanged("RegistryRoot");
-                  OnPropertyChanged("StorageKind");
-                  OnPropertyChanged("DisplayLabel");
+                    m_StorageKind = value;
+                    OnPropertyChanged("RegistryRoot");
+                    OnPropertyChanged("StorageKind");
+                    OnPropertyChanged("DisplayLabel");
                 }
             }
         }
@@ -665,18 +665,18 @@ namespace wv2util
                 string description = "Stored in ";
                 switch (StorageKind)
                 {
-                  case StorageKind.HKCU:
-                    description += "registry (HKCU)";
-                    break;
-                  case StorageKind.HKLM:
-                    description += "registry (HKLM)";
-                    break;
-                  case StorageKind.EVCU:
-                    description += "environment variables (User)";
-                    break;
-                  case StorageKind.EVLM:
-                    description += "environment variables (Machine)";
-                    break;
+                    case StorageKind.HKCU:
+                        description += "registry (HKCU)";
+                        break;
+                    case StorageKind.HKLM:
+                        description += "registry (HKLM)";
+                        break;
+                    case StorageKind.EVCU:
+                        description += "environment variables (User)";
+                        break;
+                    case StorageKind.EVLM:
+                        description += "environment variables (Machine)";
+                        break;
                 }
                 return description;
             }
@@ -688,12 +688,12 @@ namespace wv2util
             {
                 switch (StorageKind)
                 {
-                  case StorageKind.HKCU:
-                    return Registry.CurrentUser;
-                  case StorageKind.HKLM:
-                    return Registry.LocalMachine;
-                  default:
-                    return null;
+                    case StorageKind.HKCU:
+                        return Registry.CurrentUser;
+                    case StorageKind.HKLM:
+                        return Registry.LocalMachine;
+                    default:
+                        return null;
                 }
             }
         }
@@ -769,19 +769,19 @@ namespace wv2util
                 switch (StorageKind)
                 {
                     case StorageKind.HKCU:
-                      storageKindSuffix = "";
-                      break;
+                        storageKindSuffix = "";
+                        break;
                     case StorageKind.HKLM:
-                      storageKindSuffix = " (HKLM)";
-                      break;
+                        storageKindSuffix = " (HKLM)";
+                        break;
                     case StorageKind.EVCU:
-                      storageKindSuffix = " (EVCU)";
-                      break;
+                        storageKindSuffix = " (EVCU)";
+                        break;
                     case StorageKind.EVLM:
-                      storageKindSuffix = " (EVLM)";
-                      break;
+                        storageKindSuffix = " (EVLM)";
+                        break;
                     default:
-                      throw new Exception("Unknown StorageKind");
+                        throw new Exception("Unknown StorageKind");
                 }
                 string nameSuffix = "";
                 if (HostApp == "*")
