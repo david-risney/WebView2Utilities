@@ -1,4 +1,12 @@
-﻿using Microsoft.Win32;
+﻿//using Microsoft.Toolkit.Parsers.Markdown; // losing markdown
+using Microsoft.Win32;
+//using ModernWpf.Toolkit.UI.Controls;
+//using ModernWpf.Toolkit.UI.Controls.Markdown; // transparent text
+//using Markdown.Wpf.Editor; // less downloads
+using Markdig;
+using Markdig.Wpf; // link won't work
+// using MdXaml; // link won't work, losing markdown
+// using MarkdownViewer; // provides MarkdownBox, link won't work, able to change the content
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,12 +21,14 @@ using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Media;
 using System.Windows.Navigation;
 using System.Windows.Threading;
 using Clipboard = System.Windows.Clipboard;
 using ElapsedEventArgs = System.Timers.ElapsedEventArgs;
 using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
 using Timer = System.Timers.Timer;
+using System.Windows.Input;
 
 namespace wv2util
 {
@@ -28,6 +38,7 @@ namespace wv2util
     public partial class MainWindow : Window
     {
         private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
+        private Dictionary<TextBlock, UIElement> containerMap = new Dictionary<TextBlock, UIElement>();
 
         public MainWindow()
         {
@@ -79,17 +90,38 @@ namespace wv2util
                     TextBlock newsBlock = new TextBlock
                     {
                         Text = title.GetString(),
-                        FontSize = 14,
-                        Margin = new Thickness(0, 10, 0, 0)
+                        FontSize = 16,
+                        Margin = new Thickness(0, 10, 0, 0),
+                        Cursor = Cursors.Hand
                     };
-                    TextBlock bodyBlock = new TextBlock()
+                    newsBlock.MouseDown += ToggleTextBlock_MouseDown;
+
+                    MarkdownViewer bodyBlock = new MarkdownViewer
                     {
-                        Text = body.GetString(),
+                        Markdown = body.GetString(),
                         FontSize = 12,
-                        Margin = new Thickness(0, 10, 0, 0)
                     };
+                    foreach (Block block in bodyBlock.Document.Blocks) 
+                    {
+                        if (block.FontSize > 12) 
+                        {
+                            block.FontSize = 12;
+                        }
+                    }
+                    bodyBlock.CommandBindings.Add(new CommandBinding(Commands.Hyperlink, Hyperlink_ExecutedRouted));
+
+                    Grid container = new Grid();
+                    container.Children.Add(bodyBlock);
+                    container.Width = 500; // Set the desired width
+                    // container.Height = 300; // Set the desired height
+                    container.Visibility = Visibility.Collapsed;
+
+
+                    containerMap[newsBlock] = container;
+
+
                     newsBlock.Inlines.Add(new LineBreak());
-                    newsBlock.Inlines.Add(bodyBlock);
+                    newsBlock.Inlines.Add(container);
                     NewsPanel.Children.Add(newsBlock);
                 }
             }
@@ -101,6 +133,35 @@ namespace wv2util
                 Margin = new Thickness(0, 10, 0, 0)
             };
             NewsPanel.Children.Add(lastBlock);
+        }
+
+        private void Hyperlink_ExecutedRouted(object sender, ExecutedRoutedEventArgs e)
+        {
+            /*if (Hyperlink != null)
+            {
+                Hyperlink.Execute(e.Parameter.ToString());
+                return;
+            }*/
+
+            try
+            {
+                Process.Start(e.Parameter.ToString());
+            }
+            catch
+            {
+            }
+        }
+
+        private void ToggleTextBlock_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock clickedTextBlock && containerMap.ContainsKey(clickedTextBlock))
+            {
+                UIElement targetContainer = containerMap[clickedTextBlock];
+                targetContainer.Visibility = targetContainer.Visibility == Visibility.Visible
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+
+            }
         }
 
         private void RemoveButton_Click(object sender, RoutedEventArgs e)
