@@ -143,10 +143,10 @@
 
                             <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The full path of the host application executable." IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}">
-                <Hyperlink NavigateUri="{Binding Path=/ExecutablePathDirectory, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
-                  <TextBlock Text="{Binding Path=/ExecutablePath, Mode=OneWay}"/>
-                </Hyperlink>
-              </TextBlock>
+                            <Hyperlink NavigateUri="{Binding Path=/ExecutablePathDirectory, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                              <TextBlock Text="{Binding Path=/ExecutablePath, Mode=OneWay}"/>
+                            </Hyperlink>
+                            </TextBlock>
 
                             <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
                             <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding Path=/PIDAndStatus, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding SelectedItems.Count, ElementName=HostAppListView}"/>
@@ -340,35 +340,40 @@
                     <Label Content="Host app exe" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,17,0,0" Width="126" />
                     <local:TextComboBox x:Name="AppOverrideHostAppComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource HostAppList}}" DisplayMemberPath="ExecutableName" TextSearch.TextPath="ExecutableName" ToolTip="E.g. 'example.exe'\nThe filename (not full path) of the executable of the desired host application." Text="{Binding Path=/HostApp, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding Path=/CanChangeHostApp,UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Top" Margin="468,17,68,0" ScrollViewer.CanContentScroll="True" VerticalContentAlignment="Center" Height="26"/>
 
-                    <GroupBox Height="120" VerticalAlignment="Top" Margin="339,48,10,0">
+                    <GroupBox Height="180" VerticalAlignment="Top" Margin="339,48,10,0">
                         <GroupBox.Header>
                             <Label>Runtime</Label>
                         </GroupBox.Header>
                         <Grid>
-                            <RadioButton Name="RuntimeScenarioEvergreen" IsChecked="{Binding Path=/IsRuntimeEvergreen, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen" ToolTip="Use the installed WebView2 Runtime or if not available the first of Beta, Dev, or Canary Edge browser install." GroupName="RuntimeScenario" Margin="10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <RadioButton Name="RuntimeScenarioEvergreen" IsChecked="{Binding Path=/IsRuntimeEvergreen, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen (Stable)" ToolTip="Use the installed WebView2 Runtime or if not available the first of Beta, Dev, or Canary Edge browser install." GroupName="RuntimeScenario" Margin="10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                             <RadioButton Name="RuntimeScenarioEvergreenPreview" IsChecked="{Binding Path=/IsRuntimeEvergreenPreview, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen with preview build" ToolTip="Use the first of Canary, Dev, or Beta Edge browser install or if none of those then the WebView2 Runtime." GroupName="RuntimeScenario" Margin="10,26,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
-                            <RadioButton Name="RuntimeScenarioFixedVersion" IsChecked="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Content="Fixed Version" ToolTip="Use the WebView2 Runtime at the specified path" GroupName="RuntimeScenario" Margin="10,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioReverseSearchOrder" IsChecked="{Binding Path=/IsReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse search order" ToolTip="Reverse the channels search order to prefer least stable build." Margin="55,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewCanary" IsChecked="{Binding Path=/IsRuntimeCanary, UpdateSourceTrigger=PropertyChanged}" Content="Canary" ToolTip="Use Canary Edge browser install or the WebView2 Runtime if Dev is not available." Margin="55,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewDev" IsChecked="{Binding Path=/IsRuntimeDev, UpdateSourceTrigger=PropertyChanged}" Content="Dev" ToolTip="Use Dev Edge browser install or the WebView2 Runtime if Dev is not available." Margin="140,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewBeta" IsChecked="{Binding Path=/IsRuntimeBeta, UpdateSourceTrigger=PropertyChanged}" Content="Beta" ToolTip="Use Beta Edge browser install or the WebView2 Runtime if Dev is not available." Margin="210,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewStable" IsChecked="{Binding Path=/IsRuntimeStable, UpdateSourceTrigger=PropertyChanged}" Content="Stable" ToolTip="Use the stable WebView2 Runtime." Margin="280,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <RadioButton Name="RuntimeScenarioFixedVersion" IsChecked="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Content="Fixed Version" ToolTip="Use the WebView2 Runtime at the specified path" GroupName="RuntimeScenario" Margin="10,106,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                         </Grid>
                     </GroupBox>
-                    <local:TextComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,129,68,0" VerticalContentAlignment="Center"/>
-                    <Button IsEnabled="{Binding Path=/IsRuntimeFixedVersion}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,131,21,0" Click="AppOverrideRuntimePathButton_Click"/>
+                    <local:TextComboBox x:Name="AppOverrideRuntimePathComboBox" IsEditable="true" ItemsSource="{Binding Source={StaticResource RuntimeList}}" DisplayMemberPath="RuntimeLocation" TextSearch.TextPath="RuntimeLocation" ToolTip="The full path of the WebView2 Runtime or non-stable browser. The path should contain msedgewebview2.exe." IsEnabled="{Binding Path=/IsRuntimeFixedVersion, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=/RuntimePath, UpdateSourceTrigger=PropertyChanged}" Height="26" VerticalAlignment="Top" Margin="468,185,68,0" VerticalContentAlignment="Center"/>
+                    <Button IsEnabled="{Binding Path=/IsRuntimeFixedVersion}" x:Name="AppOverrideRuntimePathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="37" Margin="0,188,21,0" Click="AppOverrideRuntimePathButton_Click"/>
 
-                    <GroupBox Height="120" VerticalAlignment="Top" Margin="339,167,10,0">
+                    <GroupBox Height="120" VerticalAlignment="Top" Margin="339,227,10,0">
                         <GroupBox.Header>
                             <Label Content="Browser arguments"/>
                         </GroupBox.Header>
                     </GroupBox>
-                    <Label Content="Arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="354,191,0,0" Width="109" />
-                    <TextBox ToolTip="Additional arguments to include on the command line for msedgewebview2.exe." x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,191,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
-                    <Button x:Name="AppOverrideBrowserArgumentsButton" Content="?" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,194,21,0" Click="AppOverrideBrowserArgumentsButton_Click"/>
-                    <CheckBox x:Name="AppOverrideArgumentsAutoOpenDevTools" Content="Auto open DevTools" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,233,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledAutoOpenDevTools}"/>
-                    <CheckBox x:Name="AppOverrideArgumentsLogging" Content="Logging" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,255,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledLogging}"/>
+                    <Label Content="Arguments" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="354,251,0,0" Width="109" />
+                    <TextBox ToolTip="Additional arguments to include on the command line for msedgewebview2.exe." x:Name="AppOverrideBrowserArgumentsTextBox" Text="{Binding Path=/BrowserArguments, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,251,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <Button x:Name="AppOverrideBrowserArgumentsButton" Content="?" HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,254,21,0" Click="AppOverrideBrowserArgumentsButton_Click"/>
+                    <CheckBox x:Name="AppOverrideArgumentsAutoOpenDevTools" Content="Auto open DevTools" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,293,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledAutoOpenDevTools}"/>
+                    <CheckBox x:Name="AppOverrideArgumentsLogging" Content="Logging" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="354,320,0,0" IsChecked="{Binding /IsCommonBrowserArgumentEnabledLogging}"/>
 
-                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,298,0,0" Width="126"/>
-                    <TextBox ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,298,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
-                    <Button x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,301,21,0" Click="AppOverrideUserDataPathButton_Click"/>
+                    <Label Content="User data path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,358,0,0" Width="126"/>
+                    <TextBox ToolTip="The full path of the user data folder. The selected folder should contain an EBWebView subfolder." x:Name="AppOverrideUserDataPathTextBox" Text="{Binding Path=/UserDataPath, UpdateSourceTrigger=PropertyChanged}" Height="26" TextWrapping="Wrap" VerticalAlignment="Top" Margin="468,358,68,0" ScrollViewer.CanContentScroll="True" MaxLines="1" VerticalContentAlignment="Center"/>
+                    <Button x:Name="AppOverrideUserDataPathButton" Content="..." HorizontalAlignment="Right" VerticalAlignment="Top" Width="36" Margin="0,361,21,0" Click="AppOverrideUserDataPathButton_Click"/>
 
-                    <Label Content="{Binding Path=/StorageKindDescription,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,329,0,0" Width="747"/>
+                    <Label Content="{Binding Path=/StorageKindDescription,UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="337,389,0,0" Width="747"/>
 
                     <Button x:Name="EnvVarButton" Content="Edit Env Var" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,120,5" Click="EnvVarButton_Click"/>
                     <Button x:Name="RegEditButton" Content="Launch RegEdit" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Margin="0,0,10,5" Click="RegEditButton_Click"/>
