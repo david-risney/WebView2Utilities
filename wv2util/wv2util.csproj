@@ -113,6 +113,7 @@
     <Compile Include="CreateReportWindow.xaml.cs">
       <DependentUpon>CreateReportWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ExperimentalFeature.cs" />
     <Compile Include="HostAppList.cs" />
     <Compile Include="HwndUtil.cs" />
     <Compile Include="ProcessUtil.cs" />

@@ -1,7 +1,5 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -11,11 +9,9 @@ using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using System.Windows.Threading;
-using CheckBox = System.Windows.Controls.CheckBox;
 using Clipboard = System.Windows.Clipboard;
 using ElapsedEventArgs = System.Timers.ElapsedEventArgs;
 using FolderBrowserDialog = System.Windows.Forms.FolderBrowserDialog;
-using SaveFileDialog = System.Windows.Forms.SaveFileDialog;
 using Timer = System.Timers.Timer;
 
 namespace wv2util
@@ -75,7 +71,7 @@ namespace wv2util
         protected RuntimeList RuntimeListData => AppState.GetRuntimeList();
         protected HostAppList HostAppsListData => AppState.GetHostAppList();
 
-        private void Reload_Click(object sender, RoutedEventArgs e)
+        private void OverridesReload_Click(object sender, RoutedEventArgs e)
         {
             AppOverrideListData.FromSystem();
         }
