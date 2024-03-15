@@ -439,6 +439,16 @@
             <LineBreak/>
             <LineBreak/>
           </TextBlock>
+          <LineBreak/>
+          <TextBlock FontSize="16" Margin="0,10,0,10">Latest WebView2 News</TextBlock>
+          <LineBreak/>
+          <InlineUIContainer>
+          <StackPanel Margin="10,0,0,0" x:Name="NewsPanel" />
+          </InlineUIContainer>
+          <LineBreak/>
+          <Hyperlink NavigateUri="https://github.com/MicrosoftEdge/WebView2Announcements/issues" RequestNavigate="Hyperlink_RequestNavigate">
+              More news ...
+          </Hyperlink>
         </TextBlock>
       </TabItem>
         </TabControl>
