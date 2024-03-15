@@ -363,7 +363,7 @@
             <TabItem DataContext="{Binding Source={StaticResource ExperimentalFeatureList}}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Experimental "/>
+                        <TextBlock Text="Experiments "/>
                     </StackPanel>
                 </TabItem.Header>
                 <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
