@@ -9,11 +9,11 @@
         Title="WebView2Utilities"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
-        <ObjectDataProvider x:Key="AppOverrideList" ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
+        <ObjectDataProvider x:Key="AppOverrideList"         ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
         <ObjectDataProvider x:Key="ExperimentalFeatureList" ObjectType="{x:Type local:AppState}" MethodName="GetExperimentalFeatureList"/>
-        <ObjectDataProvider x:Key="RuntimeList" ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
-        <ObjectDataProvider x:Key="HostAppList" ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
-        <ObjectDataProvider x:Key="HostAppTree" ObjectType="{x:Type local:AppState}" MethodName="GetHostAppTree"/>
+        <ObjectDataProvider x:Key="RuntimeList"             ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
+        <ObjectDataProvider x:Key="HostAppList"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
+        <ObjectDataProvider x:Key="HostAppTree"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppTree"/>
 
         <CollectionViewSource Source="{StaticResource AppOverrideList}" x:Key="AppOverrideSortedList">
             <CollectionViewSource.SortDescriptions>
