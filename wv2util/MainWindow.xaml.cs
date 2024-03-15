@@ -31,7 +31,7 @@ namespace wv2util
         {
             InitializeComponent();
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
-            GenerateNewsBlocks();
+            GenerateNewsBlocksAsync();
 
             m_watchForChangesTimer.Interval = 3000;
             m_watchForChangesTimer.Elapsed += WatchForChangesTimer_Elapsed;
@@ -356,25 +356,25 @@ namespace wv2util
             m_previousHostAppEntries = currentHostAppEntries;            
         }
 
-        private string newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
-        private async Task<string> GetNewsData()
+        private static string s_newsLink = "https://api.github.com/repos/MicrosoftEdge/WebView2Announcements/issues";
+        private async Task<string> GetNewsDataAsync()
         {
             var client = new HttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
             client.DefaultRequestHeaders.Add("User-Agent", ".NET Foundation Repository Reporter");
 
-            var response = client.GetAsync(newsLink).Result;
+            var response = await client.GetAsync(s_newsLink);
             if (response.IsSuccessStatusCode)
                 return await response.Content.ReadAsStringAsync();
             else
-                return $"{{ \"error\": \"{response.StatusCode}\" }}";
+                return await Task.FromResult($"{{ \"error\": \"{response.StatusCode}\" }}");
         }
 
-        private Dictionary<TextBlock, UIElement> newsBodyCollapsControllerMap = new Dictionary<TextBlock, UIElement>();
-        private void GenerateNewsBlocks()
+        private Dictionary<TextBlock, UIElement> m_newsBodyCollapsedControllerMap = new Dictionary<TextBlock, UIElement>();
+        private async void GenerateNewsBlocksAsync()
         {
-            string newsData = GetNewsData().GetAwaiter().GetResult();
+            string newsData = await GetNewsDataAsync();
             var newsJson = JsonSerializer.Deserialize<JsonElement>(newsData);
             int newsDisplayed = 3;
             int bodyFontSize = 12;
@@ -420,7 +420,7 @@ namespace wv2util
 
                     // Enable click to collapse function.
                     newsBlock.MouseDown += NewsBlock_Click;
-                    newsBodyCollapsControllerMap[newsBlock] = bodyGrid;
+                    m_newsBodyCollapsedControllerMap[newsBlock] = bodyGrid;
                     bodyGrid.Visibility = Visibility.Collapsed;
 
                     newsBlock.Inlines.Add(new LineBreak());
@@ -432,9 +432,9 @@ namespace wv2util
 
         private void NewsBlock_Click(object sender, MouseButtonEventArgs e)
         {
-            if (sender is TextBlock clickedTextBlock && newsBodyCollapsControllerMap.ContainsKey(clickedTextBlock))
+            if (sender is TextBlock clickedTextBlock && m_newsBodyCollapsedControllerMap.ContainsKey(clickedTextBlock))
             {
-                UIElement targetContainer = newsBodyCollapsControllerMap[clickedTextBlock];
+                UIElement targetContainer = m_newsBodyCollapsedControllerMap[clickedTextBlock];
                 targetContainer.Visibility = targetContainer.Visibility == Visibility.Visible
                     ? Visibility.Collapsed
                     : Visibility.Visible;
