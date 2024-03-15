@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using static wv2util.AppOverrideEntry;
 
 namespace wv2util
 {
@@ -44,6 +45,11 @@ namespace wv2util
     public class AppOverrideList : ObservableCollection<AppOverrideEntry>
     {
         public static bool IgnoreUpdatesToRegistry = true;
+        public static Channels allChannels =
+            Channels.Stable |
+            Channels.Beta |
+            Channels.Dev |
+            Channels.Canary;
 
         public AppOverrideList()
         {
@@ -225,27 +231,44 @@ namespace wv2util
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
-              AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
-              try
-              {
-                var value = regKey.GetValue(valueName);
-                int valueAsInt = (int)value;
-                entry.ReverseSearchOrder = 1 == valueAsInt;
-              }
-              catch (InvalidCastException)
-              {
-                Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
-              }
-              entriesToRemove.Remove(entry);
+                AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
+                try
+                {
+                    var value = regKey.GetValue(valueName);
+                    if (value is int)
+                    {
+                        entry.ReverseSearchOrder = ((int)value) == 1;
+                    }
+                    else if (value is string)
+                    {
+                        if (int.TryParse((string)value, out int valueAsInt))
+                        {
+                            entry.ReverseSearchOrder = valueAsInt == 1;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Ignoring unsupported registry value type: path=" + regKey + "." + valueName + ", type=" + value.GetType().FullName);
+                    }
+                }
+                catch (InvalidCastException)
+                {
+                    Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
+                }
+                entriesToRemove.Remove(entry);
             }
 
             regKey = RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, false);
             valueNames = regKey.GetValueNames();
             foreach (string valueName in valueNames)
             {
-              AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
-              entry.ReleaseChannels = (string)regKey.GetValue(valueName);
-              entriesToRemove.Remove(entry);
+                AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
+                entry.ReleaseChannels = ReleaseChannelsFromString((string)regKey.GetValue(valueName));
+                entriesToRemove.Remove(entry);
             }
 
             regKey = RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathAdditionalBrowserArguments, false);
@@ -296,6 +319,56 @@ namespace wv2util
                     collection.Move(idx, 0);
                 }
             }
+        }
+
+        private static Channels ReleaseChannelsFromString(string channelString)
+        {
+            Channels channels = 0;
+            var channelNumbers = channelString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var channelNumber in channelNumbers)
+            {
+                if (int.TryParse(channelNumber.Trim(), out int number))
+                {
+                    switch (number)
+                    {
+                        case 0:
+                            channels |= Channels.Stable;
+                            break;
+                        case 1:
+                            channels |= Channels.Beta;
+                            break;
+                        case 2:
+                            channels |= Channels.Dev;
+                            break;
+                        case 3:
+                            channels |= Channels.Canary;
+                            break;
+                    }
+                }
+            }
+            return channels;
+        }
+
+        private static string ReleaseChannelsToString(Channels channels)
+        {
+            List<string> channelStrings = new List<string>();
+            if ((channels & Channels.Stable) != 0)
+            {
+                channelStrings.Add("0");
+            }
+            if ((channels & Channels.Beta) != 0)
+            {
+                channelStrings.Add("1");
+            }
+            if ((channels & Channels.Dev) != 0)
+            {
+                channelStrings.Add("2");
+            }
+            if ((channels & Channels.Canary) != 0)
+            {
+                channelStrings.Add("3");
+            }
+            return string.Join(",", channelStrings);
         }
 
         public static ObservableCollection<AppOverrideEntry> CreateCollectionFromSystem()
@@ -350,7 +423,7 @@ namespace wv2util
                 entry.RuntimePath = browserExecutableFolder;
                 entry.BrowserArguments = additionalBrowserArguments;
                 entry.ReverseSearchOrder = reverseChannelSearch;
-                entry.ReleaseChannels = releaseChannels;
+                entry.ReleaseChannels = ReleaseChannelsFromString(releaseChannels);
 
                 // If found in the env vars then we either need to update the
                 // existing entry or add the entry to the collection.
@@ -454,7 +527,7 @@ namespace wv2util
             SetEnvironmentVariableIfChanged("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", StringEmptyToNull(entry.BrowserArguments), target);
             SetEnvironmentVariableIfChanged("WEBVIEW2_RELEASE_CHANNEL_PREFERENCE", entry.ReverseSearchOrder ? "1" : null, target);
             SetEnvironmentVariableIfChanged("WEBVIEW2_CHANNEL_SEARCH_KIND", entry.ReverseSearchOrder ? "1" : null, target);
-            SetEnvironmentVariableIfChanged("WEBVIEW2_RELEASE_CHANNELS", StringEmptyToNull(entry.ReleaseChannels), target);
+            SetEnvironmentVariableIfChanged("WEBVIEW2_RELEASE_CHANNELS", StringEmptyToNull(ReleaseChannelsToString(entry.ReleaseChannels)), target);
         }
 
         private static void SetEnvironmentVariableIfChanged(string name, string value, EnvironmentVariableTarget target)
@@ -495,13 +568,12 @@ namespace wv2util
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
                     }
-                    if (entry.ReverseSearchOrder)
-                    {
+                    if (entry.IsRuntimeEvergreenPreview && entry.ReverseSearchOrder) {
                         RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
                     }
                     else
                     {
-                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true), entry.HostApp);
+                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true), entry.HostApp);
                     }
                     if (entry.UserDataPath != null && entry.UserDataPath != "")
                     {
@@ -511,9 +583,9 @@ namespace wv2util
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathUserDataFolder, true), entry.HostApp);
                     }
-                    if (entry.ReleaseChannels != null && entry.ReleaseChannels != "")
+                    if (entry.IsRuntimeEvergreenPreview && entry.ReleaseChannels != Channels.None && entry.ReleaseChannels != allChannels)
                     {
-                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true)?.SetValue(entry.HostApp, entry.ReleaseChannels, RegistryValueKind.String);
+                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true)?.SetValue(entry.HostApp, ReleaseChannelsToString(entry.ReleaseChannels), RegistryValueKind.String);
                     }
                     else
                     {
@@ -564,7 +636,7 @@ namespace wv2util
                 int precedence = (int)StorageKind * 2;
                 if (HostApp == "*")
                 {
-                    ++precedence;
+                  ++precedence;
                 }
                 return precedence.ToString("D4");
             }
@@ -572,16 +644,16 @@ namespace wv2util
         public event PropertyChangedEventHandler PropertyChanged;
         private bool m_InitializationComplete = false;
         public StorageKind StorageKind
-        { 
+        {
             get => m_StorageKind;
             set
             {
                 if (m_StorageKind != value)
                 {
-                    m_StorageKind = value;
-                    OnPropertyChanged("RegistryRoot");
-                    OnPropertyChanged("StorageKind");
-                    OnPropertyChanged("DisplayLabel");
+                  m_StorageKind = value;
+                  OnPropertyChanged("RegistryRoot");
+                  OnPropertyChanged("StorageKind");
+                  OnPropertyChanged("DisplayLabel");
                 }
             }
         }
@@ -593,35 +665,35 @@ namespace wv2util
                 string description = "Stored in ";
                 switch (StorageKind)
                 {
-                    case StorageKind.HKCU:
-                        description += "registry (HKCU)";
-                        break;
-                    case StorageKind.HKLM:
-                        description += "registry (HKLM)";
-                        break;
-                    case StorageKind.EVCU:
-                        description += "environment variables (User)";
-                        break;
-                    case StorageKind.EVLM:
-                        description += "environment variables (Machine)";
-                        break;
+                  case StorageKind.HKCU:
+                    description += "registry (HKCU)";
+                    break;
+                  case StorageKind.HKLM:
+                    description += "registry (HKLM)";
+                    break;
+                  case StorageKind.EVCU:
+                    description += "environment variables (User)";
+                    break;
+                  case StorageKind.EVLM:
+                    description += "environment variables (Machine)";
+                    break;
                 }
                 return description;
             }
         }
-        
+
         public RegistryKey RegistryRoot
         {
             get
             {
                 switch (StorageKind)
                 {
-                    case StorageKind.HKCU:
-                        return Registry.CurrentUser;
-                    case StorageKind.HKLM:
-                        return Registry.LocalMachine;
-                    default:
-                        return null;
+                  case StorageKind.HKCU:
+                    return Registry.CurrentUser;
+                  case StorageKind.HKLM:
+                    return Registry.LocalMachine;
+                  default:
+                    return null;
                 }
             }
         }
@@ -655,12 +727,30 @@ namespace wv2util
             {
                 if (m_ReverseSearchOrder != value)
                 {
-                    m_ReverseSearchOrder = value;
-                    OnPropertyChanged("ReverseSearchOrder");
+                  m_ReverseSearchOrder = value;
+                  OnPropertyChanged("ReverseSearchOrder");
+                }
+                else
+                {
+
                 }
             }
         }
-        private bool m_ReverseSearchOrder = false;
+        private bool m_ReverseSearchOrder = true;
+
+        public bool IsEvergreenPreview
+        {
+            get => m_IsEvergreenPreview;
+            set
+            {
+                if (m_IsEvergreenPreview != value)
+                {
+                  m_IsEvergreenPreview = value;
+                  OnPropertyChanged("IsEvergreenPreview");
+                }
+            }
+        }
+        private bool m_IsEvergreenPreview = false;
 
         public string DisplayLabel
         {
@@ -670,19 +760,19 @@ namespace wv2util
                 switch (StorageKind)
                 {
                     case StorageKind.HKCU:
-                        storageKindSuffix = "";
-                        break;
+                      storageKindSuffix = "";
+                      break;
                     case StorageKind.HKLM:
-                        storageKindSuffix = " (HKLM)";
-                        break;
+                      storageKindSuffix = " (HKLM)";
+                      break;
                     case StorageKind.EVCU:
-                        storageKindSuffix = " (EVCU)";
-                        break;
+                      storageKindSuffix = " (EVCU)";
+                      break;
                     case StorageKind.EVLM:
-                        storageKindSuffix = " (EVLM)";
-                        break;
+                      storageKindSuffix = " (EVLM)";
+                      break;
                     default:
-                        throw new Exception("Unknown StorageKind");
+                      throw new Exception("Unknown StorageKind");
                 }
                 string nameSuffix = "";
                 if (HostApp == "*")
@@ -753,19 +843,34 @@ namespace wv2util
         }
         private string m_BrowserArguments = "";
 
-        public string ReleaseChannels
+        public Channels ReleaseChannels
         {
             get => m_ReleaseChannels;
             set
             {
                 if (m_ReleaseChannels != value)
                 {
-                    m_ReleaseChannels = NullToEmpty(value);
+                    m_ReleaseChannels = value;
                     OnPropertyChanged("m_ReleaseChannels");
                 }
             }
         }
-        private string m_ReleaseChannels = "";
+
+        [Flags]
+        public enum Channels
+        {
+            None = 0,
+            Stable = 1,
+            Beta = 2,
+            Dev = 4,
+            Canary = 8
+        }
+        private const Channels allChannels =
+            Channels.Stable |
+            Channels.Beta |
+            Channels.Dev |
+            Channels.Canary;
+        private Channels m_ReleaseChannels = allChannels;
 
         public bool IsCommonBrowserArgumentEnabledLogging
         {
@@ -817,12 +922,12 @@ namespace wv2util
 
         public bool IsRuntimeEvergreen
         {
-            get => !ReverseSearchOrder && RuntimePath == "";
+            get => !IsEvergreenPreview && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    ReverseSearchOrder = false;
+                    IsEvergreenPreview = false;
                     RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreen");
@@ -831,31 +936,47 @@ namespace wv2util
 
         public bool IsRuntimeEvergreenPreview
         {
-            get => ReverseSearchOrder && RuntimePath == "";
+            get => IsEvergreenPreview && RuntimePath == "";
             set
             {
                 if (value)
                 {
-                    ReverseSearchOrder = true;
+                    IsEvergreenPreview = true;
                     RuntimePath = null;
                 }
                 OnPropertyChanged("IsRuntimeEvergreenPreview");
             }
         }
 
-        public bool IsRuntimeStable
+        public bool IsReverseSearchOrder
         {
-            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("0");
+            get => ReverseSearchOrder;
             set
             {
                 if (value)
                 {
-                  ReverseSearchOrder = true;
-                  if (!ReleaseChannels.Contains("0"))
-                  {
-                    ReleaseChannels += ",0";
-                  }
-                  RuntimePath = null;
+                    ReverseSearchOrder = value;
+                }
+                else
+                {
+                  ReverseSearchOrder = false;
+                }
+                OnPropertyChanged("IsReverseSearchOrder");
+            }
+        }
+
+        public bool IsRuntimeStable
+        {
+            get => (ReleaseChannels & Channels.Stable) != 0;
+            set
+            {
+                if (value)
+                {
+                    ReleaseChannels |= Channels.Stable;
+                }
+                else
+                {
+                    ReleaseChannels &= ~Channels.Stable;
                 }
                 OnPropertyChanged("IsRuntimeStable");
             }
@@ -863,17 +984,16 @@ namespace wv2util
 
         public bool IsRuntimeBeta
         {
-            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("1");
+            get => (ReleaseChannels & Channels.Beta) != 0;
             set
             {
                 if (value)
                 {
-                    ReverseSearchOrder = true;
-                    if (!ReleaseChannels.Contains("1"))
-                    {
-                      ReleaseChannels += ",1";
-                    }
-                    RuntimePath = null;
+                    ReleaseChannels |= Channels.Beta;
+                }
+                else
+                {
+                    ReleaseChannels &= ~Channels.Beta;
                 }
                 OnPropertyChanged("IsRuntimeBeta");
             }
@@ -881,17 +1001,16 @@ namespace wv2util
 
         public bool IsRuntimeDev
         {
-            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("2");
+            get => (ReleaseChannels & Channels.Dev) != 0;
             set
             {
                 if (value)
                 {
-                  ReverseSearchOrder = true;
-                  if (!ReleaseChannels.Contains("2"))
-                  {
-                    ReleaseChannels += ",2";
-                  }
-                  RuntimePath = null;
+                    ReleaseChannels |= Channels.Dev;
+                }
+                else
+                {
+                    ReleaseChannels &= ~Channels.Dev;
                 }
                 OnPropertyChanged("IsRuntimeDev");
             }
@@ -899,17 +1018,16 @@ namespace wv2util
 
         public bool IsRuntimeCanary
         {
-            get => ReverseSearchOrder && RuntimePath == "" && ReleaseChannels.Contains("3");
+            get => (ReleaseChannels & Channels.Canary) != 0;
             set
             {
                 if (value)
                 {
-                  ReverseSearchOrder = true;
-                  if (!ReleaseChannels.Contains("3"))
-                  {
-                    ReleaseChannels += ",3";
-                  }
-                  RuntimePath = null;
+                    ReleaseChannels |= Channels.Canary;
+                }
+                else
+                {
+                    ReleaseChannels &= ~Channels.Canary;
                 }
                 OnPropertyChanged("IsRuntimeCanary");
             }
@@ -917,13 +1035,13 @@ namespace wv2util
 
         public bool IsRuntimeFixedVersion
         {
-            get => !ReverseSearchOrder && RuntimePath != "";
+            get => RuntimePath != "";
             set
             {
                 if (value)
                 {
-                    ReverseSearchOrder = false;
                     RuntimePath = ".";
+                    IsEvergreenPreview = false;
                 }
                 OnPropertyChanged("IsRuntimeFixedVersion");
             }
