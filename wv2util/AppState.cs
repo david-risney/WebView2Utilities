@@ -7,9 +7,6 @@ namespace wv2util
         private static AppOverrideList s_AppOverrideList = new AppOverrideList();
         public static AppOverrideList GetAppOverrideList() => s_AppOverrideList;
 
-        private static ExperimentalFeatureList s_ExperimentalFeatureList = new ExperimentalFeatureList();
-        public static ExperimentalFeatureList GetExperimentalFeatureList() => s_ExperimentalFeatureList;
-
         private static RuntimeList s_RuntimeList = new RuntimeList();
         public static RuntimeList GetRuntimeList() => s_RuntimeList;
 
@@ -20,5 +17,8 @@ namespace wv2util
                         GetHostAppList(),
                         i => new HostAppEntryTreeItem(GetHostAppList(), i));
         public static ObservableCollection<ITreeItem> GetHostAppTree() => s_hostAppTreeItems;
+
+        private static ExperimentalFeatureList s_ExperimentalFeatureList = new ExperimentalFeatureList();
+        public static ExperimentalFeatureList GetExperimentalFeatureList() => s_ExperimentalFeatureList;
     }
 }

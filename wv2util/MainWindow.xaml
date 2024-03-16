@@ -326,7 +326,7 @@
                         <Grid>
                             <RadioButton Name="RuntimeScenarioEvergreen" IsChecked="{Binding Path=/IsRuntimeEvergreen, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen (Stable)" ToolTip="Use the installed WebView2 Runtime or if not available the first of Beta, Dev, or Canary Edge browser install." GroupName="RuntimeScenario" Margin="10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                             <RadioButton Name="RuntimeScenarioEvergreenPreview" IsChecked="{Binding Path=/IsRuntimeEvergreenPreview, UpdateSourceTrigger=PropertyChanged}" Content="Evergreen with preview build" ToolTip="Use the first of Canary, Dev, or Beta Edge browser install or if none of those then the WebView2 Runtime." GroupName="RuntimeScenario" Margin="10,26,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
-                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioReverseSearchOrder" IsChecked="{Binding Path=/IsReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse search order" ToolTip="Reverse the channels search order to prefer least stable build." Margin="55,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
+                            <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioReverseSearchOrder" IsChecked="{Binding Path=/ReverseSearchOrder, UpdateSourceTrigger=PropertyChanged}" Content="Reverse search order" ToolTip="Reverse the channels search order to prefer least stable build." Margin="55,52,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                             <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewCanary" IsChecked="{Binding Path=/IsRuntimeCanary, UpdateSourceTrigger=PropertyChanged}" Content="Canary" ToolTip="Use Canary Edge browser install or the WebView2 Runtime if Dev is not available." Margin="55,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                             <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewDev" IsChecked="{Binding Path=/IsRuntimeDev, UpdateSourceTrigger=PropertyChanged}" Content="Dev" ToolTip="Use Dev Edge browser install or the WebView2 Runtime if Dev is not available." Margin="140,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
                             <CheckBox IsEnabled="{Binding Path=/IsRuntimeEvergreenPreview}" Name="RuntimeScenarioEvergreenPreviewBeta" IsChecked="{Binding Path=/IsRuntimeBeta, UpdateSourceTrigger=PropertyChanged}" Content="Beta" ToolTip="Use Beta Edge browser install or the WebView2 Runtime if Dev is not available." Margin="210,78,-10,0" VerticalAlignment="Top" Height="26" VerticalContentAlignment="Center"/>
@@ -370,7 +370,7 @@
                     <ListView x:Name="ExperimentalFeatureList" ItemsSource="{Binding}" Grid.Row="0" Grid.ColumnSpan="2">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding Name}">
+                                <GridViewColumn DisplayMemberBinding="{Binding Path=Name}">
                                     <GridViewColumnHeader>Name</GridViewColumnHeader>
                                 </GridViewColumn>
                                 <GridViewColumn>
@@ -378,7 +378,7 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Grid Width="{Binding ElementName=CheckBoxColumn, Path=Width}">
-                                                <CheckBox HorizontalAlignment="Center" IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                                <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Path=IsEnabled}" />
                                             </Grid>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>

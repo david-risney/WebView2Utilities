@@ -935,23 +935,6 @@ namespace wv2util
             }
         }
 
-        public bool IsReverseSearchOrder
-        {
-            get => ReverseSearchOrder;
-            set
-            {
-                if (value)
-                {
-                    ReverseSearchOrder = value;
-                }
-                else
-                {
-                  ReverseSearchOrder = false;
-                }
-                OnPropertyChanged("IsReverseSearchOrder");
-            }
-        }
-
         public bool IsRuntimeStable
         {
             get => (ReleaseChannels & Channels.Stable) != 0;
