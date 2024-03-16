@@ -377,7 +377,7 @@
                                     <GridViewColumnHeader>Enabled</GridViewColumnHeader>
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Grid Width="{Binding ElementName=CheckBoxColumn, Path=Width}">
+                                            <Grid>
                                                 <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Path=IsEnabled}" />
                                             </Grid>
                                         </DataTemplate>
