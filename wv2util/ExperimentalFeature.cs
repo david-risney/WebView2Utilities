@@ -128,8 +128,8 @@ namespace wv2util
                 "COREWEBVIEW2_HOSTING_MODE_WINDOW_TO_VISUAL",
                 null)
             {
-                Name = "Windows to visual hosting",
-                Description = "Host apps use visual hosting instead of regular window hosting."
+                Name = "Window-to-Visual hosting",
+                Description = "Host apps use window-to-visual hosting instead of regular window hosting."
             });
 
             // To add more experimental features to the runtimes either:

@@ -230,6 +230,8 @@
 
                             <Label   Grid.Row="4" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
                             <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                            <Label   Grid.Row="5" Grid.Column="0" Content="Visual Hosting"/>
+                            <CheckBox Grid.Row="5" Grid.Column="1" IsChecked="{Binding Path=VisualHosting, Mode=OneWay}" IsEnabled="False"/>
                         </Grid>
                     </GroupBox>
                     <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>

@@ -61,6 +61,7 @@ namespace wv2util
             UserDataPath = userDataPath == null ? "Unknown" : userDataPath;
             InterestingLoadedDllPaths = interestingLoadedDllPaths;
             BrowserProcessPID = browserProcessPid;
+            VisualHosting = IsProcessInVisualHosting(pid);
         }
 
         public string DisplayLabel
@@ -89,6 +90,7 @@ namespace wv2util
         public string ExecutablePathDirectory => Path.GetDirectoryName(ExecutablePath);
         public int PID { get; private set; } = 0;
         public int ParentPID { get; private set; } = 0;
+        public bool VisualHosting { get; private set; }
         public string PIDAndStatus => 
             "" + PID + 
             (this.Status != HostAppStatus.Running ? " " + this.StatusDescription : "");
@@ -123,6 +125,14 @@ namespace wv2util
         };
         public HostAppStatus Status { get; set; } = HostAppStatus.Running;
         public string StatusDescription => this.Status == HostAppStatus.Running ? "Running" : "Terminated";
+
+        public static bool IsProcessInVisualHosting(int pid)
+        {
+            string value;
+            if (!Process.GetProcessById(pid).StartInfo.Environment.TryGetValue("COREWEBVIEW2_FORCED_HOSTING_MODE", out value))
+                return false;
+            return value == "COREWEBVIEW2_HOSTING_MODE_WINDOW_TO_VISUAL";
+        }
 
         public int CompareTo(HostAppEntry other)
         {
