@@ -175,5 +175,23 @@ namespace wv2util
             }
             return className;
         }
+
+        public static System.Windows.Rect ToSystemWindowsRect(this PInvoke.RECT rectAsPInvokeRect)
+        {
+            System.Windows.Rect rectAsSystemWindowsRect = new System.Windows.Rect();
+            rectAsSystemWindowsRect.X = rectAsPInvokeRect.left;
+            rectAsSystemWindowsRect.Y = rectAsPInvokeRect.top;
+            rectAsSystemWindowsRect.Width = rectAsPInvokeRect.right - rectAsPInvokeRect.left;
+            rectAsSystemWindowsRect.Height = rectAsPInvokeRect.bottom - rectAsPInvokeRect.top;
+            return rectAsSystemWindowsRect;
+        }
+         public static System.Windows.Rect GetWindowRect(IntPtr hwnd)
+        {
+            if (!PInvoke.User32.GetWindowRect(hwnd, out var rect))
+            {
+                throw new PInvoke.Win32Exception(PInvoke.Kernel32.GetLastError());
+            }
+            return rect.ToSystemWindowsRect();
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace wv2util.Tests
         ReportCreator CreateReportCreatorForTest()
         {
             return new ReportCreator(
-                new HostAppEntry("host", "example.exe", 1, 0, "C:\\windows\\system32\\actxprxy.dll", "C:\\windows\\system32", "C:\\windows\\system32", new string[] { }, 2),
+                new HostAppEntry("host", "example.exe", 1, 0, "C:\\windows\\system32\\actxprxy.dll", "C:\\windows\\system32", "C:\\windows\\system32", new string[] { }, 2, null),
                 new List<AppOverrideEntry>(),
                 new List<RuntimeEntry>());
         }
