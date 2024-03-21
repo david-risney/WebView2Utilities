@@ -187,9 +187,25 @@ namespace wv2util
                 try
                 {
                     var value = regKey.GetValue(valueName);
-                    int valueAsInt = (int)value;
-                    entry.ReverseSearchOrder = 1 == valueAsInt;
-                    entry.IsEvergreenPreview = true;
+                    if (value is int)
+                    {
+                        entry.ReverseSearchOrder = ((int)value) == 1;
+                    }
+                    else if (value is string)
+                    {
+                        if (int.TryParse((string)value, out int valueAsInt))
+                        {
+                            entry.ReverseSearchOrder = valueAsInt == 1;
+                        }
+                        else
+                        {
+                            Debug.WriteLine("Ignoring malformed registry entries that don't use an int: path=" + regKey + "." + valueName);
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Ignoring unsupported registry value type: path=" + regKey + "." + valueName + ", type=" + value.GetType().FullName);
+                    }
                 }
                 catch (InvalidCastException)
                 {
@@ -206,17 +222,16 @@ namespace wv2util
                 try
                 {
                     var value = regKey.GetValue(valueName);
+
                     if (value is int)
                     {
                         entry.ReverseSearchOrder = ((int)value) == 1;
-                        entry.IsEvergreenPreview = true;
                     }
                     else if (value is string)
                     {
                         if (int.TryParse((string)value, out int valueAsInt))
                         {
                             entry.ReverseSearchOrder = valueAsInt == 1;
-                            entry.IsEvergreenPreview = true;
                         }
                         else
                         {
@@ -241,7 +256,6 @@ namespace wv2util
             {
                 AppOverrideEntry entry = GetOrCreateEntry(appNameToEntry, collection, valueName, storageKind);
                 entry.ReleaseChannels = ReleaseChannelsFromString((string)regKey.GetValue(valueName));
-                entry.IsEvergreenPreview = true;
                 entriesToRemove.Remove(entry);
             }
 
@@ -300,6 +314,7 @@ namespace wv2util
             Channels channels = allChannels;
             if (!String.IsNullOrEmpty(channelString))
             {
+                channels = Channels.None;
                 var channelNumbers = channelString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var channelNumber in channelNumbers)
                 {
@@ -382,9 +397,9 @@ namespace wv2util
             string userDataFolder = (string)envVars["WEBVIEW2_USER_DATA_FOLDER"];
             string additionalBrowserArguments = (string)envVars["WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"];
             string releaseChannelPreferenceAsString = (string)envVars["WEBVIEW2_RELEASE_CHANNEL_PREFERENCE"];
-            string channelSearchKind = (string)envVars["WEBVIEW2_CHANNEL_SEARCH_KIND"];
-            string releaseChannels = (string)envVars["WEBVIEW2_RELEASE_CHANNELS"];
-            bool reverseChannelSearch = (releaseChannelPreferenceAsString == "1") || (channelSearchKind == "1");
+            string channelSearchKindAsString = (string)envVars["WEBVIEW2_CHANNEL_SEARCH_KIND"];
+            string releaseChannelsAsString = (string)envVars["WEBVIEW2_RELEASE_CHANNELS"];
+            bool reverseChannelSearch = (releaseChannelPreferenceAsString == "1") || (channelSearchKindAsString == "1");
 
             bool foundInCollection = true;
             AppOverrideEntry entry = collection.FirstOrDefault(existingEntry => existingEntry.StorageKind == storageKind);
@@ -394,19 +409,12 @@ namespace wv2util
                 foundInCollection = false;
             }
 
-            if (!String.IsNullOrEmpty(channelSearchKind) ||
-                !String.IsNullOrEmpty(releaseChannels) ||
-                !String.IsNullOrEmpty(releaseChannelPreferenceAsString))
-            {
-                entry.IsEvergreenPreview = true;
-            }
-
             if (!String.IsNullOrEmpty(browserExecutableFolder) ||
                 !String.IsNullOrEmpty(userDataFolder) ||
                 !String.IsNullOrEmpty(additionalBrowserArguments) ||
                 !String.IsNullOrEmpty(releaseChannelPreferenceAsString) ||
-                !String.IsNullOrEmpty(channelSearchKind) ||
-                !String.IsNullOrEmpty(releaseChannels))
+                !String.IsNullOrEmpty(channelSearchKindAsString) ||
+                !String.IsNullOrEmpty(releaseChannelsAsString))
             {
                 entry.HostApp = "*";
                 entry.StorageKind = storageKind;
@@ -414,7 +422,7 @@ namespace wv2util
                 entry.RuntimePath = browserExecutableFolder;
                 entry.BrowserArguments = additionalBrowserArguments;
                 entry.ReverseSearchOrder = reverseChannelSearch;
-                entry.ReleaseChannels = ReleaseChannelsFromString(releaseChannels);
+                entry.ReleaseChannels = ReleaseChannelsFromString(releaseChannelsAsString);
 
                 // If found in the env vars then we either need to update the
                 // existing entry or add the entry to the collection.
@@ -551,7 +559,7 @@ namespace wv2util
                         entry.BrowserArguments != null ? entry.BrowserArguments : "",
                         RegistryValueKind.String);
 
-                    if (entry.RuntimePath != null && entry.RuntimePath != "")
+                    if (!String.IsNullOrEmpty(entry.RuntimePath))
                     {
                         RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathBrowserExecutableFolder, true)?.SetValue(entry.HostApp, entry.RuntimePath, RegistryValueKind.String);
                     }
@@ -559,14 +567,19 @@ namespace wv2util
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathBrowserExecutableFolder, true), entry.HostApp);
                     }
-                    if (entry.IsRuntimeEvergreenPreview && entry.ReverseSearchOrder) {
+                    
+                    if (entry.ReverseSearchOrder)
+                    {
                         RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
+                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true)?.SetValue(entry.HostApp, entry.ReverseSearchOrder ? 1 : 0, RegistryValueKind.DWord);
                     }
                     else
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathChannelSearchKind, true), entry.HostApp);
+                        RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannelPreference, true), entry.HostApp);
                     }
-                    if (entry.UserDataPath != null && entry.UserDataPath != "")
+                    
+                    if (!String.IsNullOrEmpty(entry.UserDataPath))
                     {
                         RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathUserDataFolder, true)?.SetValue(entry.HostApp, entry.UserDataPath, RegistryValueKind.String);
                     }
@@ -574,9 +587,11 @@ namespace wv2util
                     {
                         RegistryUtil.DeleteValueIfItExists(RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathUserDataFolder, true), entry.HostApp);
                     }
-                    if (entry.IsRuntimeEvergreenPreview && entry.ReleaseChannels != Channels.None && entry.ReleaseChannels != allChannels)
+
+                    string releaseChannelsAsString = ReleaseChannelsToString(entry.ReleaseChannels);
+                    if (!String.IsNullOrEmpty(releaseChannelsAsString))
                     {
-                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true)?.SetValue(entry.HostApp, ReleaseChannelsToString(entry.ReleaseChannels), RegistryValueKind.String);
+                        RegistryUtil.OpenRegistryPath(registryRoot, s_registryPathReleaseChannels, true)?.SetValue(entry.HostApp, releaseChannelsAsString, RegistryValueKind.String);
                     }
                     else
                     {
@@ -639,7 +654,7 @@ namespace wv2util
             get => m_StorageKind;
             set
             {
-                if (m_StorageKind != value)
+                if (StorageKind != value)
                 {
                     m_StorageKind = value;
                     OnPropertyChanged("RegistryRoot");
@@ -716,28 +731,16 @@ namespace wv2util
             get => m_ReverseSearchOrder;
             set
             {
-                if (m_ReverseSearchOrder != value)
+                if (ReverseSearchOrder != value)
                 {
                     m_ReverseSearchOrder = value;
                     OnPropertyChanged("ReverseSearchOrder");
+                    OnPropertyChanged("IsRuntimeEvergreen");
+                    OnPropertyChanged("IsRuntimeEvergreenPreview");
                 }
             }
         }
-        private bool m_ReverseSearchOrder = true;
-
-        public bool IsEvergreenPreview
-        {
-            get => m_IsEvergreenPreview;
-            set
-            {
-                if (m_IsEvergreenPreview != value)
-                {
-                  m_IsEvergreenPreview = value;
-                  OnPropertyChanged("IsEvergreenPreview");
-                }
-            }
-        }
-        private bool m_IsEvergreenPreview = false;
+        private bool m_ReverseSearchOrder = false;
 
         public string DisplayLabel
         {
@@ -778,7 +781,7 @@ namespace wv2util
             get => m_HostApp;
             set
             {
-                if (m_HostApp != value)
+                if (HostApp != value)
                 {
                     m_HostApp = NullToEmpty(value);
                     OnPropertyChanged("HostApp");
@@ -793,10 +796,13 @@ namespace wv2util
             get => m_RuntimePath;
             set
             {
-                if (m_RuntimePath != value)
+                if (RuntimePath != value)
                 {
                     m_RuntimePath = NullToEmpty(value);
                     OnPropertyChanged("RuntimePath");
+                    OnPropertyChanged("IsRuntimeEvergreen");
+                    OnPropertyChanged("IsRuntimeEvergreenPreview");
+                    OnPropertyChanged("IsRuntimeFixedVersion");
                 }
             }
         }
@@ -807,7 +813,7 @@ namespace wv2util
             get => m_UserDataPath;
             set
             {
-                if (m_UserDataPath != value)
+                if (UserDataPath != value)
                 {
                     m_UserDataPath = NullToEmpty(value);
                     OnPropertyChanged("UserDataPath");
@@ -821,7 +827,7 @@ namespace wv2util
             get => m_BrowserArguments;
             set
             {
-                if (m_BrowserArguments != value)
+                if (BrowserArguments != value)
                 {
                     m_BrowserArguments = NullToEmpty(value);
                     OnPropertyChanged("BrowserArguments");
@@ -835,10 +841,18 @@ namespace wv2util
             get => m_ReleaseChannels;
             set
             {
-                if (m_ReleaseChannels != value)
+                if (ReleaseChannels != value)
                 {
                     m_ReleaseChannels = value;
-                    OnPropertyChanged("m_ReleaseChannels");
+                    OnPropertyChanged("ReleaseChannels");
+                    
+                    OnPropertyChanged("IsRuntimeDev");
+                    OnPropertyChanged("IsRuntimeStable");
+                    OnPropertyChanged("IsRuntimeBeta");
+                    OnPropertyChanged("IsRuntimeCanary");
+
+                    OnPropertyChanged("IsRuntimeEvergreen");
+                    OnPropertyChanged("IsRuntimeEvergreenPreview");
                 }
             }
         }
@@ -909,97 +923,37 @@ namespace wv2util
 
         public bool IsRuntimeEvergreen
         {
-            get => !IsEvergreenPreview && RuntimePath == "";
+            get => !(ReverseSearchOrder || ReleaseChannels != allChannels) && RuntimePath == "";
             set
             {
-                if (value)
+                if (IsRuntimeEvergreen != value)
                 {
-                    IsEvergreenPreview = false;
-                    RuntimePath = null;
+                    if (value)
+                    {
+                        ReverseSearchOrder = false;
+                        ReleaseChannels = allChannels;
+                        RuntimePath = null;
+                    }
+                    OnPropertyChanged("IsRuntimeEvergreen");
                 }
-                OnPropertyChanged("IsRuntimeEvergreen");
             }
         }
 
         public bool IsRuntimeEvergreenPreview
         {
-            get => IsEvergreenPreview && RuntimePath == "";
+            get => (ReverseSearchOrder || ReleaseChannels != allChannels) && RuntimePath == "";
             set
             {
-                if (value)
+                if (IsRuntimeEvergreenPreview != value)
                 {
-                    IsEvergreenPreview = true;
-                    RuntimePath = null;
-                }
-                OnPropertyChanged("IsRuntimeEvergreenPreview");
-            }
-        }
+                    if (value)
+                    {
+                        ReverseSearchOrder = true;
+                        RuntimePath = null;
+                    }
 
-        public bool IsRuntimeStable
-        {
-            get => (ReleaseChannels & Channels.Stable) != 0;
-            set
-            {
-                if (value)
-                {
-                    ReleaseChannels |= Channels.Stable;
+                    OnPropertyChanged("IsRuntimeEvergreenPreview");
                 }
-                else
-                {
-                    ReleaseChannels &= ~Channels.Stable;
-                }
-                OnPropertyChanged("IsRuntimeStable");
-            }
-        }
-
-        public bool IsRuntimeBeta
-        {
-            get => (ReleaseChannels & Channels.Beta) != 0;
-            set
-            {
-                if (value)
-                {
-                    ReleaseChannels |= Channels.Beta;
-                }
-                else
-                {
-                    ReleaseChannels &= ~Channels.Beta;
-                }
-                OnPropertyChanged("IsRuntimeBeta");
-            }
-        }
-
-        public bool IsRuntimeDev
-        {
-            get => (ReleaseChannels & Channels.Dev) != 0;
-            set
-            {
-                if (value)
-                {
-                    ReleaseChannels |= Channels.Dev;
-                }
-                else
-                {
-                    ReleaseChannels &= ~Channels.Dev;
-                }
-                OnPropertyChanged("IsRuntimeDev");
-            }
-        }
-
-        public bool IsRuntimeCanary
-        {
-            get => (ReleaseChannels & Channels.Canary) != 0;
-            set
-            {
-                if (value)
-                {
-                    ReleaseChannels |= Channels.Canary;
-                }
-                else
-                {
-                    ReleaseChannels &= ~Channels.Canary;
-                }
-                OnPropertyChanged("IsRuntimeCanary");
             }
         }
 
@@ -1008,12 +962,96 @@ namespace wv2util
             get => RuntimePath != "";
             set
             {
-                if (value)
+                if (value != IsRuntimeFixedVersion)
                 {
-                    RuntimePath = ".";
-                    IsEvergreenPreview = false;
+                    if (value)
+                    {
+                        ReverseSearchOrder = false;
+                        ReleaseChannels = allChannels;
+                        RuntimePath = ".";
+                    }
+                    OnPropertyChanged("IsRuntimeFixedVersion");
                 }
-                OnPropertyChanged("IsRuntimeFixedVersion");
+            }
+        }
+
+        public bool IsRuntimeStable
+        {
+            get => (ReleaseChannels & Channels.Stable) != 0;
+            set
+            {
+                if (IsRuntimeStable != value)
+                {
+                    if (value)
+                    {
+                        ReleaseChannels |= Channels.Stable;
+                    }
+                    else
+                    {
+                        ReleaseChannels &= ~Channels.Stable;
+                    }
+                    OnPropertyChanged("IsRuntimeStable");
+                }
+            }
+        }
+
+        public bool IsRuntimeBeta
+        {
+            get => (ReleaseChannels & Channels.Beta) != 0;
+            set
+            {
+                if (value != IsRuntimeBeta)
+                {
+                    if (value)
+                    {
+                        ReleaseChannels |= Channels.Beta;
+                    }
+                    else
+                    {
+                        ReleaseChannels &= ~Channels.Beta;
+                    }
+                    OnPropertyChanged("IsRuntimeBeta");
+                }
+            }
+        }
+
+        public bool IsRuntimeDev
+        {
+            get => (ReleaseChannels & Channels.Dev) != 0;
+            set
+            {
+                if (value != IsRuntimeDev)
+                {
+                    if (value)
+                    {
+                        ReleaseChannels |= Channels.Dev;
+                    }
+                    else
+                    {
+                        ReleaseChannels &= ~Channels.Dev;
+                    }
+                    OnPropertyChanged("IsRuntimeDev");
+                }
+            }
+        }
+
+        public bool IsRuntimeCanary
+        {
+            get => (ReleaseChannels & Channels.Canary) != 0;
+            set
+            {
+                if (value != IsRuntimeCanary)
+                {
+                    if (value)
+                    {
+                        ReleaseChannels |= Channels.Canary;
+                    }
+                    else
+                    {
+                        ReleaseChannels &= ~Channels.Canary;
+                    }
+                    OnPropertyChanged("IsRuntimeCanary");
+                }
             }
         }
 
