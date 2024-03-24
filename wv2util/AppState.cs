@@ -15,7 +15,7 @@ namespace wv2util
 
         private static ObservableCollection<ITreeItem> s_hostAppTreeItems = new ObservableCollectionProjection<HostAppEntry, ITreeItem>(
                         GetHostAppList(),
-                        i => new HostAppEntryTreeItem(GetHostAppList(), i));
+                        i => new HostAppEntryTreeItem(null, GetHostAppList(), i));
         public static ObservableCollection<ITreeItem> GetHostAppTree() => s_hostAppTreeItems;
 
         private static ExperimentalFeatureList s_ExperimentalFeatureList = new ExperimentalFeatureList();

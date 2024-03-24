@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 
 namespace wv2util
 {
@@ -16,6 +17,16 @@ namespace wv2util
             public string GetKeyValue(string key)
             {
                 return GetKeyValue(m_parts, key);
+            }
+
+            public void RemovePrefixedCommand(string prefix)
+            {
+                m_parts = m_parts.Where(p => !p.StartsWith(prefix)).ToList();
+            }
+
+            public void RemoveAt(int idx)
+            {
+                m_parts.RemoveAt(idx);
             }
 
             public string[] Parts => m_parts.ToArray();

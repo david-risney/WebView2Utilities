@@ -31,6 +31,7 @@ namespace wv2util
 
         bool IsSelected { get; set; }
         bool IsExpanded { get; set; }
+        ITreeItem Parent { get; }
     }
 
     public class TreeItemBase : ITreeItem
@@ -77,14 +78,18 @@ namespace wv2util
                 }
             }
         }
+
+        public virtual ITreeItem Parent => null;
     }
 
     public class HostAppEntryTreeItem : TreeItemBase
     {
+        private HostAppEntryTreeItem m_parent;
         private HostAppList m_hostAppList;
         private HostAppEntry m_hostAppEntry;
-        public HostAppEntryTreeItem(HostAppList hostAppList, HostAppEntry hostAppEntry)
+        public HostAppEntryTreeItem(HostAppEntryTreeItem parent, HostAppList hostAppList, HostAppEntry hostAppEntry)
         {
+            m_parent = parent;
             m_hostAppList = hostAppList;
             m_hostAppEntry = hostAppEntry;
 
@@ -168,11 +173,12 @@ namespace wv2util
             get
             {
                 return new ObservableCollection<ITreeItem>(
-                    m_hostAppEntry.Children.Select(processEntry => new HostAppEntryTreeItem(m_hostAppList, processEntry)));
+                    m_hostAppEntry.Children.Select(processEntry => new HostAppEntryTreeItem(this, m_hostAppList, processEntry)));
             }
         }
 
         public override Object Model => m_hostAppEntry;
+        public override ITreeItem Parent => m_parent;
 
     }
 }

@@ -29,6 +29,11 @@ namespace wv2util
     {
         public MainWindow()
         {
+            Environment.SetEnvironmentVariable(
+                "COREWEBVIEW2_FORCED_HOSTING_MODE",
+                "COREWEBVIEW2_HOSTING_MODE_WINDOW_TO_VISUAL");
+            PInvoke.User32.SetThreadDpiAwarenessContext((IntPtr)2);
+
             InitializeComponent();
             VersionInfo.Text = "v" + VersionUtil.GetWebView2UtilitiesVersion();
             GenerateNewsBlocksAsync();
@@ -425,6 +430,40 @@ namespace wv2util
                 targetContainer.Visibility = targetContainer.Visibility == Visibility.Visible
                     ? Visibility.Collapsed
                     : Visibility.Visible;
+            }
+        }
+
+        private void HostAppsConnect_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedTreeItem = (ITreeItem)HostAppTreeView.SelectedItem;
+            if (selectedTreeItem != null)
+            {
+                ITreeItem hostAppTreeItem = null;
+                ITreeItem runtimeTreeItem = null;
+                if (((HostAppEntry)selectedTreeItem.Model)?.Kind == "host")
+                {
+                    hostAppTreeItem = selectedTreeItem;
+                    runtimeTreeItem = selectedTreeItem.Children.FirstOrDefault();
+                }
+                else if (((HostAppEntry)selectedTreeItem.Model)?.Kind == "browser")
+                {
+                    runtimeTreeItem = selectedTreeItem;
+                    hostAppTreeItem = selectedTreeItem.Parent;
+                }
+                else
+                {
+                    runtimeTreeItem = selectedTreeItem.Parent;
+                    hostAppTreeItem = runtimeTreeItem?.Parent;
+                }
+
+                if (hostAppTreeItem != null && runtimeTreeItem != null && 
+                    hostAppTreeItem.Model is HostAppEntry && runtimeTreeItem.Model is HostAppEntry)
+                {
+                    var connectWindow = new ConnectWindow(
+                        (HostAppEntry)hostAppTreeItem.Model, 
+                        (HostAppEntry)runtimeTreeItem.Model);
+                    connectWindow.Show();
+                }
             }
         }
     }

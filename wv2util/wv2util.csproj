@@ -111,6 +111,9 @@
     <Compile Include="AppOverride.cs" />
     <Compile Include="AppState.cs" />
     <Compile Include="CommandLineUtil.cs" />
+    <Compile Include="ConnectWindow.xaml.cs">
+      <DependentUpon>ConnectWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CreateReportWindow.xaml.cs">
       <DependentUpon>CreateReportWindow.xaml</DependentUpon>
     </Compile>
@@ -130,6 +133,10 @@
     </Compile>
     <Compile Include="TreeItem.cs" />
     <Compile Include="VersionUtil.cs" />
+    <Page Include="ConnectWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CreateReportWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -196,6 +203,9 @@
   <ItemGroup>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.5.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.2365.46</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.2</Version>
