@@ -1,0 +1,203 @@
+﻿<Page x:Class="wv2util.HostAppsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:wv2util"
+      mc:Ignorable="d" 
+      d:DesignHeight="600" d:DesignWidth="800"
+      Title="HostAppsPage">
+    <Page.Resources>
+        <ObjectDataProvider x:Key="HostAppList"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
+        <ObjectDataProvider x:Key="HostAppTree"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppTree"/>
+
+        <local:HostAppEntryStatusToBrushConverter x:Key="HostAppEntryStatusToBrushConverter"/>
+        <local:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
+    </Page.Resources>
+
+    <Grid DataContext="{Binding Source={StaticResource HostAppTree}}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300px"/>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <CheckBox Grid.Row="0" Grid.Column="0" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Source={StaticResource HostAppList}, Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverSlowlyCheckbox_Checked"/>
+        <TreeView Grid.Row="1" Grid.Column="0" Grid.RowSpan="20" Margin="5 5 5 5" x:Name="HostAppTreeView" ItemsSource="{Binding .}" SelectedValuePath="Model">
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                </Style>
+            </TreeView.ItemContainerStyle>
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Path=Children}">
+                    <StackPanel Orientation="Horizontal"  VerticalAlignment="Center" Margin="2 2 2 2" >
+                        <Image x:Name="IconImage" Source="{Binding Path=IconAsBitmapSource}" VerticalAlignment="Center" Margin="2 2 2 2" Height="20" Width="20"/>
+                        <TextBlock x:Name="NameTextBlock" Text="{Binding Path=Name}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <HierarchicalDataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                            <Setter TargetName="NameTextBlock" Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrush}}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsSelected}" Value="False">
+                            <Setter TargetName="NameTextBlock" Property="Foreground" Value="{Binding Path=Model.Status,Converter={StaticResource HostAppEntryStatusToBrushConverter}}" />
+                        </DataTrigger>
+                    </HierarchicalDataTemplate.Triggers>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <GroupBox Grid.Row="1" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+            <GroupBox.Header>
+                <Label>Host app details</Label>
+            </GroupBox.Header>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Label   Grid.Row="0" Grid.Column="0" Content="Executable path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The full path of the host application executable." IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}">
+                                <Hyperlink NavigateUri="{Binding ElementName=HostAppTreeView,Path=SelectedValue.ExecutablePath, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <TextBlock Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.ExecutablePath, Mode=OneWay}"/>
+                                </Hyperlink>
+                            </TextBlock>
+
+                <Label   Grid.Row="1" Grid.Column="0" Content="PID" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.PIDAndStatus, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="2" Grid.Column="0" Content="Package full name" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The package identity of the host app process or blank if it has none." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.PackageFullName, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="3" Grid.Column="0" Content="IL" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The integrity level of the host app process." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.IntegrityLevel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="2" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+            <GroupBox.Header>
+                <Label>SDK details</Label>
+            </GroupBox.Header>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Label   Grid.Row="0" Grid.Column="0" Content="SDK DLL path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The path to the SDK DLL loaded in the host application." IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}">
+                                <Hyperlink x:Name="Hyperlink" NavigateUri="{Binding Path=/SdkInfo.PathDirectory, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <TextBlock Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.SdkInfo.Path, Mode=OneWay}"/>
+                                </Hyperlink>
+                            </TextBlock>
+
+                <Label   Grid.Row="1" Grid.Column="0" Content="SDK version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the SDK used by the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.SdkInfo.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="2" Grid.Column="0" Content="Probable API kind" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The kind of WebView2 API (.NET, WinRT, Win32) the host application is using." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.SdkInfo.ApiKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="3" Grid.Column="0" Content="Probable UI framework" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The UI framework used to display the WebView2 (WinForms, WPF, WinUI2, WinUI3)." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.SdkInfo.UIFrameworkKind, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="3" Grid.Column="1" Height="Auto" VerticalAlignment="Top" Margin="10 0 10 10">
+            <GroupBox.Header>
+                <Label>WebView2 Instance details</Label>
+            </GroupBox.Header>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+
+                <Label   Grid.Row="0" Grid.Column="0" Content="Runtime path" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The path of the WebView2 Runtime used by this WebView2 instance." IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}">
+                                <Hyperlink NavigateUri="{Binding ElementName=HostAppTreeView,Path=SelectedValue.Runtime.RuntimeLocation, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <TextBlock Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.Runtime.RuntimeLocation, Mode=OneWay}"/>
+                                </Hyperlink>
+                            </TextBlock>
+                <Label   Grid.Row="1" Grid.Column="0" Content="Runtime version" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The version of the WebView2 Runtime used by the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.Runtime.Version, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="2" Grid.Column="0" Content="Runtime channel" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The channel of the WebView2 Runtime used by the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.Runtime.Channel, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+
+                <Label   Grid.Row="3" Grid.Column="0" Content="User data folder" HorizontalAlignment="Left" VerticalAlignment="Top" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" ToolTip="The user data folder used by this WebView2 instance." IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}">
+                                <Hyperlink NavigateUri="{Binding ElementName=HostAppTreeView,Path=SelectedValue.UserDataPath, Mode=OneWay}" RequestNavigate="Hyperlink_RequestNavigate">
+                                    <TextBlock Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.UserDataPath, Mode=OneWay}"/>
+                                </Hyperlink>
+                            </TextBlock>
+
+                <Label   Grid.Row="4" Grid.Column="0" Content="Brower process PID" HorizontalAlignment="Left" VerticalAlignment="Top"  IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+                <TextBox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Stretch" IsReadOnly="true" ToolTip="The process ID of the browser process used by the host application." Text="{Binding ElementName=HostAppTreeView,Path=SelectedValue.BrowserProcessPID, Mode=OneWay}" MaxLines="1" VerticalContentAlignment="Center" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+            </Grid>
+        </GroupBox>
+        <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+        <Button Grid.Row="5" Grid.Column="1" x:Name="HostAppsCreateReport" Content="Create Report" Click="HostAppsCreateReport_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+    </Grid>
+</Page>

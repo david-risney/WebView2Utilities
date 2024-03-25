@@ -116,9 +116,20 @@
     </Compile>
     <Compile Include="ExperimentalFeature.cs" />
     <Compile Include="HostAppList.cs" />
+    <Compile Include="Pages\AppOverridesPage.xaml.cs">
+      <DependentUpon>AppOverridesPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\HostAppsPage.xaml.cs">
+      <DependentUpon>HostAppsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HwndUtil.cs" />
     <Compile Include="NullToBooleanConverter.cs" />
     <Compile Include="ObservableCollectionProjection.cs" />
+    <Compile Include="Pages\IReloadable.cs" />
+    <Compile Include="Pages\ReloadableHost.cs" />
+    <Compile Include="Pages\RuntimesPage.xaml.cs">
+      <DependentUpon>RuntimesPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProcessUtil.cs" />
     <Compile Include="RegistryUtil.cs" />
     <Compile Include="ReportCreator.cs" />
@@ -134,6 +145,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\AppOverridesPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\HostAppsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -145,6 +164,10 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="Pages\RuntimesPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="TraceWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
