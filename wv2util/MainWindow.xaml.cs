@@ -143,7 +143,40 @@ namespace wv2util
                 }
             }
         }
+        private List<OverlayWindow> m_openOverlayWindows = new List<OverlayWindow>();
+        private void UpdateOverlayWindows()
+        {
+            foreach (var overlayWindow in m_openOverlayWindows)
+            {
+                overlayWindow.CloseOverlay();
+            }
+            m_openOverlayWindows.Clear();
+
+            if (this.HostAppsVisuallyHighlightWebView2sCheckbox.IsChecked.GetValueOrDefault(true))
+            {
+                
+                HostAppEntry selection = HostAppTreeViewSelectedItem;
+                if (selection != null)
+                {
+                    foreach (var hwnd in selection?.Hwnds)
+                    {
+                        m_openOverlayWindows.Add(
+                            OverlayWindow.OpenOverlayForHwnd(hwnd));
+                    }
+                }
+                
+            }
+        }
+        private void HostAppTreeViewSelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            UpdateOverlayWindows();
+        }
         
+        private void HostAppsVisuallyHighlightWebView2sCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            UpdateOverlayWindows();
+        }
+
         private void AppOverrideRuntimePathButton_Click(object sender, RoutedEventArgs e)
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
@@ -427,5 +460,6 @@ namespace wv2util
                     : Visibility.Visible;
             }
         }
+
     }
 }

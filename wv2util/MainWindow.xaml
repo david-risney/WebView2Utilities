@@ -65,7 +65,8 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <CheckBox Grid.Row="0" Grid.Column="0" Margin="5 5 5 5" Content="Discover more Host Apps information (slower)" IsChecked="{Binding Source={StaticResource HostAppList}, Path=ShouldDiscoverSlowly, Mode=TwoWay}" x:Name="HostAppsDiscoverSlowlyCheckbox" Checked="HostAppsDiscoverSlowlyCheckbox_Checked" Unchecked="HostAppsDiscoverSlowlyCheckbox_Checked"/>
-                    <TreeView Grid.Row="1" Grid.Column="0" Grid.RowSpan="20" Margin="5 5 5 5" x:Name="HostAppTreeView" ItemsSource="{Binding .}" SelectedValuePath="Model">
+                    <CheckBox Grid.Row="0" Grid.Column="1" Margin="5 5 5 5" Content="Highlight WebView2 (experimental)" IsChecked="False" x:Name="HostAppsVisuallyHighlightWebView2sCheckbox" Checked="HostAppsVisuallyHighlightWebView2sCheckbox_Checked" Unchecked="HostAppsVisuallyHighlightWebView2sCheckbox_Checked"/>
+                    <TreeView Grid.Row="1" Grid.Column="0" Grid.RowSpan="20" Margin="5 5 5 5" x:Name="HostAppTreeView" ItemsSource="{Binding .}" SelectedValuePath="Model" SelectedItemChanged="HostAppTreeViewSelectionChanged">
                         <TreeView.ItemContainerStyle>
                             <Style TargetType="{x:Type TreeViewItem}">
                                 <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
