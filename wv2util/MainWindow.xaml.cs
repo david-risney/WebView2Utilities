@@ -27,7 +27,7 @@ namespace wv2util
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IShowHostAppEntryAsAppOverrideEntry
     {
         public MainWindow()
         {
@@ -37,6 +37,12 @@ namespace wv2util
             new ReloadableHost(this.HostAppsReload, this.HostAppsPage);
             new ReloadableHost(this.RuntimesReload, this.RuntimesPage);
             new ReloadableHost(this.AppOverridesReload, this.AppOverridesPage);
+        }
+
+        public void ShowHostAppEntryAsAppOverrideEntry(HostAppEntry entry)
+        {
+            this.AppOverridesPage.ShowHostAppEntryAsAppOverrideEntry(entry);
+            this.TabControl.SelectedItem = this.AppOverridesTab;
         }
     }
 }

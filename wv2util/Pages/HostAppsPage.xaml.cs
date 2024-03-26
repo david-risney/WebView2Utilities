@@ -154,30 +154,8 @@ namespace wv2util
             HostAppEntry selectedHostAppEntry = HostAppTreeViewSelectedItem;
             if (selectedHostAppEntry != null)
             {
-                /*
-                // TODO
-                AppOverrideListData.FromSystem();
-
-                // Find the first override entry that explicitly matches the host app.
-                // If none exist, then create and add it.
-                // Then select that entry and show that tab.
-                AppOverrideEntry selectedAppOverrideEntry = AppOverrideListData.FirstOrDefault(
-                    entry => entry.HostApp.ToLower() == selectedHostAppEntry.ExecutableName.ToLower());
-
-                if (selectedAppOverrideEntry == null)
-                {
-                    selectedAppOverrideEntry = new AppOverrideEntry
-                    {
-                        HostApp = selectedHostAppEntry.ExecutableName,
-                        StorageKind = StorageKind.HKCU,
-                    };
-                    selectedAppOverrideEntry.InitializationComplete();
-                    AppOverrideListData.Add(selectedAppOverrideEntry);
-                }
-
-                AppOverrideListBox.SelectedItem = selectedAppOverrideEntry;
-                TabControl.SelectedIndex = 2;
-                */
+                Window parent = Window.GetWindow(this);
+                ((IShowHostAppEntryAsAppOverrideEntry)parent).ShowHostAppEntryAsAppOverrideEntry(selectedHostAppEntry);
             }
         }
 

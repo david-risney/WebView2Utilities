@@ -20,7 +20,7 @@ namespace wv2util
     /// <summary>
     /// Interaction logic for AppOverridesPage.xaml
     /// </summary>
-    public partial class AppOverridesPage : Page, IReloadable
+    public partial class AppOverridesPage : Page, IReloadable, IShowHostAppEntryAsAppOverrideEntry
     {
         public AppOverridesPage()
         {
@@ -123,5 +123,26 @@ namespace wv2util
             }
         }
 
+        public void ShowHostAppEntryAsAppOverrideEntry(HostAppEntry hostAppEntry)
+        {
+            // Find the first override entry that explicitly matches the host app.
+            // If none exist, then create and add it.
+            // Then select that entry and show that tab.
+            AppOverrideEntry selectedAppOverrideEntry = AppOverrideListData.FirstOrDefault(
+                entry => entry.HostApp.ToLower() == hostAppEntry.ExecutableName.ToLower());
+
+            if (selectedAppOverrideEntry == null)
+            {
+                selectedAppOverrideEntry = new AppOverrideEntry
+                {
+                    HostApp = hostAppEntry.ExecutableName,
+                    StorageKind = StorageKind.HKCU,
+                };
+                selectedAppOverrideEntry.InitializationComplete();
+                AppOverrideListData.Add(selectedAppOverrideEntry);
+            }
+
+            AppOverrideListBox.SelectedItem = selectedAppOverrideEntry;
+        }
     }
 }

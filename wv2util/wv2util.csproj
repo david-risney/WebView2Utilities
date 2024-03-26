@@ -131,6 +131,7 @@
     <Compile Include="HwndUtil.cs" />
     <Compile Include="NullToBooleanConverter.cs" />
     <Compile Include="ObservableCollectionProjection.cs" />
+    <Compile Include="Pages\IShowHostAppEntryAsAppOverrideEntry.cs" />
     <Compile Include="Pages\IReloadable.cs" />
     <Compile Include="Pages\ReloadableHost.cs" />
     <Compile Include="Pages\RuntimesPage.xaml.cs">

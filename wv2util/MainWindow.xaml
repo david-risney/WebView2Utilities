@@ -46,7 +46,7 @@
             </TabItem>
 
             <!-- App Override List -->
-            <TabItem>
+            <TabItem x:Name="AppOverridesTab">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Overrides "/>
