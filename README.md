@@ -2,8 +2,7 @@
 
 WebView2Utilities help you develop and debug Microsoft Edge WebView2 apps.
 
-![image](https://github.com/david-risney/WebView2Utilities/assets/5773562/00846e42-6556-49c2-91ba-efffa45668ca)
-
+![Screenshot of WebView2 Utilities](screenshot.png)
 
 ## Install & Run
 
