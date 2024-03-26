@@ -10,25 +10,6 @@
         Title="WebView2Utilities"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Window.Resources>
-        <ObjectDataProvider x:Key="AppOverrideList"         ObjectType="{x:Type local:AppState}" MethodName="GetAppOverrideList"/>
-        <ObjectDataProvider x:Key="ExperimentalFeatureList" ObjectType="{x:Type local:AppState}" MethodName="GetExperimentalFeatureList"/>
-        <ObjectDataProvider x:Key="RuntimeList"             ObjectType="{x:Type local:AppState}" MethodName="GetRuntimeList"/>
-        <ObjectDataProvider x:Key="HostAppList"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppList"/>
-        <ObjectDataProvider x:Key="HostAppTree"             ObjectType="{x:Type local:AppState}" MethodName="GetHostAppTree"/>
-
-        <CollectionViewSource Source="{StaticResource AppOverrideList}" x:Key="AppOverrideSortedList">
-            <CollectionViewSource.SortDescriptions>
-                <scm:SortDescription PropertyName="PrecedenceCategory" Direction="Ascending"/>
-            </CollectionViewSource.SortDescriptions>
-        </CollectionViewSource>
-
-        <local:HostAppEntryStatusToBrushConverter x:Key="HostAppEntryStatusToBrushConverter"/>
-        <local:NullToBooleanConverter x:Key="NullToBooleanConverter"/>
-
-        <DataTemplate x:Key="AppOverrideListTemplate">
-            <TextBlock Text="{Binding Path=DisplayLabel}" />
-        </DataTemplate>
-
         <Style x:Key="heading" TargetType="Label">
             <Setter Property="FontSize" Value="24" />
         </Style>
@@ -74,7 +55,7 @@
             </TabItem>
 
             <!-- App Override List -->
-            <TabItem DataContext="{Binding Source={StaticResource AppOverrideSortedList}}">
+            <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Overrides "/>
@@ -89,36 +70,17 @@
             </TabItem>
 
             <!-- App Experimental Features List -->
-            <TabItem DataContext="{Binding Source={StaticResource ExperimentalFeatureList}}">
+            <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Experiments "/>
                     </StackPanel>
                 </TabItem.Header>
-                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <ListView x:Name="ExperimentalFeatureList" ItemsSource="{Binding}" Grid.Row="0" Grid.ColumnSpan="2">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding Path=Name}">
-                                    <GridViewColumnHeader>Name</GridViewColumnHeader>
-                                </GridViewColumn>
-                                <GridViewColumn>
-                                    <GridViewColumnHeader>Enabled</GridViewColumnHeader>
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <Grid>
-                                                <CheckBox HorizontalAlignment="Center" IsChecked="{Binding Path=IsEnabled}" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Description}">
-                                    <GridViewColumnHeader>Description</GridViewColumnHeader>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                </Grid>
+                <Frame>
+                    <Frame.Content>
+                        <local:ExperimentsPage x:Name="ExperimentsPage"/>
+                    </Frame.Content>
+                </Frame>
             </TabItem>
 
             <!-- About tab -->

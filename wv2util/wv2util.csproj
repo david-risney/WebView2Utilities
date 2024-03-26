@@ -119,6 +119,9 @@
     <Compile Include="Pages\AppOverridesPage.xaml.cs">
       <DependentUpon>AppOverridesPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\ExperimentsPage.xaml.cs">
+      <DependentUpon>ExperimentsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\HostAppsPage.xaml.cs">
       <DependentUpon>HostAppsPage.xaml</DependentUpon>
     </Compile>
@@ -146,6 +149,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\AppOverridesPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\ExperimentsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
