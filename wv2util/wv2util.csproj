@@ -116,6 +116,9 @@
     </Compile>
     <Compile Include="ExperimentalFeature.cs" />
     <Compile Include="HostAppList.cs" />
+    <Compile Include="Pages\AboutPage.xaml.cs">
+      <DependentUpon>AboutPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\AppOverridesPage.xaml.cs">
       <DependentUpon>AppOverridesPage.xaml</DependentUpon>
     </Compile>
@@ -145,6 +148,10 @@
     <Compile Include="TreeItem.cs" />
     <Compile Include="VersionUtil.cs" />
     <Page Include="CreateReportWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\AboutPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

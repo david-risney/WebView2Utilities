@@ -110,10 +110,10 @@ namespace wv2util
         public event EventHandler ReloadingChanged;
         public void Reload()
         {
-            _ = ReloadInternalAsync();
+            ReloadInternal();
         }
 
-        private async Task ReloadInternalAsync()
+        private void ReloadInternal()
         {
             if (!this.Reloading)
             {
