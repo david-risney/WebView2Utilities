@@ -247,6 +247,9 @@
     <PackageReference Include="System.Text.Json">
       <Version>7.0.0-rc.1.22426.10</Version>
     </PackageReference>
+    <PackageReference Include="WPF-UI">
+      <Version>3.0.3</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

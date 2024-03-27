@@ -1,92 +1,85 @@
-<Window x:Class="wv2util.MainWindow"
+<ui:FluentWindow x:Class="wv2util.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml" 
         xmlns:local="clr-namespace:wv2util" 
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Icon="logo.ico"
         Title="WebView2Utilities"
+        ui:Design.Background="{DynamicResource ApplicationBackgroundBrush}"
+        ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <TabControl x:Name="TabControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <ui:NavigationView
+            x:Name="NavigationView"
+            Padding="42,0,42,0"
+            BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
+            EnableDebugMessages="True"            
+            FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems, Mode=OneWay}"
+            FrameMargin="0"
+            IsBackButtonVisible="Visible"
+            IsPaneToggleVisible="True"
+            MenuItemsSource="{Binding ViewModel.MenuItems, Mode=OneWay}"
+            OpenPaneLength="150"
+            PaneDisplayMode="Left"
+            IsPaneOpen="False"
+            SelectionChanged="OnNavigationSelectionChanged"
+            TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}"
+            Transition="FadeInWithSlide">
+            <ui:NavigationView.MenuItems>
+                <ui:NavigationViewItem
+                        Content="Home"
+                        x:Name="HomeNavigationViewItem"
+                        Icon="{ui:SymbolIcon Home24}"
+                        TargetPageType="{x:Type local:AboutPage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Host Apps"
+                        Icon="{ui:SymbolIcon Apps24}"
+                        TargetPageType="{x:Type local:HostAppsPage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Runtimes"
+                        Icon="{ui:SymbolIcon Library24}"
+                        TargetPageType="{x:Type local:RuntimesPage}"
+                        />
+                <ui:NavigationViewItem
+                        Content="Overrides"
+                        Icon="{ui:SymbolIcon WindowEdit20}"
+                        TargetPageType="{x:Type local:AppOverridesPage}"                    
+                        />
+                <ui:NavigationViewItem
+                        Content="Experiments"
+                        Icon="{ui:SymbolIcon Beaker24}"
+                        TargetPageType="{x:Type local:ExperimentsPage}"                    
+                        />
+            </ui:NavigationView.MenuItems>
+            <ui:NavigationView.Header>
+                <StackPanel Margin="42,32,42,20">
+                    <ui:BreadcrumbBar x:Name="BreadcrumbBar" />
+                </StackPanel>
+            </ui:NavigationView.Header>
 
-            <!-- Host App list -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Host Apps "/>
-                        <Button x:Name="HostAppsReload" Content="&#x1F503;" />
-                    </StackPanel>
-                </TabItem.Header>
-                <Frame>
-                    <Frame.Content>
-                        <local:HostAppsPage x:Name="HostAppsPage"/>
-                    </Frame.Content>
-                </Frame>
-            </TabItem>
-
-            <!-- Runtime list -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Runtimes "/>
-                        <Button x:Name="RuntimesReload" Content="&#x1F503;"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Frame>
-                    <Frame.Content>
-                        <local:RuntimesPage x:Name="RuntimesPage"/>
-                    </Frame.Content>
-                </Frame>
-            </TabItem>
-
-            <!-- App Override List -->
-            <TabItem x:Name="AppOverridesTab">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Overrides "/>
-                        <Button x:Name="AppOverridesReload" Content="&#x1F503;"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Frame>
-                    <Frame.Content>
-                        <local:AppOverridesPage x:Name="AppOverridesPage"/>
-                    </Frame.Content>
-                </Frame>
-            </TabItem>
-
-            <!-- App Experimental Features List -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Experiments "/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Frame>
-                    <Frame.Content>
-                        <local:ExperimentsPage x:Name="ExperimentsPage"/>
-                    </Frame.Content>
-                </Frame>
-            </TabItem>
-
-            <!-- About tab -->
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="About"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Frame>
-                    <Frame.Content>
-                        <local:AboutPage x:Name="AboutPage"/>
-                    </Frame.Content>
-                </Frame>
-            </TabItem>
-        </TabControl>
+            <ui:NavigationView.ContentOverlay>
+                <Grid>
+                    <ui:SnackbarPresenter x:Name="SnackbarPresenter" />
+                </Grid>
+            </ui:NavigationView.ContentOverlay>
+        </ui:NavigationView>
+        <ContentPresenter x:Name="RootContentDialog" Grid.Row="0" />
+        <ui:TitleBar
+            x:Name="TitleBar"
+            Title="WebView2Utilities"
+            Grid.Row="0"
+            CloseWindowByDoubleClickOnIcon="True">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Source="pack://application:,,,/logo.ico" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
     </Grid>
-</Window>
+</ui:FluentWindow>

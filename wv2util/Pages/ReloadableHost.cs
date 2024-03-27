@@ -32,7 +32,7 @@ namespace wv2util.Pages
         private void OnReloadingChanged(object sender, EventArgs e)
         {
             // Get back to UI thread
-            m_button.Dispatcher.Invoke(() =>
+            //m_button.Dispatcher.Invoke(() =>
             {
                 if (m_reloadable.Reloading)
                 {
@@ -44,7 +44,7 @@ namespace wv2util.Pages
                     m_button.Content = "🔃";
                     m_button.IsEnabled = true;
                 }
-            });
+            }//);
         }
     }
 }

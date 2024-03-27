@@ -27,22 +27,35 @@ namespace wv2util
     /// <summary>
     /// Interaction logic for AppOverride.xaml
     /// </summary>
-    public partial class MainWindow : Window, IShowHostAppEntryAsAppOverrideEntry
+    public partial class MainWindow : IShowHostAppEntryAsAppOverrideEntry
     {
         public MainWindow()
         {
             InitializeComponent();
 
             // ReloadableHost connects up the reload button in the main page to the reloadable page
-            new ReloadableHost(this.HostAppsReload, this.HostAppsPage);
-            new ReloadableHost(this.RuntimesReload, this.RuntimesPage);
-            new ReloadableHost(this.AppOverridesReload, this.AppOverridesPage);
+            // new ReloadableHost(this.HostAppsReload, this.HostAppsPage);
+            // new ReloadableHost(this.RuntimesReload, this.RuntimesPage);
+            // new ReloadableHost(this.AppOverridesReload, this.AppOverridesPage);
         }
 
         public void ShowHostAppEntryAsAppOverrideEntry(HostAppEntry entry)
         {
-            this.AppOverridesPage.ShowHostAppEntryAsAppOverrideEntry(entry);
-            this.TabControl.SelectedItem = this.AppOverridesTab;
+            // this.AppOverridesPage.ShowHostAppEntryAsAppOverrideEntry(entry);
+            // this.TabControl.SelectedItem = this.AppOverridesTab;
+        }
+
+        private void OnNavigationSelectionChanged(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is Wpf.Ui.Controls.NavigationView navigationView))
+            {
+                return;
+            }
+
+            NavigationView.HeaderVisibility =
+                navigationView.SelectedItem?.TargetPageType != typeof(AboutPage)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
         }
     }
 }
