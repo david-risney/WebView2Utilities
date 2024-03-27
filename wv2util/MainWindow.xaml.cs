@@ -39,6 +39,12 @@ namespace wv2util
             // new ReloadableHost(this.AppOverridesReload, this.AppOverridesPage);
         }
 
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            this.NavigationView.Navigate(typeof(AboutPage));
+
+        }
+        
         public void ShowHostAppEntryAsAppOverrideEntry(HostAppEntry entry)
         {
             // this.AppOverridesPage.ShowHostAppEntryAsAppOverrideEntry(entry);
@@ -57,5 +63,6 @@ namespace wv2util
                     ? Visibility.Visible
                     : Visibility.Collapsed;
         }
+
     }
 }

@@ -13,13 +13,14 @@
         ui:Design.Foreground="{DynamicResource TextFillColorPrimaryBrush}"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
+        Loaded="OnLoaded"
         Height="700" Width="1100" ResizeMode="CanResizeWithGrip" MinWidth="662" MinHeight="360">
     <Grid>
         <ui:NavigationView
             x:Name="NavigationView"
             Padding="42,0,42,0"
             BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
-            EnableDebugMessages="True"            
+            EnableDebugMessages="True"
             FooterMenuItemsSource="{Binding ViewModel.FooterMenuItems, Mode=OneWay}"
             FrameMargin="0"
             IsBackButtonVisible="Visible"
@@ -27,7 +28,7 @@
             MenuItemsSource="{Binding ViewModel.MenuItems, Mode=OneWay}"
             OpenPaneLength="150"
             PaneDisplayMode="Left"
-            IsPaneOpen="False"
+            IsPaneOpen="True"
             SelectionChanged="OnNavigationSelectionChanged"
             TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}"
             Transition="FadeInWithSlide">
