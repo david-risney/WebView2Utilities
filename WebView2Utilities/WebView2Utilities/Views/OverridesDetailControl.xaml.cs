@@ -7,13 +7,18 @@ namespace WebView2Utilities.Views;
 
 public sealed partial class OverridesDetailControl : UserControl
 {
-    public SampleOrder? ListDetailsMenuItem
+    public AppOverrideEntry? ListDetailsMenuItem
     {
-        get => GetValue(ListDetailsMenuItemProperty) as SampleOrder;
+        get => GetValue(ListDetailsMenuItemProperty) as AppOverrideEntry;
         set => SetValue(ListDetailsMenuItemProperty, value);
     }
 
-    public static readonly DependencyProperty ListDetailsMenuItemProperty = DependencyProperty.Register("ListDetailsMenuItem", typeof(SampleOrder), typeof(OverridesDetailControl), new PropertyMetadata(null, OnListDetailsMenuItemPropertyChanged));
+    public static readonly DependencyProperty ListDetailsMenuItemProperty = 
+        DependencyProperty.Register(
+            "ListDetailsMenuItem", 
+            typeof(AppOverrideEntry), 
+            typeof(OverridesDetailControl), 
+            new PropertyMetadata(null, OnListDetailsMenuItemPropertyChanged));
 
     public OverridesDetailControl()
     {
@@ -24,7 +29,7 @@ public sealed partial class OverridesDetailControl : UserControl
     {
         if (d is OverridesDetailControl control)
         {
-            control.ForegroundElement.ChangeView(0, 0, 1);
+            // control.ForegroundElement.ChangeView(0, 0, 1);
         }
     }
 }

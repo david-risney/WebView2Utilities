@@ -10,29 +10,18 @@ namespace WebView2Utilities.ViewModels;
 
 public partial class OverridesViewModel : ObservableRecipient, INavigationAware
 {
-    private readonly ISampleDataService _sampleDataService;
-
     [ObservableProperty]
-    private SampleOrder? selected;
+    private AppOverrideEntry? selected;
 
-    public ObservableCollection<SampleOrder> SampleItems { get; private set; } = new ObservableCollection<SampleOrder>();
+    public AppOverrideList Items { get; private set; } = new();
 
-    public OverridesViewModel(ISampleDataService sampleDataService)
+    public OverridesViewModel()
     {
-        _sampleDataService = sampleDataService;
     }
 
     public async void OnNavigatedTo(object parameter)
     {
-        SampleItems.Clear();
-
-        // TODO: Replace with real data.
-        var data = await _sampleDataService.GetListDetailsDataAsync();
-
-        foreach (var item in data)
-        {
-            SampleItems.Add(item);
-        }
+        Items.FromSystem();
     }
 
     public void OnNavigatedFrom()
@@ -41,6 +30,6 @@ public partial class OverridesViewModel : ObservableRecipient, INavigationAware
 
     public void EnsureItemSelected()
     {
-        Selected ??= SampleItems.First();
+        Selected ??= Items.First();
     }
 }

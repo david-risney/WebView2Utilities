@@ -8,27 +8,15 @@
     xmlns:models="using:WebView2Utilities.Core.Models"
     xmlns:views="using:WebView2Utilities.Views"
     xmlns:behaviors="using:WebView2Utilities.Behaviors"
-    behaviors:NavigationViewHeaderBehavior.HeaderMode="Never"
     mc:Ignorable="d">
     <Page.Resources>
-        <DataTemplate x:Key="ItemTemplate" x:DataType="models:SampleOrder">
-            <Grid Height="60">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <FontIcon
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    FontSize="32"
-                    Glyph="{x:Bind Symbol}"
-                    AutomationProperties.Name="{x:Bind SymbolName}" />
+        <DataTemplate x:Key="ItemTemplate" x:DataType="models:AppOverrideEntry">
+            <Grid Height="Auto">
                 <StackPanel
-                    Grid.Column="1"
+                    Grid.Column="0"
                     Margin="{StaticResource SmallLeftMargin}"
                     VerticalAlignment="Center">
-                    <TextBlock Text="{x:Bind Company}" Style="{StaticResource ListTitleStyle}" />
-                    <TextBlock Text="{x:Bind Status}" Style="{StaticResource ListSubTitleStyle}" />
+                    <TextBlock Text="{x:Bind DisplayLabel}" Style="{StaticResource ListTitleStyle}" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -69,7 +57,7 @@
         </DataTemplate>
     </Page.Resources>
 
-    <Grid x:Name="ContentArea">
+    <Grid x:Name="ContentArea" RowDefinitions="*, Auto, 20" ColumnDefinitions="Auto, Auto, *">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
@@ -83,6 +71,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
+        
         <controls:ListDetailsView
             x:Uid="Overrides"
             x:Name="ListDetailsViewControl"
@@ -90,11 +79,18 @@
             Background="Transparent"
             BorderBrush="Transparent"
             DetailsTemplate="{StaticResource DetailsTemplate}"
-            ItemsSource="{x:Bind ViewModel.SampleItems}"
+            ItemsSource="{x:Bind ViewModel.Items}"
             ItemTemplate="{StaticResource ItemTemplate}"
             ListHeaderTemplate="{StaticResource MinimalListHeaderTemplate}"
             NoSelectionContentTemplate="{StaticResource NoSelectionContentTemplate}"
             SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
-            ViewStateChanged="OnViewStateChanged"/>
+            ViewStateChanged="OnViewStateChanged"
+            Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"/>
+        
+        <Button x:Name="Add"
+            Grid.Row="1" Grid.Column="0" Click="Add_Click">Add</Button>
+        
+        <Button x:Name="Remove"
+            Grid.Row="1" Grid.Column="1" Click="Remove_Click">Remove</Button>
     </Grid>
 </Page>
