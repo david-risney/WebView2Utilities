@@ -329,5 +329,12 @@ namespace wv2util
             }
             m_previousHostAppEntries = currentHostAppEntries;            
         }
+
+        private void ListViewItem_PreviewMouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ListViewItem item = (ListViewItem)(sender);
+            RuntimeEntry entry = (RuntimeEntry)item.Content;
+            Process.Start(entry.RuntimeLocation);
+        }
     }
 }
