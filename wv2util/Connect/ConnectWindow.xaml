@@ -1,0 +1,26 @@
+﻿<Window x:Class="wv2util.Connect.ConnectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:wv2util.Connect"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d"
+        Title="ConnectWindow" Height="450" Width="800">
+    <Grid>
+        <ProgressBar x:Name="ProgressBar" IsIndeterminate="True" Visibility="Hidden"></ProgressBar>
+        <Grid x:Name="WebViewGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="UriTextBox" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="edge://inspect/" KeyDown="UriTextBox_KeyDown"/>
+            <wv2:WebView2 x:Name="WebView" Grid.RowSpan="10" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"/>
+        </Grid>
+    </Grid>
+</Window>

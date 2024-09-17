@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using wv2util.Connect;
 using wv2util.Pages;
 using Timer = System.Timers.Timer;
 
@@ -171,6 +172,16 @@ namespace wv2util
                 this.Reloading = true;
                 await HostAppsListData.FromMachineAsync();
                 this.Reloading = false;
+            }
+        }
+
+        private void HostAppsConnect_Click(object sender, RoutedEventArgs e)
+        {
+            HostAppEntry selectedHostAppEntry = HostAppTreeViewSelectedItem;
+            if (selectedHostAppEntry != null && !String.IsNullOrEmpty(selectedHostAppEntry.CommandLine))
+            {
+                ConnectWindow connectWindow = new ConnectWindow(selectedHostAppEntry);
+                connectWindow.Show();
             }
         }
     }

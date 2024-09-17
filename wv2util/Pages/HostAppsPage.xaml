@@ -202,5 +202,6 @@
         </GroupBox>
         <Button Grid.Row="4" Grid.Column="1" x:Name="HostAppsGoToOverride" Content="Open Override" Click="HostAppsGoToOverride_Click" HorizontalAlignment="Left" Margin="10 0 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
         <Button Grid.Row="5" Grid.Column="1" x:Name="HostAppsCreateReport" Content="Create Report" Click="HostAppsCreateReport_Click" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
+        <Button Grid.Row="6" Grid.Column="1" x:Name="HostAppsConnect"      Content="Connect"       Click="HostAppsConnect_Click"      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 10 0 0" Width="100" IsEnabled="{Binding ElementName=HostAppTreeView,Path=SelectedItem,Converter={StaticResource NullToBooleanConverter}}"/>
     </Grid>
 </Page>

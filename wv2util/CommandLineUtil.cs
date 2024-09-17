@@ -97,6 +97,16 @@ namespace wv2util
 
                 return parts;
             }
+
+            public void RemovePrefixedCommand(string prefix)
+            {
+                m_parts = m_parts.Where(p => !p.StartsWith(prefix)).ToList();
+            }
+
+            public void RemoveAt(int idx)
+            {
+                m_parts.RemoveAt(idx);
+            }
         }
     }
 }
