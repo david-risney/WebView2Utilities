@@ -10,8 +10,41 @@ using System.Text;
 
 namespace wv2util
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SID_AND_ATTRIBUTES
+    {
+        public IntPtr Sid;
+        public UInt32 Attributes;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct TOKEN_MANDATORY_LABEL
+    {
+        public SID_AND_ATTRIBUTES Label;
+    }
+
     public static class ProcessUtil
     {
+
+        #region Integrity Levels Utilities
+        [DllImport("advapi32", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern bool ConvertSidToStringSid(IntPtr securityIdentifier, out string securityIdentifierName);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern IntPtr GetSidSubAuthority(IntPtr sid, UInt32 subAuthorityIndex);
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern IntPtr GetSidSubAuthorityCount(IntPtr sid);
+
+        const int SECURITY_MANDATORY_UNTRUSTED_RID = (0x00000000);
+        const int SECURITY_MANDATORY_LOW_RID = (0x00001000);
+        const int SECURITY_MANDATORY_MEDIUM_RID = (0x00002000);
+        const int SECURITY_MANDATORY_MEDIUM_PLUS_RID = (0x00002100);
+        const int SECURITY_MANDATORY_HIGH_RID = (0x00003000);
+        const int SECURITY_MANDATORY_SYSTEM_RID = (0x00004000);
+        const int SECURITY_MANDATORY_PROTECTED_PROCESS_RID = (0x00005000);
+        #endregion Integrity Levels Utilities
+
         private readonly static string[] InterestingDllFileNames = new string[]
         {
             "embeddedbrowserwebview.dll",
@@ -155,7 +188,7 @@ namespace wv2util
 
         public static string GetIntegrityLevelOfProcess(int pid)
         {
-            // Determine if this is admin
+            // Determine if this is admin with TokenElevationType
             var processSafeHandle = PInvoke.Kernel32.OpenProcess(
                 PInvoke.Kernel32.ProcessAccess.PROCESS_QUERY_INFORMATION,
                 false,
@@ -196,6 +229,7 @@ namespace wv2util
                 }
             }
 
+            // Determine if this is AppContainer with TokenIsAppContainer
             UInt32[] isAppContainer = new UInt32[] { 0 };
             unsafe
             {
@@ -219,7 +253,53 @@ namespace wv2util
                 }
             }
 
-            return "Normal";
+            // Determine the IntegrityLevel with TokenIntegrityLevel
+            // https://devblogs.microsoft.com/oldnewthing/20221017-00/?p=107291
+            string ilAsString = "Unknown";
+            unsafe
+            {
+                // Calling GetTokenInformation first to get the token information length
+                PInvoke.AdvApi32.GetTokenInformation(
+                    tokenHandle,
+                    PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel,
+                    IntPtr.Zero,
+                    0,
+                    out int integrityLevelInfoLength);
+                IntPtr integrityLevel = Marshal.AllocHGlobal(integrityLevelInfoLength);
+                if (!PInvoke.AdvApi32.GetTokenInformation(
+                    tokenHandle,
+                    PInvoke.AdvApi32.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel,
+                    integrityLevel,
+                    integrityLevelInfoLength,
+                    out int _))
+                {
+                    PInvoke.Win32ErrorCode errorCode = PInvoke.Kernel32.GetLastError();
+                    Marshal.FreeHGlobal(integrityLevel);
+                    if (errorCode != PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                    {
+                        throw new PInvoke.Win32Exception(errorCode, "Error calling GetTokenInformation");
+                    }
+                }
+
+                TOKEN_MANDATORY_LABEL mandatoryLabel = (TOKEN_MANDATORY_LABEL)Marshal.PtrToStructure(
+                    integrityLevel, typeof(TOKEN_MANDATORY_LABEL));
+                IntPtr pSid = mandatoryLabel.Label.Sid;
+                // The integrity level is encoded in the SID as the relative identifier (the final subauthority).
+                uint subAuthorityCount = Marshal.ReadByte(GetSidSubAuthorityCount(pSid));
+                int subAuthority = Marshal.ReadInt32(GetSidSubAuthority(pSid, subAuthorityCount - 1));
+                switch (subAuthority)
+                {
+                    case SECURITY_MANDATORY_UNTRUSTED_RID:          ilAsString = "Untrusted"; break;    // 0x00000000 Untrusted.
+                    case SECURITY_MANDATORY_LOW_RID:                ilAsString = "Low"; break;          // 0x00001000 Low integrity.
+                    case SECURITY_MANDATORY_MEDIUM_RID:             ilAsString = "Medium"; break;       // 0x00002000 Medium integrity.
+                    case SECURITY_MANDATORY_MEDIUM_PLUS_RID:        ilAsString = "MediumPlus"; break;   // SECURITY_MANDATORY_MEDIUM_RID + 0x100 Medium high integrity.
+                    case SECURITY_MANDATORY_HIGH_RID:               ilAsString = "High"; break;         // 0X00003000 High integrity.
+                    case SECURITY_MANDATORY_SYSTEM_RID:             ilAsString = "System"; break;       // 0x00004000 System integrity.
+                    case SECURITY_MANDATORY_PROTECTED_PROCESS_RID:  ilAsString = "ProtectedProcess"; break;
+                }
+                Marshal.FreeHGlobal(integrityLevel);
+            }
+            return ilAsString;
         }
 
         public static Process GetParentProcess(this Process process)
